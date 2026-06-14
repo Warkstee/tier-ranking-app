@@ -4,3 +4,5 @@ services:
     build: .
     ports:
       - "4173:80"
+    volumes:
+      - ./config.yml:/usr/share/nginx/html/config.yml:ro

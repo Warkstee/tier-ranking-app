@@ -1,36 +1,31 @@
-const DEFAULT_CONFIG = `#S-Tier Ranking Board
-
+const DEFAULT_CONFIG = `title: "#S-Tier Ranking Board"
 tiers: [S, A, B, C, D, F]
 
-## Facets
+rubric:
+  ease:
+    label: Ease of use
+    weight: 1
+    max: 10
+  performance:
+    label: Performance
+    weight: 1
+    max: 10
 
-| Facet | Weight | Max |
-| --- | ---: | ---: |
-| First impression | 1.0 | 10 |
-| Core features | 1.2 | 10 |
-| Ease of use | 1.1 | 10 |
-| Performance | 1.2 | 10 |
-| Reliability | 1.2 | 10 |
-| Visual polish | 1.0 | 10 |
-| Flexibility | 0.9 | 10 |
-| Learning curve | 0.8 | 10 |
-| Workflow fit | 1.0 | 10 |
-| Final vibe | 0.9 | 10 |
-
-## Candidates
-
-| Name | Image | Description | Tier | First impression | Core features | Ease of use | Performance | Reliability | Visual polish | Flexibility | Learning curve | Workflow fit | Final vibe |
-| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Atlas | ./assets/candidates/atlas.svg | A polished all-rounder with strong defaults and broad appeal. | Unranked | 9 | 9 | 8 | 8 | 9 | 8 | 8 | 7 | 9 | 8 |
-| Beacon | ./assets/candidates/beacon.svg | A friendly pick that looks refined and gets new users moving quickly. | Unranked | 8 | 7 | 9 | 7 | 8 | 9 | 7 | 8 | 8 | 8 |
-| Comet | ./assets/candidates/comet.svg | A fast, focused option with confident day-to-day performance. | Unranked | 7 | 8 | 8 | 9 | 8 | 7 | 8 | 7 | 8 | 7 |
-| Drift | ./assets/candidates/drift.svg | A flexible contender that rewards setup time and deeper customization. | Unranked | 6 | 7 | 7 | 8 | 7 | 6 | 8 | 6 | 7 | 6 |
-| Ember | ./assets/candidates/ember.svg | A stylish candidate with a memorable first impression and a few tradeoffs. | Unranked | 9 | 8 | 7 | 7 | 7 | 9 | 6 | 8 | 7 | 9 |
-| Flux | ./assets/candidates/flux.svg | A power-user option with unusual flexibility but a steeper learning curve. | Unranked | 5 | 6 | 6 | 7 | 6 | 7 | 9 | 5 | 6 | 6 |
-| Grove | ./assets/candidates/grove.svg | A calm, reliable choice that feels balanced across most categories. | Unranked | 8 | 8 | 8 | 7 | 7 | 8 | 7 | 7 | 8 | 7 |
-| Halo | ./assets/candidates/halo.svg | A visually pleasant option that is easy to explain on camera. | Unranked | 6 | 6 | 7 | 6 | 7 | 8 | 6 | 8 | 6 | 7 |
-| Ion | ./assets/candidates/ion.svg | A compact option that performs well once its workflow clicks. | Unranked | 7 | 6 | 7 | 8 | 8 | 6 | 8 | 6 | 7 | 6 |
-| Juniper | ./assets/candidates/juniper.svg | A budget-feeling pick that can still surprise in the right niche. | Unranked | 5 | 5 | 6 | 6 | 5 | 6 | 6 | 7 | 5 | 6 |
+candidates:
+  - name: Atlas
+    image: ./assets/candidates/atlas.svg
+    description: Polished all-rounder.
+    tier: Unranked
+    scores:
+      ease: 8
+      performance: 9
+  - name: Beacon
+    image: ./assets/candidates/beacon.svg
+    description: Friendly and quick to learn.
+    tier: Unranked
+    scores:
+      ease: 9
+      performance: 7
 `;
 
 const state = {
@@ -39,7 +34,9 @@ const state = {
   facets: [],
   candidates: [],
   selectedId: null,
-  configText: DEFAULT_CONFIG
+  configText: DEFAULT_CONFIG,
+  configFormat: "yaml",
+  configSource: "bundled config"
 };
 
 const els = {
@@ -61,8 +58,8 @@ boot();
 
 async function boot() {
   wireStaticControls();
-  const text = await loadMarkdownConfig({ fallbackToDefault: true });
-  applyConfig(text);
+  const config = await loadConfig({ fallbackToDefault: true });
+  applyConfig(config);
 }
 
 function wireStaticControls() {
@@ -88,48 +85,112 @@ function wireStaticControls() {
   });
 }
 
-async function loadMarkdownConfig({ fallbackToDefault = false } = {}) {
-  try {
-    const response = await fetch(`./config.md?refresh=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`config.md returned ${response.status}`);
+async function loadConfig({ fallbackToDefault = false } = {}) {
+  const sources = [
+    { path: "./config.yml", format: "yaml" },
+    { path: "./config.yaml", format: "yaml" },
+    { path: "./config.md", format: "markdown" }
+  ];
+
+  for (const source of sources) {
+    try {
+      const response = await fetch(`${source.path}?refresh=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) continue;
+      return {
+        text: await response.text(),
+        format: source.format,
+        source: source.path.replace("./", "")
+      };
+    } catch {
+      // Try the next config path before falling back to the bundled sample.
     }
-    return await response.text();
-  } catch (error) {
-    if (fallbackToDefault) {
-      showToast("Using bundled config because config.md was not fetched.");
-      return DEFAULT_CONFIG;
-    }
-    throw error;
   }
+
+  if (fallbackToDefault) {
+    showToast("Using bundled config because config.yml was not fetched.");
+    return { text: DEFAULT_CONFIG, format: "yaml", source: "bundled config" };
+  }
+
+  throw new Error("Could not load config.yml.");
 }
 
 async function resetFromDisk() {
   els.resetConfig.disabled = true;
   try {
-    const markdown = await loadMarkdownConfig();
-    applyConfig(markdown);
-    showToast("Reset from config.md.");
+    const config = await loadConfig();
+    applyConfig(config);
+    showToast(`Reset from ${config.source}.`);
   } catch {
-    showToast("Could not refresh config.md.");
+    showToast("Could not refresh config.yml.");
   } finally {
     els.resetConfig.disabled = false;
   }
 }
 
-function applyConfig(markdown) {
-  const parsed = parseConfig(markdown);
+function applyConfig(config) {
+  const parsed = parseConfig(config.text, config.format);
   state.title = parsed.title;
   state.tiers = parsed.tiers;
   state.facets = parsed.facets;
   state.candidates = parsed.candidates;
-  state.configText = markdown;
+  state.configText = config.text;
+  state.configFormat = config.format;
+  state.configSource = config.source;
   state.selectedId = null;
   closeModal();
   render();
 }
 
-function parseConfig(markdown) {
+function parseConfig(text, format) {
+  if (format === "yaml") {
+    return parseYamlConfig(text);
+  }
+  return parseMarkdownConfig(text);
+}
+
+function parseYamlConfig(text) {
+  if (!window.jsyaml?.load) {
+    throw new Error("YAML parser did not load.");
+  }
+
+  const data = window.jsyaml.load(text) || {};
+  const title = String(data.title || "S-Tier Ranking Board");
+  const tiers = Array.isArray(data.tiers) && data.tiers.length
+    ? data.tiers.map((tier) => String(tier))
+    : ["S", "A", "B", "C", "D", "F"];
+  const rawCandidates = Array.isArray(data.candidates) ? data.candidates : [];
+  let facets = normalizeRubric(data.rubric);
+
+  if (!rawCandidates.length) {
+    throw new Error("config.yml needs a candidates list.");
+  }
+
+  if (!facets.length) {
+    facets = inferFacetsFromScores(rawCandidates);
+  }
+
+  const candidates = rawCandidates.map((item, index) => {
+    const candidate = item && typeof item === "object" ? item : {};
+    const name = String(candidate.name || `Candidate ${index + 1}`);
+    const rawScores = candidate.scores && typeof candidate.scores === "object" ? candidate.scores : {};
+    const scores = {};
+    facets.forEach((facet) => {
+      scores[facet.id] = clamp(toNumber(rawScores[facet.id] ?? rawScores[facet.name], 0), 0, facet.max);
+    });
+    return {
+      id: `${slugify(name)}-${index + 1}`,
+      name,
+      image: String(candidate.image || "./assets/candidates/atlas.svg"),
+      description: String(candidate.description || ""),
+      tier: normalizeTier(candidate.tier || "Unranked", tiers),
+      scores
+    };
+  });
+
+  return { title, tiers, facets, candidates };
+}
+
+function parseMarkdownConfig(markdown) {
   const lines = markdown.split(/\r?\n/);
   const titleLine = lines.find((line) => line.trim().startsWith("#"));
   const title = titleLine ? titleLine.trim() : "S-Tier Ranking Board";
@@ -141,6 +202,7 @@ function parseConfig(markdown) {
     : parseMarkdownTable(lines, "## Clients");
 
   let facets = facetRows.map((row) => ({
+    id: slugify(row.Facet || row.facet || row.Name || row.name),
     name: row.Facet || row.facet || row.Name || row.name,
     weight: toNumber(row.Weight ?? row.weight, 1),
     max: Math.max(1, toNumber(row.Max ?? row.max, 10))
@@ -154,14 +216,14 @@ function parseConfig(markdown) {
     const reserved = new Set(["Name", "Image", "Description", "Tier"]);
     facets = Object.keys(candidateRows[0])
       .filter((header) => !reserved.has(header))
-      .map((header) => ({ name: header, weight: 1, max: 10 }));
+      .map((header) => ({ id: slugify(header), name: header, weight: 1, max: 10 }));
   }
 
   const candidates = candidateRows.map((row, index) => {
     const name = row.Name || row.name || `Candidate ${index + 1}`;
     const scores = {};
     facets.forEach((facet) => {
-      scores[facet.name] = clamp(toNumber(row[facet.name], 0), 0, facet.max);
+      scores[facet.id] = clamp(toNumber(row[facet.name], 0), 0, facet.max);
     });
     return {
       id: `${slugify(name)}-${index + 1}`,
@@ -224,6 +286,39 @@ function splitTableRow(line) {
     .replace(/\|$/, "")
     .split("|")
     .map((cell) => cell.trim());
+}
+
+function normalizeRubric(rubric) {
+  const seen = new Set();
+  const entries = Array.isArray(rubric)
+    ? rubric.map((item, index) => [item?.id || item?.key || `facet_${index + 1}`, item])
+    : Object.entries(rubric || {});
+
+  return entries.map(([rawId, rawValue]) => {
+    const value = rawValue && typeof rawValue === "object" ? rawValue : { label: rawValue };
+    const label = value.label || value.name || humanizeId(rawId);
+    const id = uniqueId(configId(rawId || label), seen);
+    return {
+      id,
+      name: String(label),
+      weight: toNumber(value.weight, 1),
+      max: Math.max(1, toNumber(value.max, 10))
+    };
+  }).filter((facet) => facet.name);
+}
+
+function inferFacetsFromScores(candidates) {
+  const seen = new Set();
+  candidates.forEach((candidate) => {
+    if (!candidate?.scores || typeof candidate.scores !== "object") return;
+    Object.keys(candidate.scores).forEach((key) => seen.add(key));
+  });
+  return [...seen].map((id) => ({
+    id: configId(id),
+    name: humanizeId(id),
+    weight: 1,
+    max: 10
+  }));
 }
 
 function normalizeTier(value, tiers) {
@@ -413,8 +508,8 @@ function renderModal(candidate) {
     ? state.facets[0]?.max
     : null;
   const reviewRows = state.facets.map((facet) => {
-    const value = candidate.scores[facet.name] ?? 0;
-    const id = `facet-${slugify(facet.name)}`;
+    const value = candidate.scores[facet.id] ?? 0;
+    const id = `facet-${slugify(facet.id)}`;
     const percent = Math.round((clamp(value, 0, facet.max) / facet.max) * 100);
     return `
       <tr>
@@ -424,7 +519,7 @@ function renderModal(candidate) {
             <span>Weight ${escapeHtml(formatNumber(facet.weight))}</span>
           </div>
           <div class="score-meter" aria-hidden="true">
-            <span data-score-meter="${escapeAttr(facet.name)}" style="width: ${percent}%"></span>
+            <span data-score-meter="${escapeAttr(facet.id)}" style="width: ${percent}%"></span>
           </div>
         </th>
         <td>
@@ -432,7 +527,7 @@ function renderModal(candidate) {
             autocomplete="off" autocapitalize="off" spellcheck="false"
             data-bwignore="true" data-lpignore="true" data-1p-ignore
             value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${facet.name} score out of ${facet.max}`)}"
-            data-score-input="${escapeAttr(facet.name)}">
+            data-score-input="${escapeAttr(facet.id)}">
         </td>
       </tr>
     `;
@@ -474,14 +569,14 @@ function renderModal(candidate) {
   els.detailCard.querySelector(".modal-close").addEventListener("click", closeModal);
   els.detailCard.querySelectorAll("[data-score-input]").forEach((input) => {
     input.addEventListener("input", () => {
-      const facetName = input.dataset.scoreInput;
-      const facet = state.facets.find((item) => item.name === facetName);
+      const facetId = input.dataset.scoreInput;
+      const facet = state.facets.find((item) => item.id === facetId);
       if (!input.value.trim()) return;
-      candidate.scores[facetName] = clamp(toNumber(input.value, 0), 0, facet?.max ?? 10);
-      input.value = candidate.scores[facetName];
-      const meter = els.detailCard.querySelector(`[data-score-meter="${cssEscape(facetName)}"]`);
+      candidate.scores[facetId] = clamp(toNumber(input.value, 0), 0, facet?.max ?? 10);
+      input.value = candidate.scores[facetId];
+      const meter = els.detailCard.querySelector(`[data-score-meter="${cssEscape(facetId)}"]`);
       if (meter && facet) {
-        meter.style.width = `${Math.round((candidate.scores[facetName] / facet.max) * 100)}%`;
+        meter.style.width = `${Math.round((candidate.scores[facetId] / facet.max) * 100)}%`;
       }
       updateScoresForCandidate(candidate);
       syncConfigFromState();
@@ -527,7 +622,7 @@ function updateScoresForCandidate(candidate) {
 
 function overallScore(candidate) {
   const weighted = state.facets.reduce((total, facet) => {
-    const value = clamp(toNumber(candidate.scores[facet.name], 0), 0, facet.max);
+    const value = clamp(toNumber(candidate.scores[facet.id], 0), 0, facet.max);
     return total + (value / facet.max) * 100 * facet.weight;
   }, 0);
   const weight = state.facets.reduce((total, facet) => total + facet.weight, 0) || 1;
@@ -552,7 +647,47 @@ function formatRank(rank) {
 }
 
 function syncConfigFromState() {
-  state.configText = exportMarkdown();
+  state.configText = exportConfig();
+}
+
+function exportConfig() {
+  if (state.configFormat === "markdown") {
+    return exportMarkdown();
+  }
+  return exportYaml();
+}
+
+function exportYaml() {
+  const rubric = {};
+  state.facets.forEach((facet) => {
+    rubric[facet.id] = {
+      label: facet.name,
+      weight: facet.weight,
+      max: facet.max
+    };
+  });
+
+  const candidates = state.candidates.map((candidate) => ({
+    name: candidate.name,
+    image: candidate.image,
+    description: candidate.description,
+    tier: candidate.tier,
+    scores: state.facets.reduce((scores, facet) => {
+      scores[facet.id] = candidate.scores[facet.id] ?? 0;
+      return scores;
+    }, {})
+  }));
+
+  return window.jsyaml.dump({
+    title: state.title,
+    tiers: state.tiers,
+    rubric,
+    candidates
+  }, {
+    lineWidth: -1,
+    noRefs: true,
+    sortKeys: false
+  });
 }
 
 function exportMarkdown() {
@@ -570,7 +705,7 @@ function exportMarkdown() {
       candidate.image,
       candidate.description,
       candidate.tier,
-      ...scoreHeaders.map((facet) => formatNumber(candidate.scores[facet] ?? 0))
+      ...state.facets.map((facet) => formatNumber(candidate.scores[facet.id] ?? 0))
     ];
     return `| ${values.map(cell).join(" | ")} |`;
   }).join("\n");
@@ -621,6 +756,30 @@ function clamp(value, min, max) {
 
 function formatNumber(value) {
   return Number.isInteger(Number(value)) ? String(Number(value)) : String(Number(value).toFixed(2)).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function uniqueId(id, seen) {
+  const fallback = id || "facet";
+  let next = fallback;
+  let counter = 2;
+  while (seen.has(next)) {
+    next = `${fallback}-${counter}`;
+    counter += 1;
+  }
+  seen.add(next);
+  return next;
+}
+
+function humanizeId(value) {
+  return String(value || "Facet")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function configId(value) {
+  const text = String(value || "").trim();
+  if (/^[A-Za-z0-9_-]+$/.test(text)) return text;
+  return slugify(text);
 }
 
 function slugify(value) {

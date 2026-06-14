@@ -14,26 +14,30 @@ Open `http://127.0.0.1:4173/`.
 
 ## Config
 
-Edit `config.md` to change the title, tiers, review facets, and candidates.
+Edit `config.yml` to change the title, tiers, rubric, and candidates.
 
-```md
-#My Ranking Board
-
+```yaml
+title: "#My Ranking Board"
 tiers: [S, A, B, C, D, F]
 
-## Facets
+rubric:
+  ease:
+    label: Ease of use
+    weight: 1
+    max: 10
+  performance:
+    label: Performance
+    weight: 1
+    max: 10
 
-| Facet | Weight | Max |
-| --- | ---: | ---: |
-| Ease of use | 1.0 | 10 |
-| Performance | 1.0 | 10 |
-
-## Candidates
-
-| Name | Image | Description | Tier | Ease of use | Performance |
-| --- | --- | --- | --- | ---: | ---: |
-| Atlas | ./assets/candidates/atlas.svg | Polished all-rounder. | Unranked | 8 | 9 |
-| Beacon | ./assets/candidates/beacon.svg | Friendly and quick to learn. | Unranked | 9 | 7 |
+candidates:
+  - name: Atlas
+    image: ./assets/candidates/atlas.svg
+    description: Polished all-rounder.
+    tier: Unranked
+    scores:
+      ease: 8
+      performance: 9
 ```
 
 ## Docker
@@ -44,6 +48,8 @@ services:
     image: ghcr.io/ironicbadger/tier-ranking-app:latest
     ports:
       - "4173:80"
+    volumes:
+      - ./config.yml:/usr/share/nginx/html/config.yml:ro
 ```
 
 ```sh
