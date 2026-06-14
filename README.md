@@ -18,8 +18,16 @@ Edit `config.md` to change the title, tiers, review facets, and candidates.
 
 ## Docker
 
+```yaml
+services:
+  tier-ranking-app:
+    image: ghcr.io/ironicbadger/tier-ranking-app:latest
+    ports:
+      - "4173:80"
+```
+
 ```sh
-docker compose up --build
+docker compose up -d
 ```
 
 Image: `ghcr.io/ironicbadger/tier-ranking-app:latest`
