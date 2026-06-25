@@ -1,10 +1,15 @@
-title: "#S-Tier Ranking Board"
-tiers: [S, A, B, C, D, F]
-
+title: '#S-Tier Ranking Board'
+tiers:
+  - S
+  - A
+  - B
+  - C
+  - D
+  - F
 rubric:
   first_impression:
     label: First impression
-    weight: 1.0
+    weight: 1
     max: 10
   core_features:
     label: Core features
@@ -24,7 +29,7 @@ rubric:
     max: 10
   polish:
     label: Visual polish
-    weight: 1.0
+    weight: 1
     max: 10
   flexibility:
     label: Flexibility
@@ -36,29 +41,28 @@ rubric:
     max: 10
   workflow_fit:
     label: Workflow fit
-    weight: 1.0
+    weight: 1
     max: 10
   final_vibe:
     label: Final vibe
     weight: 0.9
     max: 10
-
 candidates:
   - name: Atlas
     image: ./assets/candidates/atlas.svg
     description: A polished all-rounder with strong defaults and broad appeal.
-    tier: Unranked
+    tier: B
     scores:
-      first_impression: 9
-      core_features: 9
-      ease: 8
-      performance: 8
-      reliability: 9
-      polish: 8
-      flexibility: 8
-      learning_curve: 7
-      workflow_fit: 9
-      final_vibe: 8
+      first_impression: 0
+      core_features: 0
+      ease: 0
+      performance: 0
+      reliability: 0
+      polish: 0
+      flexibility: 0
+      learning_curve: 0
+      workflow_fit: 0
+      final_vibe: 0
   - name: Beacon
     image: ./assets/candidates/beacon.svg
     description: A friendly pick that looks refined and gets new users moving quickly.
@@ -107,7 +111,7 @@ candidates:
   - name: Ember
     image: ./assets/candidates/ember.svg
     description: A stylish candidate with a memorable first impression and a few tradeoffs.
-    tier: Unranked
+    tier: D
     scores:
       first_impression: 9
       core_features: 8
@@ -137,18 +141,18 @@ candidates:
   - name: Grove
     image: ./assets/candidates/grove.svg
     description: A calm, reliable choice that feels balanced across most categories.
-    tier: Unranked
+    tier: B
     scores:
-      first_impression: 8
-      core_features: 8
-      ease: 8
-      performance: 7
-      reliability: 7
-      polish: 8
-      flexibility: 7
-      learning_curve: 7
-      workflow_fit: 8
-      final_vibe: 7
+      first_impression: 2
+      core_features: 2
+      ease: 2
+      performance: 2
+      reliability: 2
+      polish: 2
+      flexibility: 2
+      learning_curve: 2
+      workflow_fit: 2
+      final_vibe: 2
   - name: Halo
     image: ./assets/candidates/halo.svg
     description: A visually pleasant option that is easy to explain on camera.

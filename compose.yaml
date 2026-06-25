@@ -1,4 +1,8 @@
 services:
+  api:
+    build: ./api
+    volumes:
+      - ./config.yml:/app/config.yml
   tier-ranking-app:
     image: ghcr.io/ironicbadger/tier-ranking-app:latest
     build: .
@@ -6,3 +10,6 @@ services:
       - "4173:80"
     volumes:
       - ./config.yml:/usr/share/nginx/html/config.yml:ro
+    depends_on:
+      - api
+      

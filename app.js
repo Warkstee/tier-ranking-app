@@ -62,6 +62,7 @@ const els = {
 let drag = null;
 let toastTimer = 0;
 let modalTitleFrame = 0;
+let saveTimer = 0;
 
 boot();
 
@@ -769,6 +770,24 @@ function formatRank(rank) {
 
 function syncConfigFromState() {
   state.configText = exportConfig();
+  window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(persistConfig, 1000);
+}
+
+async function persistConfig() {
+  try {
+    const response = await fetch("/api/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-yaml" },
+      body: state.configText
+    });
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+  } catch (err) {
+    console.error("Failed to persist config:", err);
+    showToast("Could not save config.");
+  }
 }
 
 function exportConfig() {
