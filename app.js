@@ -56,7 +56,14 @@ const els = {
   closeConfig: document.querySelector("[data-close-config]"),
   applyConfigEdit: document.querySelector("[data-apply-config]"),
   downloadConfig: document.querySelector("[data-download-config]"),
-  saveConfig: document.querySelector("[data-save-config]")
+  saveConfig: document.querySelector("[data-save-config]"),
+  openAddCandidate: document.querySelector("[data-open-add-candidate]"),
+  addCandidateModal: document.querySelector("[data-add-candidate-modal]"),
+  addCandidateForm: document.querySelector("[data-add-candidate-form]"),
+  addNameInput: document.querySelector("[data-add-candidate-name]"),
+  addImageInput: document.querySelector("[data-add-candidate-image]"),
+  closeAddCandidate: document.querySelector("[data-close-add-candidate]"),
+  cancelAddCandidate: document.querySelector("[data-cancel-add-candidate]")
 };
 
 let drag = null;
@@ -82,9 +89,21 @@ function wireStaticControls() {
   els.configEditor.addEventListener("input", () => setConfigStatus(""));
   els.saveConfig.hidden = typeof window.showSaveFilePicker !== "function";
 
+  // Candidate modal handlers
+  els.openAddCandidate.addEventListener("click", openAddCandidateModal);
+  els.closeAddCandidate.addEventListener("click", closeAddCandidateModal);
+  els.cancelAddCandidate.addEventListener("click", closeAddCandidateModal);
+  els.addCandidateForm.addEventListener("submit", handleAddCandidateSubmit);
+
   els.modal.addEventListener("click", (event) => {
     if (event.target === els.modal) {
       closeModal();
+    }
+  });
+
+  els.addCandidateModal.addEventListener("click", (event) => {
+    if (event.target === els.addCandidateModal) {
+      closeAddCandidateModal();
     }
   });
 
@@ -92,6 +111,8 @@ function wireStaticControls() {
     if (event.key === "Escape") {
       if (!els.configModal.hidden) {
         closeConfigEditor();
+      } else if (!els.addCandidateModal.hidden) {
+        closeAddCandidateModal();
       } else if (!els.modal.hidden) {
         closeModal();
       }
@@ -133,6 +154,94 @@ async function loadConfig({ fallbackToDefault = false } = {}) {
   }
 
   throw new Error("Could not load config.yml.");
+}
+
+function openAddCandidateModal() {
+  closeModal();
+  closeConfigEditor();
+  els.addCandidateForm.reset();
+  els.addCandidateModal.hidden = false;
+  els.addNameInput.focus();
+}
+
+function closeAddCandidateModal() {
+  els.addCandidateModal.hidden = true;
+  els.addCandidateForm.reset();
+}
+
+async function handleAddCandidateSubmit(event) {
+  event.preventDefault();
+  
+  const name = els.addNameInput.value.trim();
+  if (!name) return;
+
+  const imageFile = els.addImageInput.files[0];
+  let imagePath = "";
+
+  if (imageFile) {
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      
+      const response = await fetch("/api/uploadimg", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        // Try to parse as JSON, fall back to text
+        let errorMessage = `Upload failed (${response.status})`;
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch {
+          // Response is not JSON (e.g., nginx HTML error page)
+          if (response.status === 413) {
+            errorMessage = "File too large (max 5MB)";
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      imagePath = result.path;
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+      showToast(`Could not upload image: ${err.message}`);
+      return;
+    }
+  }
+
+  // Generate unique ID
+  const baseId = slugify(name);
+  let candidateId = `${baseId}-${Date.now()}`;
+  
+  // Ensure uniqueness
+  while (state.candidates.some(c => c.id === candidateId)) {
+    candidateId = `${baseId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  // Build scores object with all facets set to 0
+  const scores = {};
+  state.facets.forEach((facet) => {
+    scores[facet.id] = 0;
+  });
+
+  // Create new candidate
+  const newCandidate = {
+    id: candidateId,
+    name,
+    image: imagePath || "",
+    description: "",
+    tier: "Unranked",
+    scores
+  };
+
+  state.candidates.push(newCandidate);
+  renderUnranked();
+  syncConfigFromState();
+  closeAddCandidateModal();
+  showToast(`Added "${name}" to Unranked.`);
 }
 
 async function resetFromDisk() {
@@ -610,6 +719,22 @@ function moveCandidate(candidateId, tier) {
   syncConfigFromState();
 }
 
+function deleteCandidate(candidateId) {
+  const candidate = getCandidate(candidateId);
+  if (!candidate) return;
+  
+  if (!window.confirm(`Delete "${candidate.name}"? This cannot be undone.`)) {
+    return;
+  }
+  
+  state.candidates = state.candidates.filter((c) => c.id !== candidateId);
+  renderTierBoard();
+  renderUnranked();
+  syncConfigFromState();
+  closeModal();
+  showToast(`Deleted "${candidate.name}".`);
+}
+
 function openModal(candidateId) {
   const candidate = getCandidate(candidateId);
   if (!candidate) return;
@@ -664,6 +789,12 @@ function renderModal(candidate) {
       <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
     </div>
     <div class="detail-body">
+      <button class="modal-delete" type="button" aria-label="Delete ${escapeAttr(candidate.name)}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
       <button class="modal-close" type="button" aria-label="Close">x</button>
       <div class="detail-meta">
         <div class="detail-kicker" data-modal-score>OVERALL ${overallScore(candidate)}</div>
@@ -688,6 +819,9 @@ function renderModal(candidate) {
   `;
 
   fitModalTitle();
+  els.detailCard.querySelector(".modal-delete").addEventListener("click", () => {
+    deleteCandidate(candidate.id);
+  });
   els.detailCard.querySelector(".modal-close").addEventListener("click", closeModal);
   els.detailCard.querySelectorAll("[data-score-input]").forEach((input) => {
     input.addEventListener("input", () => {

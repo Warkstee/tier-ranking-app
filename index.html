@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>S-Tier Ranking Board</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
@@ -18,6 +18,7 @@
         </div>
       </div>
       <nav class="menu" aria-label="Board controls">
+        <button type="button" data-open-add-candidate>Add Candidate</button>
         <button type="button" data-open-config>Config</button>
         <button type="button" data-reset-config>Reset</button>
       </nav>
@@ -65,6 +66,32 @@
             <button type="button" data-apply-config>Apply</button>
           </div>
         </footer>
+      </article>
+    </section>
+
+    <section class="add-candidate-modal" aria-label="Add new candidate" data-add-candidate-modal hidden>
+      <article class="add-candidate-panel">
+        <header class="add-candidate-header">
+          <h2>Add Candidate</h2>
+          <button class="add-candidate-close" type="button" aria-label="Close add candidate dialog" data-close-add-candidate>x</button>
+        </header>
+
+        <form class="add-candidate-form" data-add-candidate-form>
+          <div class="form-field">
+            <label for="add-candidate-name">Name</label>
+            <input type="text" id="add-candidate-name" name="name" required autocomplete="off" spellcheck="false" data-add-candidate-name>
+          </div>
+
+          <div class="form-field">
+            <label for="add-candidate-image">Image (optional)</label>
+            <input type="file" id="add-candidate-image" name="image" accept="image/jpeg,image/png,image/gif,image/webp" data-add-candidate-image>
+          </div>
+
+          <footer class="add-candidate-footer">
+            <button type="button" data-cancel-add-candidate>Cancel</button>
+            <button type="submit" data-submit-add-candidate>Add</button>
+          </footer>
+        </form>
       </article>
     </section>
   </main>

@@ -1,4 +1,36 @@
-test-results/
 .DS_Store
+# Node modules
+node_modules
+
+# local env files
+.env.local
+.env.*.local
+.env
+.env.*
+!.env.example
+
+# Build outputs
+/dist
+
+# Log files
 *.log
-node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and coverage files
+
+# Specific project asset files
+config.yml
+
+# Specific test output files
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

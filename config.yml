@@ -51,7 +51,7 @@ candidates:
   - name: Atlas
     image: ./assets/candidates/atlas.svg
     description: A polished all-rounder with strong defaults and broad appeal.
-    tier: B
+    tier: Unranked
     scores:
       first_impression: 0
       core_features: 0
@@ -63,21 +63,6 @@ candidates:
       learning_curve: 0
       workflow_fit: 0
       final_vibe: 0
-  - name: Beacon
-    image: ./assets/candidates/beacon.svg
-    description: A friendly pick that looks refined and gets new users moving quickly.
-    tier: Unranked
-    scores:
-      first_impression: 8
-      core_features: 7
-      ease: 9
-      performance: 7
-      reliability: 8
-      polish: 9
-      flexibility: 7
-      learning_curve: 8
-      workflow_fit: 8
-      final_vibe: 8
   - name: Comet
     image: ./assets/candidates/comet.svg
     description: A fast, focused option with confident day-to-day performance.
@@ -111,7 +96,7 @@ candidates:
   - name: Ember
     image: ./assets/candidates/ember.svg
     description: A stylish candidate with a memorable first impression and a few tradeoffs.
-    tier: D
+    tier: Unranked
     scores:
       first_impression: 9
       core_features: 8
@@ -141,7 +126,7 @@ candidates:
   - name: Grove
     image: ./assets/candidates/grove.svg
     description: A calm, reliable choice that feels balanced across most categories.
-    tier: B
+    tier: Unranked
     scores:
       first_impression: 2
       core_features: 2
@@ -171,7 +156,7 @@ candidates:
   - name: Ion
     image: ./assets/candidates/ion.svg
     description: A compact option that performs well once its workflow clicks.
-    tier: Unranked
+    tier: B
     scores:
       first_impression: 7
       core_features: 6
@@ -183,18 +168,18 @@ candidates:
       learning_curve: 6
       workflow_fit: 7
       final_vibe: 6
-  - name: Juniper
-    image: ./assets/candidates/juniper.svg
-    description: A budget-feeling pick that can still surprise in the right niche.
-    tier: Unranked
+  - name: test
+    image: ./assets/candidates/lyo-fice-spice-chicken.jpg
+    description: ''
+    tier: A
     scores:
-      first_impression: 5
-      core_features: 5
-      ease: 6
-      performance: 6
-      reliability: 5
-      polish: 6
-      flexibility: 6
-      learning_curve: 7
-      workflow_fit: 5
-      final_vibe: 6
+      first_impression: 0
+      core_features: 0
+      ease: 0
+      performance: 0
+      reliability: 0
+      polish: 0
+      flexibility: 0
+      learning_curve: 0
+      workflow_fit: 0
+      final_vibe: 0
