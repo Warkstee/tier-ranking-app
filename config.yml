@@ -66,12 +66,12 @@ candidates:
   - name: Comet
     image: ./assets/candidates/comet.svg
     description: A fast, focused option with confident day-to-day performance.
-    tier: Unranked
+    tier: S
     scores:
-      first_impression: 7
-      core_features: 8
-      ease: 8
-      performance: 9
+      first_impression: 5
+      core_features: 5
+      ease: 6
+      performance: 6
       reliability: 8
       polish: 7
       flexibility: 8
@@ -81,7 +81,7 @@ candidates:
   - name: Drift
     image: ./assets/candidates/drift.svg
     description: A flexible contender that rewards setup time and deeper customization.
-    tier: Unranked
+    tier: A
     scores:
       first_impression: 6
       core_features: 7
@@ -111,18 +111,18 @@ candidates:
   - name: Flux
     image: ./assets/candidates/flux.svg
     description: A power-user option with unusual flexibility but a steeper learning curve.
-    tier: Unranked
+    tier: C
     scores:
-      first_impression: 5
-      core_features: 6
-      ease: 6
-      performance: 7
-      reliability: 6
-      polish: 7
-      flexibility: 9
-      learning_curve: 5
-      workflow_fit: 6
-      final_vibe: 6
+      first_impression: 2
+      core_features: 2
+      ease: 8
+      performance: 2
+      reliability: 8
+      polish: 3
+      flexibility: 3
+      learning_curve: 9
+      workflow_fit: 4
+      final_vibe: 8
   - name: Grove
     image: ./assets/candidates/grove.svg
     description: A calm, reliable choice that feels balanced across most categories.
@@ -141,12 +141,12 @@ candidates:
   - name: Halo
     image: ./assets/candidates/halo.svg
     description: A visually pleasant option that is easy to explain on camera.
-    tier: Unranked
+    tier: A
     scores:
       first_impression: 6
       core_features: 6
       ease: 7
-      performance: 6
+      performance: 5
       reliability: 7
       polish: 8
       flexibility: 6
@@ -156,7 +156,7 @@ candidates:
   - name: Ion
     image: ./assets/candidates/ion.svg
     description: A compact option that performs well once its workflow clicks.
-    tier: B
+    tier: Unranked
     scores:
       first_impression: 7
       core_features: 6
@@ -171,15 +171,15 @@ candidates:
   - name: test
     image: ./assets/candidates/lyo-fice-spice-chicken.jpg
     description: ''
-    tier: A
+    tier: B
     scores:
-      first_impression: 0
-      core_features: 0
-      ease: 0
-      performance: 0
-      reliability: 0
-      polish: 0
-      flexibility: 0
-      learning_curve: 0
-      workflow_fit: 0
-      final_vibe: 0
+      first_impression: 6
+      core_features: 6
+      ease: 3
+      performance: 5
+      reliability: 6
+      polish: 8
+      flexibility: 6
+      learning_curve: 6
+      workflow_fit: 5
+      final_vibe: 5

@@ -765,8 +765,9 @@ function renderModal(candidate) {
             <label for="${escapeAttr(id)}">${escapeHtml(facet.name)}</label>
             <span>Weight ${escapeHtml(formatNumber(facet.weight))}</span>
           </div>
-          <div class="score-meter" aria-hidden="true">
-            <span data-score-meter="${escapeAttr(facet.id)}" style="width: ${percent}%"></span>
+          <div class="progress-track" data-progress-track="${escapeAttr(facet.id)}" aria-hidden="true">
+            <div class="progress-fill" style="width: ${percent}%"></div>
+            <div class="progress-thumb" style="left: ${percent}%"></div>
           </div>
         </th>
         <td>
@@ -830,12 +831,41 @@ function renderModal(candidate) {
       if (!input.value.trim()) return;
       candidate.scores[facetId] = clamp(toNumber(input.value, 0), 0, facet?.max ?? 10);
       input.value = candidate.scores[facetId];
-      const meter = els.detailCard.querySelector(`[data-score-meter="${cssEscape(facetId)}"]`);
-      if (meter && facet) {
-        meter.style.width = `${Math.round((candidate.scores[facetId] / facet.max) * 100)}%`;
+      const track = els.detailCard.querySelector(`[data-progress-track="${cssEscape(facetId)}"]`);
+      if (track && facet) {
+        const pct = Math.round((candidate.scores[facetId] / facet.max) * 100);
+        track.querySelector(".progress-fill").style.width = `${pct}%`;
+        track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
       updateScoresForCandidate(candidate);
       syncConfigFromState();
+    });
+  });
+  els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
+    track.addEventListener("click", (event) => {
+      setScoreFromPointer(track, event.clientX);
+    });
+  });
+  els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
+    track.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      track.setPointerCapture?.(event.pointerId);
+      track.classList.add("dragging");
+      setScoreFromPointer(track, event.clientX);
+
+      const onMove = (moveEvent) => {
+        setScoreFromPointer(track, moveEvent.clientX);
+      };
+      const onUp = () => {
+        track.classList.remove("dragging");
+        track.releasePointerCapture?.(event.pointerId);
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+      };
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
     });
   });
 }
@@ -859,6 +889,25 @@ function fitModalTitle() {
     fittedSize -= 1;
     title.style.fontSize = `${fittedSize}px`;
   }
+}
+
+function setScoreFromPointer(track, clientX) {
+  const facetId = track.dataset.progressTrack;
+  const facet = state.facets.find((item) => item.id === facetId);
+  if (!facet) return;
+  const candidate = getCandidate(state.selectedId);
+  if (!candidate) return;
+  const rect = track.getBoundingClientRect();
+  const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+  const value = clamp(Math.round(ratio * facet.max), 0, facet.max);
+  candidate.scores[facetId] = value;
+  const pct = Math.round((value / facet.max) * 100);
+  track.querySelector(".progress-fill").style.width = `${pct}%`;
+  track.querySelector(".progress-thumb").style.left = `${pct}%`;
+  const input = els.detailCard.querySelector(`[data-score-input="${cssEscape(facetId)}"]`);
+  if (input) input.value = value;
+  updateScoresForCandidate(candidate);
+  syncConfigFromState();
 }
 
 function updateScoresForCandidate(candidate) {

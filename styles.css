@@ -957,6 +957,77 @@ button {
   transition: width 140ms ease;
 }
 
+/* Interactive progress track for drag-to-rate in detail modal */
+.progress-track {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 8px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),
+    rgba(3, 5, 10, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.progress-track:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 12px rgba(0, 164, 220, 0.12);
+}
+
+.progress-track.dragging {
+  box-shadow:
+    inset 0 0 0 1px rgba(103, 215, 255, 0.35),
+    0 0 18px rgba(0, 164, 220, 0.22);
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, var(--brand-a), var(--brand-b) 62%, var(--accent));
+  box-shadow: 0 0 12px rgba(0, 164, 220, 0.18);
+  transition: width 100ms ease;
+  pointer-events: none;
+}
+
+.progress-track.dragging .progress-fill {
+  transition: none;
+}
+
+.progress-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--brand-a);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.progress-track:hover .progress-thumb,
+.progress-track.dragging .progress-thumb {
+  opacity: 1;
+}
+
+.progress-track.dragging .progress-thumb {
+  border-color: #67d7ff;
+  box-shadow: 0 0 10px rgba(103, 215, 255, 0.4);
+}
+
 .review-table tbody td {
   width: 112px;
   padding: 6px 14px 6px 8px;
