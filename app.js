@@ -1,32 +1,43 @@
-const DEFAULT_CONFIG = `title: "#S-Tier Ranking Board"
-tiers: [S, A, B, C, D, F]
-
-rubric:
-  ease:
-    label: Ease of use
-    weight: 1
-    max: 10
-  performance:
-    label: Performance
-    weight: 1
-    max: 10
-
-candidates:
-  - name: Atlas
-    image: ./assets/candidates/atlas.svg
-    description: Polished all-rounder.
-    tier: Unranked
-    scores:
-      ease: 8
-      performance: 9
-  - name: Beacon
-    image: ./assets/candidates/beacon.svg
-    description: Friendly and quick to learn.
-    tier: Unranked
-    scores:
-      ease: 9
-      performance: 7
-`;
+const DEFAULT_CONFIG = `{
+  "title": "#S-Tier Ranking Board",
+  "tiers": ["S", "A", "B", "C", "D", "F"],
+  "min": 0,
+  "max": 10,
+  "rubric": [
+    {
+      "id": "ease",
+      "name": "Ease of use",
+      "weight": 1
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "weight": 1
+    }
+  ],
+  "candidates": [
+    {
+      "name": "Atlas",
+      "image": "./assets/candidates/atlas.svg",
+      "description": "Polished all-rounder.",
+      "tier": "Unranked",
+      "scores": {
+        "ease": 8,
+        "performance": 9
+      }
+    },
+    {
+      "name": "Beacon",
+      "image": "./assets/candidates/beacon.svg",
+      "description": "Friendly and quick to learn.",
+      "tier": "Unranked",
+      "scores": {
+        "ease": 9,
+        "performance": 7
+      }
+    }
+  ]
+}`;
 
 const state = {
   title: "S-Tier Ranking Board",
@@ -35,7 +46,7 @@ const state = {
   candidates: [],
   selectedId: null,
   configText: DEFAULT_CONFIG,
-  configFormat: "yaml",
+  configFormat: "json",
   configSource: "bundled config"
 };
 
@@ -142,9 +153,7 @@ function wireStaticControls() {
 
 async function loadConfig({ fallbackToDefault = false } = {}) {
   const sources = [
-    { path: "./config.yml", format: "yaml" },
-    { path: "./config.yaml", format: "yaml" },
-    { path: "./config.md", format: "markdown" }
+    { path: "./tier-ranking.json", format: "json" }
   ];
 
   for (const source of sources) {
@@ -162,11 +171,11 @@ async function loadConfig({ fallbackToDefault = false } = {}) {
   }
 
   if (fallbackToDefault) {
-    showToast("Using bundled config because config.yml was not fetched.");
-    return { text: DEFAULT_CONFIG, format: "yaml", source: "bundled config" };
+    showToast("Using bundled config because tier-ranking.json was not fetched.");
+    return { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
   }
 
-  throw new Error("Could not load config.yml.");
+  throw new Error("Could not load tier-ranking.json.");
 }
 
 function openAddCandidateModal() {
@@ -267,9 +276,9 @@ async function resetFromDisk() {
     showToast(`Reset from ${config.source}.`);
   } catch {
     if (!els.configModal.hidden) {
-      setConfigStatus("Could not reload config.yml.", "error");
+      setConfigStatus("Could not reload tier-ranking.json.", "error");
     }
-    showToast("Could not refresh config.yml.");
+    showToast("Could not refresh tier-ranking.json.");
   } finally {
     els.resetConfig.disabled = false;
   }
@@ -292,8 +301,8 @@ function applyConfig(config) {
 function openConfigEditor() {
   closeModal();
   els.app.classList.add("config-open");
-  els.configSource.textContent = state.configSource || "config.yml";
-  els.configEditor.value = getEditableYaml();
+  els.configSource.textContent = state.configSource || "tier-ranking.json";
+  els.configEditor.value = getEditableJson();
   setConfigStatus("");
   els.configModal.hidden = false;
   els.configEditor.focus();
@@ -306,17 +315,17 @@ function closeConfigEditor() {
 
 function syncOpenConfigEditor() {
   if (els.configModal.hidden) return;
-  els.configSource.textContent = state.configSource || "config.yml";
-  els.configEditor.value = getEditableYaml();
+  els.configSource.textContent = state.configSource || "tier-ranking.json";
+  els.configEditor.value = getEditableJson();
 }
 
 function applyEditorConfig() {
   const text = els.configEditor.value;
   try {
-    parseConfig(text, "yaml");
-    applyConfig({ text, format: "yaml", source: "editor" });
+    parseConfig(text, "json");
+    applyConfig({ text, format: "json", source: "editor" });
     els.configSource.textContent = "editor";
-    setConfigStatus("Applied YAML config.", "ok");
+    setConfigStatus("Applied JSON config.", "ok");
     closeConfigEditor();
     showToast("Applied config.");
   } catch (error) {
@@ -326,16 +335,16 @@ function applyEditorConfig() {
 
 function downloadEditorConfig() {
   const text = currentEditorText();
-  const url = URL.createObjectURL(new Blob([text], { type: "application/x-yaml;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
-  link.download = "config.yml";
+  link.download = "tier-ranking.json";
   link.style.display = "none";
   document.body.append(link);
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  setConfigStatus("Downloaded config.yml.", "ok");
+  setConfigStatus("Downloaded tier-ranking.json.", "ok");
 }
 
 async function saveEditorConfig() {
@@ -346,31 +355,31 @@ async function saveEditorConfig() {
 
   try {
     const handle = await window.showSaveFilePicker({
-      suggestedName: "config.yml",
+      suggestedName: "tier-ranking.json",
       types: [{
-        description: "YAML config",
-        accept: { "application/x-yaml": [".yml", ".yaml"] }
+        description: "JSON config",
+        accept: { "application/json": [".json"] }
       }]
     });
     const writable = await handle.createWritable();
     await writable.write(currentEditorText());
     await writable.close();
-    setConfigStatus("Saved config.yml.", "ok");
+    setConfigStatus("Saved tier-ranking.json.", "ok");
   } catch (error) {
     if (error.name !== "AbortError") {
-      setConfigStatus(`Could not save config.yml: ${error.message}`, "error");
+      setConfigStatus(`Could not save tier-ranking.json: ${error.message}`, "error");
     }
   }
 }
 
 function currentEditorText() {
   if (!els.configModal.hidden) return els.configEditor.value;
-  return getEditableYaml();
+  return getEditableJson();
 }
 
-function getEditableYaml() {
-  if (state.configFormat === "yaml") return state.configText;
-  return exportYaml();
+function getEditableJson() {
+  if (state.configFormat === "json") return state.configText;
+  return exportJson();
 }
 
 function setConfigStatus(message, tone = "") {
@@ -379,25 +388,27 @@ function setConfigStatus(message, tone = "") {
 }
 
 function formatConfigError(error) {
-  if (error.mark) {
-    return `YAML error on line ${error.mark.line + 1}, column ${error.mark.column + 1}: ${error.reason || error.message}`;
+  if (error instanceof SyntaxError) {
+    return `JSON parse error: ${error.message}`;
   }
   return error.message || "Config could not be applied.";
 }
 
 function parseConfig(text, format) {
-  if (format === "yaml") {
-    return parseYamlConfig(text);
+  if (format === "json") {
+    return parseJsonConfig(text);
   }
   return parseMarkdownConfig(text);
 }
 
-function parseYamlConfig(text) {
-  if (!window.jsyaml?.load) {
-    throw new Error("YAML parser did not load.");
+function parseJsonConfig(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`Invalid JSON: ${error.message}`);
   }
 
-  const data = window.jsyaml.load(text) || {};
   const title = String(data.title || "S-Tier Ranking Board");
   const tiers = Array.isArray(data.tiers) && data.tiers.length
     ? data.tiers.map((tier) => String(tier))
@@ -406,7 +417,7 @@ function parseYamlConfig(text) {
   let facets = normalizeRubric(data.rubric);
 
   if (!rawCandidates.length) {
-    throw new Error("config.yml needs a candidates list.");
+    throw new Error("tier-ranking.json needs a candidates list.");
   }
 
   if (!facets.length) {
@@ -422,7 +433,7 @@ function parseYamlConfig(text) {
       scores[facet.id] = clamp(toNumber(rawScores[facet.id] ?? rawScores[facet.name], 0), 0, facet.max);
     });
     return {
-      id: `${slugify(name)}-${index + 1}`,
+      id: candidate.id || `${slugify(name)}-${index + 1}`,
       name,
       image: String(candidate.image || "./assets/candidates/atlas.svg"),
       description: String(candidate.description || ""),
@@ -1091,7 +1102,7 @@ async function persistConfig() {
   try {
     const response = await fetch("/api/config", {
       method: "POST",
-      headers: { "Content-Type": "application/x-yaml" },
+      headers: { "Content-Type": "application/json" },
       body: state.configText
     });
     if (!response.ok) {
@@ -1107,18 +1118,15 @@ function exportConfig() {
   if (state.configFormat === "markdown") {
     return exportMarkdown();
   }
-  return exportYaml();
+  return exportJson();
 }
 
-function exportYaml() {
-  const rubric = {};
-  state.facets.forEach((facet) => {
-    rubric[facet.id] = {
-      label: facet.name,
-      weight: facet.weight,
-      max: facet.max
-    };
-  });
+function exportJson() {
+  const rubric = state.facets.map((facet) => ({
+    id: facet.id,
+    name: facet.name,
+    weight: facet.weight
+  }));
 
   const candidates = state.candidates.map((candidate) => ({
     name: candidate.name,
@@ -1131,16 +1139,14 @@ function exportYaml() {
     }, {})
   }));
 
-  return window.jsyaml.dump({
+  return JSON.stringify({
     title: state.title,
     tiers: state.tiers,
+    min: 0,
+    max: state.facets[0]?.max || 10,
     rubric,
     candidates
-  }, {
-    lineWidth: -1,
-    noRefs: true,
-    sortKeys: false
-  });
+  }, null, 2);
 }
 
 function exportMarkdown() {

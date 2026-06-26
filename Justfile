@@ -11,7 +11,7 @@ run: build
     docker run --rm -p {{port}}:80 {{image}}
 
 run-config: build
-    docker run --rm -p {{port}}:80 -v "$PWD/config.yml:/usr/share/nginx/html/config.yml:ro" {{image}}
+    docker run --rm -p {{port}}:80 -v "$PWD/tier-ranking.json:/usr/share/nginx/html/tier-ranking.json:ro" {{image}}
 
 compose:
     docker compose up -d

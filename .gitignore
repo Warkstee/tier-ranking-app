@@ -12,6 +12,9 @@ node_modules
 # Build outputs
 /dist
 
+# Asset folder
+/assets
+
 # Log files
 *.log
 npm-debug.log*
@@ -23,6 +26,7 @@ pnpm-debug.log*
 
 # Specific project asset files
 config.yml
+tier-ranking.json
 
 # Specific test output files
 

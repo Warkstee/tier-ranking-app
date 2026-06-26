@@ -46,12 +46,12 @@
       </div>
     </section>
 
-    <section class="config-modal" aria-label="YAML config editor" data-config-modal hidden>
+    <section class="config-modal" aria-label="JSON config editor" data-config-modal hidden>
       <article class="config-panel">
         <header class="config-header">
           <div>
             <h2>Config</h2>
-            <span data-config-source>config.yml</span>
+            <span data-config-source>tier-ranking.json</span>
           </div>
           <button class="config-close" type="button" aria-label="Close config editor" data-close-config>x</button>
         </header>
@@ -61,8 +61,8 @@
         <footer class="config-footer">
           <p data-config-status role="status" aria-live="polite"></p>
           <div class="config-actions">
-            <button type="button" data-download-config>Download config.yml</button>
-            <button type="button" data-save-config hidden>Save as config.yml</button>
+            <button type="button" data-download-config>Download tier-ranking.json</button>
+            <button type="button" data-save-config hidden>Save as tier-ranking.json</button>
             <button type="button" data-apply-config>Apply</button>
           </div>
         </footer>
@@ -97,7 +97,6 @@
     </section>
   </main>
 
-  <script src="./vendor/js-yaml.min.js"></script>
   <script src="./app.js" type="module"></script>
 </body>
 </html>

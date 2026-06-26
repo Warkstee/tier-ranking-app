@@ -3,8 +3,8 @@
  *
  * A minimal Node.js HTTP server.
  * 
- * Exposes POST /api/config endpoint for persisting the tier ranking board's YAML configuration to
- * disk. Writes are performed directly to the mounted config.yml file, which is shared with the nginx
+ * Exposes POST /api/config endpoint for persisting the tier ranking board's JSON configuration to
+ * disk. Writes are performed directly to the mounted tier-ranking.json file, which is shared with the nginx
  * container via a Docker bind mount.
  *
  * Exposes POST /api/uploadimg for uploading candidate images to /app/assets/candidates/.
@@ -17,7 +17,7 @@ import { join, basename } from "path";
 import Busboy from "busboy";
 
 const PORT = 3001;
-const CONFIG_PATH = "/app/config.yml";
+const CONFIG_PATH = "/app/tier-ranking.json";
 const UPLOAD_DIR = "/app/assets/candidates";
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
