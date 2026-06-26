@@ -1,0 +1,342 @@
+/**
+ * Application Entry Point
+ * 
+ * Main application module that bootstraps the tier ranking app, wires up
+ * event listeners, and coordinates between the config editor, candidate
+ * management, and rendering modules.
+ */
+
+import { state, els } from "./state.js";
+import { loadConfig, parseConfig, syncConfigFromState, getEditableJson, setConfigStatus, formatConfigError, currentEditorText } from "./config.js";
+import { render, renderTierBoard, renderUnranked } from "./render.js";
+import { openModal, closeModal } from "./modal.js";
+import { showToast, slugify } from "./utils.js";
+
+let modalTitleFrame = 0;
+
+boot();
+
+/**
+ * Bootstraps the application by wiring up controls and loading the initial config.
+ * @returns {Promise<void>}
+ */
+async function boot() {
+  wireStaticControls();
+  const config = await loadConfig({ fallbackToDefault: true });
+  applyConfig(config);
+}
+
+/**
+ * Wires up all static event listeners for the application controls,
+ * including config editor, add candidate modal, keyboard shortcuts, and window resize.
+ */
+function wireStaticControls() {
+  els.openConfig.addEventListener("click", openConfigEditor);
+  els.resetConfig.addEventListener("click", resetFromDisk);
+  els.closeConfig.addEventListener("click", closeConfigEditor);
+  els.applyConfigEdit.addEventListener("click", applyEditorConfig);
+  els.downloadConfig.addEventListener("click", downloadEditorConfig);
+  els.saveConfig.addEventListener("click", saveEditorConfig);
+  els.configEditor.addEventListener("input", () => setConfigStatus(""));
+  els.saveConfig.hidden = typeof window.showSaveFilePicker !== "function";
+  els.addNameInput.addEventListener("input", () => {
+    const remaining = 23 - els.addNameInput.value.length;
+    const counter = document.querySelector("[data-add-char-counter]");
+    if (counter) {
+      counter.textContent = `${remaining} character${remaining !== 1 ? "s" : ""} remaining`;
+      counter.dataset.tone = remaining <= 5 ? "warning" : "";
+    }
+  });
+
+  // Candidate modal handlers
+  els.openAddCandidate.addEventListener("click", openAddCandidateModal);
+  els.closeAddCandidate.addEventListener("click", closeAddCandidateModal);
+  els.cancelAddCandidate.addEventListener("click", closeAddCandidateModal);
+  els.addCandidateForm.addEventListener("submit", handleAddCandidateSubmit);
+
+  els.modal.addEventListener("click", (event) => {
+    if (event.target === els.modal) {
+      closeModal();
+    }
+  });
+
+  els.addCandidateModal.addEventListener("click", (event) => {
+    if (event.target === els.addCandidateModal) {
+      closeAddCandidateModal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      if (!els.configModal.hidden) {
+        closeConfigEditor();
+      } else if (!els.addCandidateModal.hidden) {
+        closeAddCandidateModal();
+      } else if (!els.modal.hidden) {
+        closeModal();
+      }
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (!els.modal.hidden) {
+      window.cancelAnimationFrame(modalTitleFrame);
+      modalTitleFrame = window.requestAnimationFrame(fitModalTitle);
+    }
+  });
+}
+
+/**
+ * Opens the config editor modal and populates it with the current JSON config.
+ */
+function openConfigEditor() {
+  closeModal();
+  els.app.classList.add("config-open");
+  els.configSource.textContent = state.configSource || "tier-ranking.json";
+  els.configEditor.value = getEditableJson();
+  setConfigStatus("");
+  els.configModal.hidden = false;
+  els.configEditor.focus();
+}
+
+/**
+ * Closes the config editor modal.
+ */
+function closeConfigEditor() {
+  els.app.classList.remove("config-open");
+  els.configModal.hidden = true;
+}
+
+/**
+ * Syncs the config editor textarea with the current state if the modal is open.
+ */
+function syncOpenConfigEditor() {
+  if (els.configModal.hidden) return;
+  els.configSource.textContent = state.configSource || "tier-ranking.json";
+  els.configEditor.value = getEditableJson();
+}
+
+/**
+ * Applies the JSON config from the editor textarea to the application state.
+ */
+function applyEditorConfig() {
+  const text = els.configEditor.value;
+  try {
+    parseConfig(text, "json");
+    applyConfig({ text, format: "json", source: "editor" });
+    els.configSource.textContent = "editor";
+    setConfigStatus("Applied JSON config.", "ok");
+    closeConfigEditor();
+    showToast("Applied config.");
+  } catch (error) {
+    setConfigStatus(formatConfigError(error), "error");
+  }
+}
+
+/**
+ * Downloads the current config as a JSON file to the user's device.
+ */
+function downloadEditorConfig() {
+  const text = currentEditorText();
+  const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "tier-ranking.json";
+  link.style.display = "none";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  setConfigStatus("Downloaded tier-ranking.json.", "ok");
+}
+
+/**
+ * Saves the current config using the File System Access API if available,
+ * otherwise falls back to downloading the file.
+ * @returns {Promise<void>}
+ */
+async function saveEditorConfig() {
+  if (typeof window.showSaveFilePicker !== "function") {
+    downloadEditorConfig();
+    return;
+  }
+
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: "tier-ranking.json",
+      types: [{
+        description: "JSON config",
+        accept: { "application/json": [".json"] }
+      }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(currentEditorText());
+    await writable.close();
+    setConfigStatus("Saved tier-ranking.json.", "ok");
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      setConfigStatus(`Could not save tier-ranking.json: ${error.message}`, "error");
+    }
+  }
+}
+
+/**
+ * Reloads the config from disk and applies it to the application state.
+ * @returns {Promise<void>}
+ */
+async function resetFromDisk() {
+  els.resetConfig.disabled = true;
+  try {
+    const config = await loadConfig();
+    applyConfig(config);
+    syncOpenConfigEditor();
+    setConfigStatus(`Reloaded ${config.source}.`, "ok");
+    showToast(`Reset from ${config.source}.`);
+  } catch {
+    if (!els.configModal.hidden) {
+      setConfigStatus("Could not reload tier-ranking.json.", "error");
+    }
+    showToast("Could not refresh tier-ranking.json.");
+  } finally {
+    els.resetConfig.disabled = false;
+  }
+}
+
+/**
+ * Applies a parsed config object to the application state and re-renders the UI.
+ * @param {Object} config - The config object containing text, format, and source
+ */
+function applyConfig(config) {
+  const parsed = parseConfig(config.text, config.format);
+  state.title = parsed.title;
+  state.tiers = parsed.tiers;
+  state.facets = parsed.facets;
+  state.candidates = parsed.candidates;
+  state.configText = config.text;
+  state.configFormat = config.format;
+  state.configSource = config.source;
+  state.selectedId = null;
+  closeModal();
+  render();
+}
+
+/**
+ * Opens the add candidate modal and resets the form.
+ */
+function openAddCandidateModal() {
+  closeModal();
+  closeConfigEditor();
+  els.addCandidateForm.reset();
+  els.addCandidateModal.hidden = false;
+  els.addNameInput.focus();
+}
+
+/**
+ * Closes the add candidate modal and resets the form.
+ */
+function closeAddCandidateModal() {
+  els.addCandidateModal.hidden = true;
+  els.addCandidateForm.reset();
+}
+
+/**
+ * Handles the add candidate form submission, uploads the image if provided,
+ * creates a new candidate with the entered data, and adds it to the unranked list.
+ * @param {Event} event - The form submit event
+ * @returns {Promise<void>}
+ */
+async function handleAddCandidateSubmit(event) {
+  event.preventDefault();
+  
+  const name = els.addNameInput.value.trim();
+  if (!name) return;
+
+  const imageFile = els.addImageInput.files[0];
+  let imagePath = "";
+
+  if (imageFile) {
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      
+      const response = await fetch("/api/uploadimg", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Upload failed (${response.status})`;
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch {
+          if (response.status === 413) {
+            errorMessage = "File too large (max 5MB)";
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      imagePath = result.path;
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+      showToast(`Could not upload image: ${err.message}`);
+      return;
+    }
+  }
+
+  const baseId = slugify(name);
+  let candidateId = `${baseId}-${Date.now()}`;
+  
+  while (state.candidates.some(c => c.id === candidateId)) {
+    candidateId = `${baseId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  const scores = {};
+  state.facets.forEach((facet) => {
+    scores[facet.id] = 0;
+  });
+
+  const newCandidate = {
+    id: candidateId,
+    name,
+    image: imagePath || "",
+    description: "",
+    tier: "Unranked",
+    scores
+  };
+
+  state.candidates.push(newCandidate);
+  renderUnranked();
+  syncConfigFromState();
+  closeAddCandidateModal();
+  showToast(`Added "${name}" to Unranked.`);
+}
+
+/**
+ * Adjusts the modal title font size to fit within the available width.
+ * Uses a binary search approach to find the optimal font size.
+ */
+function fitModalTitle() {
+  const title = els.detailCard.querySelector("[data-modal-title]");
+  if (!title) return;
+
+  title.style.fontSize = "";
+  const baseSize = parseFloat(window.getComputedStyle(title).fontSize) || 64;
+  const minSize = 24;
+  title.style.fontSize = `${baseSize}px`;
+
+  const availableWidth = title.clientWidth;
+  if (!availableWidth || title.scrollWidth <= availableWidth) return;
+
+  let fittedSize = Math.max(minSize, Math.floor(baseSize * (availableWidth / title.scrollWidth)));
+  title.style.fontSize = `${fittedSize}px`;
+
+  while (title.scrollWidth > availableWidth && fittedSize > minSize) {
+    fittedSize -= 1;
+    title.style.fontSize = `${fittedSize}px`;
+  }
+}
+
+

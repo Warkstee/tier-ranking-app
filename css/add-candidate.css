@@ -1,0 +1,104 @@
+/* Add candidate modal styles */
+
+.add-candidate-modal {
+  position: absolute;
+  z-index: 45;
+  inset: 92px 22px 22px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 58% 20%, rgba(0, 164, 220, 0.16), transparent 36%),
+    rgba(5, 6, 10, 0.72);
+  backdrop-filter: blur(16px);
+}
+
+.add-candidate-modal[hidden] {
+  display: none;
+}
+
+.add-candidate-panel {
+  width: min(520px, 100%);
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
+    rgba(14, 16, 24, 0.96);
+  box-shadow: 0 34px 95px rgba(0, 0, 0, 0.56);
+}
+
+.add-candidate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.add-candidate-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.add-candidate-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #f7f8fc;
+  background: #1d1f2a;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add-candidate-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.add-candidate-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.add-candidate-footer button {
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  border-radius: 11px;
+  color: #e8ebf4;
+  background: #1d1f2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.add-candidate-footer button[type="submit"] {
+  color: #111217;
+  background: #ffd76a;
+  border-color: rgba(255, 255, 255, 0.28);
+}
