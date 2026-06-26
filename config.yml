@@ -66,7 +66,7 @@ candidates:
   - name: Comet
     image: ./assets/candidates/comet.svg
     description: A fast, focused option with confident day-to-day performance.
-    tier: S
+    tier: Unranked
     scores:
       first_impression: 5
       core_features: 5
@@ -81,33 +81,33 @@ candidates:
   - name: Drift
     image: ./assets/candidates/drift.svg
     description: A flexible contender that rewards setup time and deeper customization.
-    tier: A
+    tier: Unranked
     scores:
-      first_impression: 6
-      core_features: 7
-      ease: 7
-      performance: 8
-      reliability: 7
-      polish: 6
+      first_impression: 3
+      core_features: 4
+      ease: 5
+      performance: 5
+      reliability: 5
+      polish: 5
       flexibility: 8
       learning_curve: 6
       workflow_fit: 7
       final_vibe: 6
   - name: Ember
-    image: ./assets/candidates/ember.svg
+    image: ./assets/candidates/tailfin-setup-01.png
     description: A stylish candidate with a memorable first impression and a few tradeoffs.
-    tier: Unranked
+    tier: B
     scores:
-      first_impression: 9
-      core_features: 8
-      ease: 7
+      first_impression: 3
+      core_features: 5
+      ease: 6
       performance: 7
       reliability: 7
-      polish: 9
-      flexibility: 6
-      learning_curve: 8
+      polish: 5
+      flexibility: 8
+      learning_curve: 5
       workflow_fit: 7
-      final_vibe: 9
+      final_vibe: 6
   - name: Flux
     image: ./assets/candidates/flux.svg
     description: A power-user option with unusual flexibility but a steeper learning curve.
@@ -141,7 +141,7 @@ candidates:
   - name: Halo
     image: ./assets/candidates/halo.svg
     description: A visually pleasant option that is easy to explain on camera.
-    tier: A
+    tier: Unranked
     scores:
       first_impression: 6
       core_features: 6
@@ -168,18 +168,33 @@ candidates:
       learning_curve: 6
       workflow_fit: 7
       final_vibe: 6
-  - name: test
+  - name: Test 03
     image: ./assets/candidates/lyo-fice-spice-chicken.jpg
-    description: ''
-    tier: B
+    description: Freeze-dried meal
+    tier: A
     scores:
-      first_impression: 6
-      core_features: 6
-      ease: 3
+      first_impression: 4
+      core_features: 7
+      ease: 5
       performance: 5
-      reliability: 6
-      polish: 8
-      flexibility: 6
-      learning_curve: 6
-      workflow_fit: 5
-      final_vibe: 5
+      reliability: 3
+      polish: 6
+      flexibility: 9
+      learning_curve: 8
+      workflow_fit: 8
+      final_vibe: 6
+  - name: test 3
+    image: ./assets/candidates/lyo-fice-spice-chicken.jpg
+    description: Description
+    tier: A
+    scores:
+      first_impression: 5
+      core_features: 7
+      ease: 4
+      performance: 7
+      reliability: 5
+      polish: 3
+      flexibility: 2
+      learning_curve: 5
+      workflow_fit: 7
+      final_vibe: 8

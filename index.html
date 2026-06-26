@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>S-Tier Ranking Board</title>
-  <link rel="stylesheet" href="./styles.css?v=5">
+  <link rel="stylesheet" href="./styles.css?v=6">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
@@ -79,7 +79,8 @@
         <form class="add-candidate-form" data-add-candidate-form>
           <div class="form-field">
             <label for="add-candidate-name">Name</label>
-            <input type="text" id="add-candidate-name" name="name" required autocomplete="off" spellcheck="false" data-add-candidate-name>
+            <input type="text" id="add-candidate-name" name="name" required maxlength="23" autocomplete="off" spellcheck="false" data-add-candidate-name>
+            <span class="char-counter" data-add-char-counter>23 characters remaining</span>
           </div>
 
           <div class="form-field">

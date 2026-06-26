@@ -773,6 +773,165 @@ button {
   height: 22px;
 }
 
+.modal-edit {
+  position: absolute;
+  top: 18px;
+  right: 158px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f7f8fb;
+  background: rgba(4, 6, 12, 0.88);
+  border: 5px solid rgba(255, 215, 106, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 20px 38px rgba(0, 0, 0, 0.44);
+  cursor: pointer;
+}
+
+.modal-edit:hover {
+  background: rgba(255, 215, 106, 0.25);
+  border-color: rgba(255, 215, 106, 0.95);
+}
+
+.modal-edit svg {
+  width: 22px;
+  height: 22px;
+}
+
+.edit-image-upload {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.75));
+  z-index: 2;
+}
+
+.edit-image-upload .form-field {
+  gap: 6px;
+}
+
+.edit-image-upload .form-field label {
+  color: #e8ebf4;
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.edit-image-upload .form-field input[type="file"] {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #eef2fb;
+  background: rgba(8, 10, 16, 0.9);
+  font-size: 13px;
+}
+
+.edit-image-upload .form-field input[type="file"]::file-selector-button {
+  height: 30px;
+  padding: 0 12px;
+  margin-right: 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e8ebf4;
+  background: #1d1f2a;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.edit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 620px;
+}
+
+.edit-fields .form-field input[type="text"] {
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #eef2fb;
+  background: #080a10;
+  font-size: 18px;
+  font-weight: 750;
+  outline: none;
+}
+
+.edit-fields .form-field input[type="text"]:focus {
+  border-color: rgba(103, 215, 255, 0.68);
+  box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
+}
+
+.edit-fields .form-field textarea {
+  min-height: 100px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #eef2fb;
+  background: #080a10;
+  font-size: 15px;
+  line-height: 1.4;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+.edit-fields .form-field textarea:focus {
+  border-color: rgba(103, 215, 255, 0.68);
+  box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
+}
+
+.modal-save {
+  position: absolute;
+  top: 18px;
+  right: 96px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  border-radius: 11px;
+  color: #111217;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  background: #ffd76a;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  cursor: pointer;
+}
+
+.modal-save:hover {
+  background: #ffe08a;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.modal-cancel {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  border-radius: 11px;
+  color: #e8ebf4;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  background: #1d1f2a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.modal-cancel:hover {
+  background: #252733;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .detail-meta {
   max-width: calc(100% - 78px);
   display: flex;
@@ -1286,4 +1445,17 @@ button {
   color: #111217;
   background: #ffd76a;
   border-color: rgba(255, 255, 255, 0.28);
+}
+
+.char-counter {
+  display: block;
+  margin-top: 4px;
+  color: #7f899b;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.char-counter[data-tone="warning"] {
+  color: #ff8aa3;
 }

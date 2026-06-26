@@ -70,6 +70,7 @@ let drag = null;
 let toastTimer = 0;
 let modalTitleFrame = 0;
 let saveTimer = 0;
+let editMode = false;
 
 boot();
 
@@ -88,6 +89,14 @@ function wireStaticControls() {
   els.saveConfig.addEventListener("click", saveEditorConfig);
   els.configEditor.addEventListener("input", () => setConfigStatus(""));
   els.saveConfig.hidden = typeof window.showSaveFilePicker !== "function";
+  els.addNameInput.addEventListener("input", () => {
+    const remaining = 23 - els.addNameInput.value.length;
+    const counter = document.querySelector("[data-add-char-counter]");
+    if (counter) {
+      counter.textContent = `${remaining} character${remaining !== 1 ? "s" : ""} remaining`;
+      counter.dataset.tone = remaining <= 5 ? "warning" : "";
+    }
+  });
 
   // Candidate modal handlers
   els.openAddCandidate.addEventListener("click", openAddCandidateModal);
@@ -113,6 +122,10 @@ function wireStaticControls() {
         closeConfigEditor();
       } else if (!els.addCandidateModal.hidden) {
         closeAddCandidateModal();
+      } else if (editMode) {
+        editMode = false;
+        const candidate = getCandidate(state.selectedId);
+        if (candidate) renderModal(candidate);
       } else if (!els.modal.hidden) {
         closeModal();
       }
@@ -751,6 +764,11 @@ function closeModal() {
 }
 
 function renderModal(candidate) {
+  if (editMode) {
+    renderEditModal(candidate);
+    return;
+  }
+
   const commonMax = state.facets.every((facet) => facet.max === state.facets[0]?.max)
     ? state.facets[0]?.max
     : null;
@@ -790,6 +808,11 @@ function renderModal(candidate) {
       <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
     </div>
     <div class="detail-body">
+      <button class="modal-edit" type="button" aria-label="Edit ${escapeAttr(candidate.name)}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+        </svg>
+      </button>
       <button class="modal-delete" type="button" aria-label="Delete ${escapeAttr(candidate.name)}">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6"></polyline>
@@ -820,6 +843,10 @@ function renderModal(candidate) {
   `;
 
   fitModalTitle();
+  els.detailCard.querySelector(".modal-edit").addEventListener("click", () => {
+    editMode = true;
+    renderModal(candidate);
+  });
   els.detailCard.querySelector(".modal-delete").addEventListener("click", () => {
     deleteCandidate(candidate.id);
   });
@@ -868,6 +895,109 @@ function renderModal(candidate) {
       document.addEventListener("pointerup", onUp);
     });
   });
+}
+
+function renderEditModal(candidate) {
+  els.detailCard.innerHTML = `
+    <div class="detail-media">
+      <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
+      <div class="edit-image-upload">
+        <div class="form-field">
+          <label for="edit-candidate-image">Change image (optional)</label>
+          <input type="file" id="edit-candidate-image" accept="image/jpeg,image/png,image/gif,image/webp" data-edit-image-input>
+        </div>
+      </div>
+    </div>
+    <div class="detail-body">
+      <button class="modal-save" type="button">Save</button>
+      <button class="modal-cancel" type="button">Cancel</button>
+      <div class="edit-fields">
+        <div class="form-field">
+          <label for="edit-candidate-name">Name</label>
+          <input type="text" id="edit-candidate-name" value="${escapeAttr(candidate.name)}" required maxlength="23" autocomplete="off" spellcheck="false" data-edit-name-input>
+          <span class="char-counter" data-edit-char-counter>${23 - candidate.name.length} characters remaining</span>
+        </div>
+        <div class="form-field">
+          <label for="edit-candidate-description">Description</label>
+          <textarea id="edit-candidate-description" rows="4" data-edit-description-input>${escapeHtml(candidate.description)}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const nameInput = els.detailCard.querySelector("[data-edit-name-input]");
+  const charCounter = els.detailCard.querySelector("[data-edit-char-counter]");
+  nameInput.addEventListener("input", () => {
+    const remaining = 23 - nameInput.value.length;
+    charCounter.textContent = `${remaining} character${remaining !== 1 ? "s" : ""} remaining`;
+    charCounter.dataset.tone = remaining <= 5 ? "warning" : "";
+  });
+  nameInput.focus();
+  nameInput.select();
+
+  els.detailCard.querySelector(".modal-save").addEventListener("click", () => {
+    handleEditSave(candidate);
+  });
+  els.detailCard.querySelector(".modal-cancel").addEventListener("click", () => {
+    editMode = false;
+    renderModal(candidate);
+  });
+}
+
+async function handleEditSave(candidate) {
+  const nameInput = els.detailCard.querySelector("[data-edit-name-input]");
+  const descriptionInput = els.detailCard.querySelector("[data-edit-description-input]");
+  const imageInput = els.detailCard.querySelector("[data-edit-image-input]");
+
+  const name = nameInput.value.trim();
+  if (!name) {
+    showToast("Name is required.");
+    nameInput.focus();
+    return;
+  }
+
+  const imageFile = imageInput.files[0];
+  if (imageFile) {
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      
+      const response = await fetch("/api/uploadimg", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Upload failed (${response.status})`;
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch {
+          if (response.status === 413) {
+            errorMessage = "File too large (max 5MB)";
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      candidate.image = result.path;
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+      showToast(`Could not upload image: ${err.message}`);
+      return;
+    }
+  }
+
+  candidate.name = name;
+  candidate.description = descriptionInput.value.trim();
+
+  editMode = false;
+  renderTierBoard();
+  renderUnranked();
+  syncConfigFromState();
+  renderModal(candidate);
+  showToast(`Updated "${name}".`);
 }
 
 function fitModalTitle() {
