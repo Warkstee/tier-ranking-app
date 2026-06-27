@@ -7,7 +7,19 @@
  */
 
 import { state, els } from "./state.js";
-import { loadConfig, parseConfig, syncConfigFromState, getEditableJson, setConfigStatus, formatConfigError, currentEditorText } from "./config.js";
+import { 
+  loadConfig, 
+  parseConfig, 
+  syncConfigFromState, 
+  setConfigStatus, 
+  formatConfigError,
+  openConfigEditor,
+  closeConfigEditor,
+  hideConfigEditor,
+  applyEditorConfig,
+  wireConfigEditorControls,
+  syncOpenConfigEditor
+} from "./config.js";
 import { render, renderTierBoard, renderUnranked } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
@@ -33,12 +45,12 @@ async function boot() {
 function wireStaticControls() {
   els.openConfig.addEventListener("click", openConfigEditor);
   els.resetConfig.addEventListener("click", resetFromDisk);
-  els.closeConfig.addEventListener("click", closeConfigEditor);
+  els.closeConfig.addEventListener("click", hideConfigEditor); // X button - preserves draft
+  els.cancelConfig.addEventListener("click", closeConfigEditor); // Cancel button - discards draft
   els.applyConfigEdit.addEventListener("click", applyEditorConfig);
-  els.downloadConfig.addEventListener("click", downloadEditorConfig);
-  els.saveConfig.addEventListener("click", saveEditorConfig);
-  els.configEditor.addEventListener("input", () => setConfigStatus(""));
-  els.saveConfig.hidden = typeof window.showSaveFilePicker !== "function";
+
+  wireConfigEditorControls();
+
   els.addNameInput.addEventListener("input", () => {
     const remaining = 23 - els.addNameInput.value.length;
     const counter = document.querySelector("[data-add-char-counter]");
@@ -69,7 +81,7 @@ function wireStaticControls() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       if (!els.configModal.hidden) {
-        closeConfigEditor();
+        hideConfigEditor(); // Escape key - preserves draft
       } else if (!els.addCandidateModal.hidden) {
         closeAddCandidateModal();
       } else if (!els.modal.hidden) {
@@ -84,100 +96,6 @@ function wireStaticControls() {
       modalTitleFrame = window.requestAnimationFrame(fitModalTitle);
     }
   });
-}
-
-/**
- * Opens the config editor modal and populates it with the current JSON config.
- */
-function openConfigEditor() {
-  closeModal();
-  els.app.classList.add("config-open");
-  els.configSource.textContent = state.configSource || "tier-ranking.json";
-  els.configEditor.value = getEditableJson();
-  setConfigStatus("");
-  els.configModal.hidden = false;
-  els.configEditor.focus();
-}
-
-/**
- * Closes the config editor modal.
- */
-function closeConfigEditor() {
-  els.app.classList.remove("config-open");
-  els.configModal.hidden = true;
-}
-
-/**
- * Syncs the config editor textarea with the current state if the modal is open.
- */
-function syncOpenConfigEditor() {
-  if (els.configModal.hidden) return;
-  els.configSource.textContent = state.configSource || "tier-ranking.json";
-  els.configEditor.value = getEditableJson();
-}
-
-/**
- * Applies the JSON config from the editor textarea to the application state.
- */
-function applyEditorConfig() {
-  const text = els.configEditor.value;
-  try {
-    parseConfig(text, "json");
-    applyConfig({ text, format: "json", source: "editor" });
-    els.configSource.textContent = "editor";
-    setConfigStatus("Applied JSON config.", "ok");
-    closeConfigEditor();
-    showToast("Applied config.");
-  } catch (error) {
-    setConfigStatus(formatConfigError(error), "error");
-  }
-}
-
-/**
- * Downloads the current config as a JSON file to the user's device.
- */
-function downloadEditorConfig() {
-  const text = currentEditorText();
-  const url = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "tier-ranking.json";
-  link.style.display = "none";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  setConfigStatus("Downloaded tier-ranking.json.", "ok");
-}
-
-/**
- * Saves the current config using the File System Access API if available,
- * otherwise falls back to downloading the file.
- * @returns {Promise<void>}
- */
-async function saveEditorConfig() {
-  if (typeof window.showSaveFilePicker !== "function") {
-    downloadEditorConfig();
-    return;
-  }
-
-  try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: "tier-ranking.json",
-      types: [{
-        description: "JSON config",
-        accept: { "application/json": [".json"] }
-      }]
-    });
-    const writable = await handle.createWritable();
-    await writable.write(currentEditorText());
-    await writable.close();
-    setConfigStatus("Saved tier-ranking.json.", "ok");
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      setConfigStatus(`Could not save tier-ranking.json: ${error.message}`, "error");
-    }
-  }
 }
 
 /**
@@ -212,6 +130,8 @@ function applyConfig(config) {
   state.tiers = parsed.tiers;
   state.facets = parsed.facets;
   state.candidates = parsed.candidates;
+  state.min = parsed.min ?? 0;   // Add support for min/max from config
+  state.max = parsed.max ?? 10;
   state.configText = config.text;
   state.configFormat = config.format;
   state.configSource = config.source;

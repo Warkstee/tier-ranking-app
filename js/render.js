@@ -110,9 +110,12 @@ export function createCandidateRow(candidate) {
  * @returns {number} The overall score (0-100)
  */
 export function overallScore(candidate) {
+  const min = state.min ?? 0;
+  const max = state.max ?? 10;
+  const range = max - min || 1;
   const weighted = state.facets.reduce((total, facet) => {
-    const value = clamp(toNumber(candidate.scores[facet.id], 0), 0, facet.max);
-    return total + (value / facet.max) * 100 * facet.weight;
+    const value = clamp(toNumber(candidate.scores[facet.id], min), min, max);
+    return total + ((value - min) / range) * 100 * facet.weight;
   }, 0);
   const weight = state.facets.reduce((total, facet) => total + facet.weight, 0) || 1;
   return Math.round(weighted / weight);

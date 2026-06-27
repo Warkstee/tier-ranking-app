@@ -47,16 +47,15 @@ export function renderModal(candidate) {
     return;
   }
 
-  // Check if all facets share the same max value for consistent score labeling
-  const commonMax = state.facets.every((facet) => facet.max === state.facets[0]?.max)
-    ? state.facets[0]?.max
-    : null;
+  // Use global min/max for consistent score labeling
+  const min = state.min ?? 0;
+  const max = state.max ?? 10;
 
   // Build HTML for each facet's score row with progress bar and input field
   const reviewRows = state.facets.map((facet) => {
-    const value = candidate.scores[facet.id] ?? 0;
+    const value = candidate.scores[facet.id] ?? min;
     const id = `facet-${slugify(facet.id)}`;
-    const percent = Math.round((clamp(value, 0, facet.max) / facet.max) * 100);
+    const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
     return `
       <tr>
         <th scope="row">
@@ -70,20 +69,18 @@ export function renderModal(candidate) {
           </div>
         </th>
         <td>
-          <input id="${escapeAttr(id)}" type="number" min="0" max="${facet.max}" step="1" inputmode="numeric"
+          <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
             autocomplete="off" autocapitalize="off" spellcheck="false"
             data-bwignore="true" data-lpignore="true" data-1p-ignore
-            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${facet.name} score out of ${facet.max}`)}"
+            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${facet.name} score out of ${max}`)}"
             data-score-input="${escapeAttr(facet.id)}">
         </td>
       </tr>
     `;
   }).join("");
 
-  // Format the score column header based on whether all facets share the same max
-  const scoreLabel = commonMax
-    ? `Score <span>/ ${escapeHtml(formatNumber(commonMax))}</span>`
-    : "Score";
+  // Format the score column header
+  const scoreLabel = `Score <span>/ ${escapeHtml(formatNumber(max))}</span>`;
   const rank = overallRank(candidate);
 
   // Render the complete candidate details modal HTML structure with image, controls, title, description and score table
@@ -149,11 +146,13 @@ export function renderModal(candidate) {
       const facetId = input.dataset.scoreInput;
       const facet = state.facets.find((item) => item.id === facetId);
       if (!input.value.trim()) return;
-      candidate.scores[facetId] = clamp(toNumber(input.value, 0), 0, facet?.max ?? 10);
+      const min = state.min ?? 0;
+      const max = state.max ?? 10;
+      candidate.scores[facetId] = clamp(toNumber(input.value, min), min, max);
       input.value = candidate.scores[facetId];
       const track = els.detailCard.querySelector(`[data-progress-track="${cssEscape(facetId)}"]`);
       if (track && facet) {
-        const pct = Math.round((candidate.scores[facetId] / facet.max) * 100);
+        const pct = Math.round((candidate.scores[facetId] - min) / (max - min) * 100);
         track.querySelector(".progress-fill").style.width = `${pct}%`;
         track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
@@ -343,9 +342,11 @@ function setScoreFromPointer(track, clientX) {
   if (!candidate) return;
   const rect = track.getBoundingClientRect();
   const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
-  const value = clamp(Math.round(ratio * facet.max), 0, facet.max);
+  const min = state.min ?? 0;
+  const max = state.max ?? 10;
+  const value = clamp(Math.round(min + ratio * (max - min)), min, max);
   candidate.scores[facetId] = value;
-  const pct = Math.round((value / facet.max) * 100);
+  const pct = Math.round((value - min) / (max - min) * 100);
   track.querySelector(".progress-fill").style.width = `${pct}%`;
   track.querySelector(".progress-thumb").style.left = `${pct}%`;
   const input = els.detailCard.querySelector(`[data-score-input="${cssEscape(facetId)}"]`);

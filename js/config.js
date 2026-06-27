@@ -3,10 +3,21 @@
  * 
  * Handles loading, parsing, exporting, and persisting the tier ranking configuration.
  * Supports JSON and Markdown formats, with automatic syncing to the backend API.
+ * Also manages the config editor draft state and UI interactions.
  */
 
 import { state, els, DEFAULT_CONFIG } from "./state.js";
-import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, formatNumber, cell, showToast } from "./utils.js";
+import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, formatNumber, cell, showToast, escapeHtml } from "./utils.js";
+import { renderTierBoard, renderUnranked } from "./render.js";
+
+/**
+ * Draft state for the config editor.
+ * Holds a snapshot of facets, min, max, and candidate scores while the editor is open.
+ * All editor operations modify the draft; changes are only applied to real state on "Apply".
+ * The draft persists across X-close and is only cleared on Apply or Cancel.
+ * @type {Object|null}
+ */
+let configDraft = null;
 
 /**
  * Loads configuration from disk, trying configured sources in order.
@@ -73,6 +84,8 @@ export function parseJsonConfig(text) {
   const tiers = Array.isArray(data.tiers) && data.tiers.length
     ? data.tiers.map((tier) => String(tier))
     : ["S", "A", "B", "C", "D", "F"];
+  const min = toNumber(data.min, 0);
+  const max = Math.max(1, toNumber(data.max, 10));
   const rawCandidates = Array.isArray(data.candidates) ? data.candidates : [];
   let facets = normalizeRubric(data.rubric);
 
@@ -90,7 +103,7 @@ export function parseJsonConfig(text) {
     const rawScores = candidate.scores && typeof candidate.scores === "object" ? candidate.scores : {};
     const scores = {};
     facets.forEach((facet) => {
-      scores[facet.id] = clamp(toNumber(rawScores[facet.id] ?? rawScores[facet.name], 0), 0, facet.max);
+      scores[facet.id] = clamp(toNumber(rawScores[facet.id] ?? rawScores[facet.name], min), min, max);
     });
     return {
       id: candidate.id || `${slugify(name)}-${index + 1}`,
@@ -102,7 +115,7 @@ export function parseJsonConfig(text) {
     };
   });
 
-  return { title, tiers, facets, candidates };
+  return { title, tiers, min, max, facets, candidates };
 }
 
 /**
@@ -125,8 +138,7 @@ export function parseMarkdownConfig(markdown) {
   let facets = facetRows.map((row) => ({
     id: slugify(row.Facet || row.facet || row.Name || row.name),
     name: row.Facet || row.facet || row.Name || row.name,
-    weight: toNumber(row.Weight ?? row.weight, 1),
-    max: Math.max(1, toNumber(row.Max ?? row.max, 10))
+    weight: toNumber(row.Weight ?? row.weight, 1)
   })).filter((facet) => facet.name);
 
   if (!candidateRows.length) {
@@ -144,7 +156,7 @@ export function parseMarkdownConfig(markdown) {
     const name = row.Name || row.name || `Candidate ${index + 1}`;
     const scores = {};
     facets.forEach((facet) => {
-      scores[facet.id] = clamp(toNumber(row[facet.name], 0), 0, facet.max);
+      scores[facet.id] = clamp(toNumber(row[facet.name], 0), 0, 10);
     });
     return {
       id: `${slugify(name)}-${index + 1}`,
@@ -195,8 +207,8 @@ export function exportJson() {
   return JSON.stringify({
     title: state.title,
     tiers: state.tiers,
-    min: 0,
-    max: state.facets[0]?.max || 10,
+    min: state.min ?? 0,
+    max: state.max ?? 10,
     rubric,
     candidates
   }, null, 2);
@@ -207,9 +219,9 @@ export function exportJson() {
  * @returns {string} Markdown-formatted configuration text
  */
 export function exportMarkdown() {
-  const facetHeader = "| Facet | Weight | Max |\n| --- | ---: | ---: |";
+  const facetHeader = "| Facet | Weight |\n| --- | ---: |";
   const facetRows = state.facets
-    .map((facet) => `| ${cell(facet.name)} | ${formatNumber(facet.weight)} | ${formatNumber(facet.max)} |`)
+    .map((facet) => `| ${cell(facet.name)} | ${formatNumber(facet.weight)} |`)
     .join("\n");
 
   const scoreHeaders = state.facets.map((facet) => facet.name);
@@ -334,8 +346,7 @@ function normalizeRubric(rubric) {
     return {
       id,
       name: String(label),
-      weight: toNumber(value.weight, 1),
-      max: Math.max(1, toNumber(value.max, 10))
+      weight: toNumber(value.weight, 1)
     };
   }).filter((facet) => facet.name);
 }
@@ -354,8 +365,7 @@ function inferFacetsFromScores(candidates) {
   return [...seen].map((id) => ({
     id: configId(id),
     name: humanizeId(id),
-    weight: 1,
-    max: 10
+    weight: 1
   }));
 }
 
@@ -371,6 +381,421 @@ function normalizeTier(value, tiers) {
   const match = tiers.find((tier) => tier.toLowerCase() === normalized.toLowerCase());
   if (match) return match;
   return "Unranked";
+}
+
+// ============================================================================
+// Config Editor Draft Management
+// ============================================================================
+
+/**
+ * Creates a draft snapshot from the current state for editing.
+ * @returns {Object} Draft object with facets, min, max, and candidateScores
+ */
+export function createDraftFromState() {
+  const candidateScores = {};
+  state.candidates.forEach((candidate) => {
+    candidateScores[candidate.id] = { ...candidate.scores };
+  });
+  return {
+    facets: state.facets.map((f) => ({ ...f })),
+    min: state.min ?? 0,
+    max: state.max ?? 10,
+    candidateScores
+  };
+}
+
+/**
+ * Opens the config editor modal.
+ * If a draft already exists (from a previous X-close), it is reused.
+ * Otherwise, a fresh draft is created from the current state.
+ */
+export function openConfigEditor() {
+  // Import closeModal from modal.js to avoid circular dependency
+  import("./modal.js").then(({ closeModal }) => {
+    closeModal();
+
+    // Reuse existing draft or create a new one from current state
+    if (!configDraft) {
+      configDraft = createDraftFromState();
+    }
+
+    els.app.classList.add("config-open");
+    els.configMin.value = configDraft.min;
+    els.configMax.value = configDraft.max;
+    els.configStatus.textContent = "";
+    renderFacetEditor();
+    updateApplyButtonState();
+    els.configModal.hidden = false;
+  });
+}
+
+/**
+ * Renders the facet list inside the config editor modal from the draft.
+ */
+export function renderFacetEditor() {
+  if (!els.facetsList || !configDraft) return;
+  els.facetsList.innerHTML = configDraft.facets.map((facet) => `
+    <div class="facet-row" data-facet-id="${facet.id}">
+      <div class="form-field">
+        <label>Name</label>
+        <input type="text" value="${escapeHtml(facet.name)}" data-facet-name="${facet.id}" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-field">
+        <label>Weight</label>
+        <input type="number" value="${facet.weight}" min="0.1" step="0.1" data-facet-weight="${facet.id}" autocomplete="off">
+      </div>
+      <button type="button" class="btn-delete-facet" data-facet-delete="${facet.id}" aria-label="Delete ${escapeHtml(facet.name)}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+        </svg>
+      </button>
+    </div>
+  `).join("");
+}
+
+/**
+ * Wires up event listeners for the config editor form fields.
+ * Called once during boot, uses event delegation for dynamic facet rows.
+ */
+export function wireConfigEditorControls() {
+  els.configMin.addEventListener("input", handleScoreRangeChange);
+  els.configMax.addEventListener("input", handleScoreRangeChange);
+  els.facetsList.addEventListener("input", handleFacetFieldChange);
+  els.facetsList.addEventListener("click", handleFacetButtonClick);
+  els.addFacet.addEventListener("click", addFacet);
+}
+
+/**
+ * Checks if the draft has unsaved changes compared to the current state.
+ * @returns {boolean} True if there are unsaved changes
+ */
+export function hasUnsavedChanges() {
+  if (!configDraft) return false;
+
+  // Check min/max
+  if (configDraft.min !== (state.min ?? 0) || configDraft.max !== (state.max ?? 10)) {
+    return true;
+  }
+
+  // Check facets count
+  if (configDraft.facets.length !== state.facets.length) {
+    return true;
+  }
+
+  // Check each facet
+  for (let i = 0; i < configDraft.facets.length; i++) {
+    const draftFacet = configDraft.facets[i];
+    const stateFacet = state.facets[i];
+    if (draftFacet.id !== stateFacet.id || 
+        draftFacet.name !== stateFacet.name || 
+        draftFacet.weight !== stateFacet.weight) {
+      return true;
+    }
+  }
+
+  // Check candidate scores
+  for (const candidate of state.candidates) {
+    const draftScores = configDraft.candidateScores[candidate.id] || {};
+    const actualScores = candidate.scores;
+    
+    // Check if any draft facet scores differ
+    for (const facet of configDraft.facets) {
+      const draftScore = draftScores[facet.id];
+      const actualScore = actualScores[facet.id];
+      if (draftScore !== actualScore) {
+        return true;
+      }
+    }
+    
+    // Check if there are scores for facets not in the draft
+    for (const scoreKey of Object.keys(actualScores)) {
+      if (!configDraft.facets.some((f) => f.id === scoreKey)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Updates the Apply button state based on whether there are unsaved changes.
+ */
+export function updateApplyButtonState() {
+  if (els.applyConfigEdit) {
+    els.applyConfigEdit.disabled = !hasUnsavedChanges();
+  }
+}
+
+/**
+ * Handles changes to the min/max score range inputs.
+ * Updates the draft only; real state is unchanged until Apply.
+ */
+export function handleScoreRangeChange() {
+  if (!configDraft) return;
+  const min = parseInt(els.configMin.value, 10);
+  const max = parseInt(els.configMax.value, 10);
+
+  if (isNaN(min) || isNaN(max) || min < 0 || max < 1) return;
+
+  configDraft.min = min;
+  configDraft.max = max;
+
+  // Clamp scores in the draft
+  configDraft.facets.forEach((facet) => {
+    state.candidates.forEach((candidate) => {
+      const scores = configDraft.candidateScores[candidate.id];
+      if (scores && scores[facet.id] !== undefined) {
+        scores[facet.id] = clamp(scores[facet.id], min, max);
+      }
+    });
+  });
+
+  updateApplyButtonState();
+}
+
+/**
+ * Handles changes to facet name or weight inputs using event delegation.
+ * Operates on the draft only; real state is unchanged until Apply.
+ */
+export function handleFacetFieldChange(event) {
+  if (!configDraft) return;
+  const target = event.target;
+  const facetId = target.dataset.facetName || target.dataset.facetWeight;
+  if (!facetId) return;
+
+  const facet = configDraft.facets.find((f) => f.id === facetId);
+  if (!facet) return;
+
+  if (target.dataset.facetName !== undefined) {
+    const newName = target.value.trim();
+    if (!newName) return;
+
+    // Check for duplicate names within the draft
+    const isDuplicate = configDraft.facets.some((f) => f.id !== facetId && f.name.toLowerCase() === newName.toLowerCase());
+    if (isDuplicate) {
+      setConfigStatus(`"${newName}" already exists. Use a different name.`, "error");
+      target.value = facet.name;
+      return;
+    }
+
+    facet.name = newName;
+    setConfigStatus("");
+  } else if (target.dataset.facetWeight !== undefined) {
+    const newWeight = parseFloat(target.value);
+    if (!isNaN(newWeight) && newWeight > 0) {
+      facet.weight = newWeight;
+    }
+  }
+
+  updateApplyButtonState();
+}
+
+/**
+ * Handles click events on facet row buttons (delete) using event delegation.
+ * Operates on the draft only; real state is unchanged until Apply.
+ */
+export function handleFacetButtonClick(event) {
+  if (!configDraft) return;
+  const deleteBtn = event.target.closest("[data-facet-delete]");
+  if (!deleteBtn) return;
+
+  const facetId = deleteBtn.dataset.facetDelete;
+  const facet = configDraft.facets.find((f) => f.id === facetId);
+  if (!facet) return;
+
+  // Count candidates with non-default scores for this facet in the draft
+  const min = configDraft.min;
+  const affectedCount = state.candidates.filter((c) => {
+    const scores = configDraft.candidateScores[c.id];
+    const score = scores ? scores[facetId] : undefined;
+    return score !== undefined && score !== min;
+  }).length;
+
+  // Show confirmation if any candidate has a meaningful score
+  if (affectedCount > 0) {
+    const confirmed = window.confirm(
+      `${affectedCount} candidate${affectedCount !== 1 ? "s have" : " has"} a score for "${facet.name}". Delete this criterion?`
+    );
+    if (!confirmed) return;
+  }
+
+  // Remove facet from draft
+  configDraft.facets = configDraft.facets.filter((f) => f.id !== facetId);
+
+  // Remove scores for this facet from all candidates in the draft
+  state.candidates.forEach((candidate) => {
+    const scores = configDraft.candidateScores[candidate.id];
+    if (scores) {
+      delete scores[facetId];
+    }
+  });
+
+  renderFacetEditor();
+  updateApplyButtonState();
+}
+
+/**
+ * Adds a new facet with default values to the draft.
+ * All existing candidates get the minimum score for the new facet in the draft.
+ */
+export function addFacet() {
+  if (!configDraft) return;
+
+  // Generate a unique ID for the new facet
+  const baseId = "new-criterion";
+  let facetId = baseId;
+  let counter = 1;
+  while (configDraft.facets.some((f) => f.id === facetId)) {
+    facetId = `${baseId}-${counter++}`;
+  }
+
+  // Create new facet
+  const newFacet = {
+    id: facetId,
+    name: "New Criterion",
+    weight: 1
+  };
+
+  configDraft.facets.push(newFacet);
+
+  // Add minimum score for all existing candidates in the draft
+  const min = configDraft.min;
+  state.candidates.forEach((candidate) => {
+    if (!configDraft.candidateScores[candidate.id]) {
+      configDraft.candidateScores[candidate.id] = {};
+    }
+    configDraft.candidateScores[candidate.id][facetId] = min;
+  });
+
+  renderFacetEditor();
+  updateApplyButtonState();
+
+  // Focus the name input of the new facet row
+  const newRow = els.facetsList.querySelector(`[data-facet-id="${facetId}"]`);
+  if (newRow) {
+    const nameInput = newRow.querySelector("[data-facet-name]");
+    if (nameInput) {
+      nameInput.focus();
+      nameInput.select();
+    }
+  }
+}
+
+/**
+ * Hides the config editor modal without discarding the draft.
+ * Used by the X button and Escape key.
+ */
+export function hideConfigEditor() {
+  els.app.classList.remove("config-open");
+  els.configModal.hidden = true;
+}
+
+/**
+ * Closes the config editor modal and discards the draft.
+ * Restores state from the last saved config to undo any unsaved changes.
+ * Used by the Cancel button.
+ */
+export function closeConfigEditor() {
+  // Discard the draft
+  configDraft = null;
+
+  // Restore state from the last saved config
+  const saved = parseConfig(state.configText, state.configFormat);
+  state.facets = saved.facets;
+  state.min = saved.min ?? 0;
+  state.max = saved.max ?? 10;
+
+  // Re-render the board to reflect the restored state
+  renderTierBoard();
+  renderUnranked();
+
+  els.app.classList.remove("config-open");
+  els.configModal.hidden = true;
+}
+
+/**
+ * Syncs the config editor form with the draft if the modal is open.
+ */
+export function syncOpenConfigEditor() {
+  if (els.configModal.hidden) return;
+  if (!configDraft) return;
+  els.configMin.value = configDraft.min;
+  els.configMax.value = configDraft.max;
+  renderFacetEditor();
+}
+
+/**
+ * Applies the draft config to the application state and persists it.
+ */
+export function applyEditorConfig() {
+  if (!configDraft) return;
+
+  const min = configDraft.min;
+  const max = configDraft.max;
+
+  // Validate score range
+  if (isNaN(min) || isNaN(max) || min < 0 || max < 1 || min >= max) {
+    setConfigStatus("Invalid score range. Min must be ≥ 0, Max must be ≥ 1, and Min < Max.", "error");
+    return;
+  }
+
+  // Validate all facet names and weights in the draft
+  const names = new Set();
+  for (const facet of configDraft.facets) {
+    if (!facet.name.trim()) {
+      setConfigStatus("All criteria must have a name.", "error");
+      return;
+    }
+    const normalizedName = facet.name.toLowerCase();
+    if (names.has(normalizedName)) {
+      setConfigStatus(`Duplicate criterion name: "${facet.name}".`, "error");
+      return;
+    }
+    names.add(normalizedName);
+    if (facet.weight <= 0 || isNaN(facet.weight)) {
+      setConfigStatus(`Invalid weight for "${facet.name}". Must be greater than 0.`, "error");
+      return;
+    }
+  }
+
+  // Apply draft to state
+  state.facets = configDraft.facets;
+  state.min = min;
+  state.max = max;
+
+  // Apply draft scores to candidates
+  state.candidates.forEach((candidate) => {
+    const draftScores = configDraft.candidateScores[candidate.id] || {};
+    // Set scores for all draft facets
+    configDraft.facets.forEach((facet) => {
+      candidate.scores[facet.id] = draftScores[facet.id] !== undefined
+        ? clamp(draftScores[facet.id], min, max)
+        : min;
+    });
+    // Remove scores for facets no longer in the draft
+    Object.keys(candidate.scores).forEach((scoreKey) => {
+      if (!configDraft.facets.some((f) => f.id === scoreKey)) {
+        delete candidate.scores[scoreKey];
+      }
+    });
+  });
+
+  // Clear the draft
+  configDraft = null;
+
+  // Persist and re-render
+  syncConfigFromState();
+  import("./render.js").then(({ render }) => {
+    render();
+  });
+  setConfigStatus("Applied configuration.", "ok");
+  els.app.classList.remove("config-open");
+  els.configModal.hidden = true;
+  showToast("Applied config.");
 }
 
 /**
