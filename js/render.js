@@ -13,9 +13,96 @@ import { attachPointer } from "./drag.js";
  * Main render function that updates the title and re-renders the entire board.
  */
 export function render() {
-  els.title.textContent = state.title;
+  // Ensure the h1 title element exists (it may have been replaced by an input during editing)
+  let titleEl = document.querySelector("[data-title]");
+  if (!titleEl) {
+    titleEl = document.createElement("h1");
+    titleEl.setAttribute("data-title", "");
+    const brandCopy = document.querySelector(".brand-copy");
+    if (brandCopy) {
+      brandCopy.insertBefore(titleEl, brandCopy.querySelector(".title-edit-btn"));
+    }
+    els.title = titleEl;
+  }
+  titleEl.textContent = state.title;
   renderTierBoard();
   renderUnranked();
+}
+
+/**
+ * Enable inline title editing mode.
+ * Replaces the h1 with an input field for editing.
+ */
+export function enableTitleEdit() {
+  const h1 = els.title;
+  const parent = h1.parentElement;
+  
+  // Create input field
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "title-edit-input";
+  input.value = state.title;
+  input.setAttribute("aria-label", "Edit board title");
+  
+  // Replace h1 with input
+  h1.replaceWith(input);
+  input.focus();
+  input.select();
+  
+  // Save on Enter
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitleEdit(input.value.trim());
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelTitleEdit();
+    }
+  });
+  
+  // Save on blur
+  input.addEventListener("blur", () => {
+    saveTitleEdit(input.value.trim());
+  });
+}
+
+/**
+ * Save the edited title and restore the h1 element.
+ */
+function saveTitleEdit(newTitle) {
+  // Remove the input field before rendering
+  const input = document.querySelector(".title-edit-input");
+  if (input) {
+    input.remove();
+  }
+  
+  if (!newTitle) {
+    cancelTitleEdit();
+    return;
+  }
+  
+  state.title = newTitle;
+  render();
+}
+
+/**
+ * Cancel title editing and restore the original title.
+ */
+function cancelTitleEdit() {
+  const input = document.querySelector(".title-edit-input");
+  if (input) {
+    input.remove();
+  }
+  render();
+}
+
+/**
+ * Initialize title edit button event listener.
+ */
+export function initTitleEdit() {
+  if (els.titleEditBtn) {
+    els.titleEditBtn.addEventListener("click", enableTitleEdit);
+  }
 }
 
 /**

@@ -20,7 +20,7 @@ import {
   wireConfigEditorControls,
   syncOpenConfigEditor
 } from "./config.js";
-import { render, renderTierBoard, renderUnranked } from "./render.js";
+import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu } from "./file-menu.js";
@@ -36,6 +36,7 @@ boot();
 async function boot() {
   wireStaticControls();
   initFileMenu();
+  initTitleEdit();
   
   // Try to load the most recent ranking first
   const loaded = await loadMostRecentRanking();

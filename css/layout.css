@@ -92,6 +92,51 @@
   letter-spacing: 0;
 }
 
+.title-edit-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.45);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.title-edit-btn:hover {
+  color: rgba(103, 215, 255, 0.9);
+  background: rgba(103, 215, 255, 0.1);
+  border-color: rgba(103, 215, 255, 0.3);
+}
+
+.title-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.title-edit-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 64vw;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(103, 215, 255, 0.68);
+  background: rgba(16, 17, 24, 0.92);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.2;
+  outline: none;
+  font-family: inherit;
+}
+
+.title-edit-input:focus {
+  border-color: rgba(103, 215, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(103, 215, 255, 0.18);
+}
+
 .brand-copy span {
   color: var(--muted);
   font-size: 14px;

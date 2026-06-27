@@ -83,6 +83,7 @@ export const state = {
 export const els = {
   app: document.querySelector("[data-app-shell]"),
   title: document.querySelector("[data-title]"),
+  titleEditBtn: document.querySelector("[data-title-edit]"),
   openConfig: document.querySelector("[data-open-config]"),
   resetConfig: document.querySelector("[data-reset-config]"),
   tierBoard: document.querySelector("[data-tier-board]"),
