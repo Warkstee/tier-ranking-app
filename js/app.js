@@ -23,7 +23,7 @@ import {
 import { render, renderTierBoard, renderUnranked } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
-import { initFileMenu, loadMostRecentRanking } from "./file-menu.js";
+import { initFileMenu, loadMostRecentRanking, closeBurgerMenu } from "./file-menu.js";
 
 let modalTitleFrame = 0;
 
@@ -52,8 +52,8 @@ async function boot() {
  * including config editor, add candidate modal, keyboard shortcuts, and window resize.
  */
 function wireStaticControls() {
-  els.openConfig.addEventListener("click", openConfigEditor);
-  els.resetConfig.addEventListener("click", resetFromDisk);
+  els.openConfig.addEventListener("click", () => { closeBurgerMenu(); openConfigEditor(); });
+  els.resetConfig.addEventListener("click", () => { closeBurgerMenu(); resetFromDisk(); });
   els.closeConfig.addEventListener("click", hideConfigEditor); // X button - preserves draft
   els.cancelConfig.addEventListener("click", closeConfigEditor); // Cancel button - discards draft
   els.applyConfigEdit.addEventListener("click", applyEditorConfig);

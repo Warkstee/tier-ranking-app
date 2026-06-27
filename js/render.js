@@ -60,7 +60,7 @@ export function renderUnranked() {
   const unranked = state.candidates.filter((candidate) => candidate.tier === "Unranked");
   els.unrankedList.replaceChildren();
   unranked.forEach((candidate) => els.unrankedList.append(createCandidateRow(candidate)));
-  els.unrankedCount.textContent = `${unranked.length} ${unranked.length === 1 ? "candidate" : "candidates"}`;
+  els.unrankedCount.textContent = `${unranked.length} of ${state.candidates.length}`;
 }
 
 /**

@@ -4,19 +4,43 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>S-Tier Ranking Board</title>
-  <link rel="stylesheet" href="./css/base.css?v=1">
-  <link rel="stylesheet" href="./css/layout.css?v=1">
-  <link rel="stylesheet" href="./css/tier-board.css?v=1">
-  <link rel="stylesheet" href="./css/detail-modal.css?v=1">
-  <link rel="stylesheet" href="./css/config-modal.css?v=2">
-  <link rel="stylesheet" href="./css/add-candidate.css?v=1">
-  <link rel="stylesheet" href="./css/components.css?v=1">
-  <link rel="stylesheet" href="./css/file-menu.css?v=1">
+  <link rel="stylesheet" href="./css/base.css?v=3">
+  <link rel="stylesheet" href="./css/layout.css?v=3">
+  <link rel="stylesheet" href="./css/tier-board.css?v=3">
+  <link rel="stylesheet" href="./css/detail-modal.css?v=3">
+  <link rel="stylesheet" href="./css/config-modal.css?v=3">
+  <link rel="stylesheet" href="./css/add-candidate.css?v=3">
+  <link rel="stylesheet" href="./css/components.css?v=3">
+  <link rel="stylesheet" href="./css/file-menu.css?v=3">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
     <div class="scene-backdrop" aria-hidden="true"></div>
     <header class="topbar">
+      <div class="burger-menu-container">
+        <button type="button" class="burger-button" data-burger-menu aria-label="Menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="burger-dropdown" data-burger-dropdown hidden>
+          <div class="burger-menu-item has-submenu" data-submenu="file">
+            <span>File</span>
+            <svg class="submenu-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <div class="burger-submenu" data-submenu-panel="file" hidden>
+              <button type="button" data-file-new>New Ranking File</button>
+              <button type="button" data-file-open>Open File...</button>
+              <button type="button" data-file-save>Save File...</button>
+              <button type="button" data-file-save-as>Save As...</button>
+              <button type="button" data-file-delete>Delete File...</button>
+            </div>
+          </div>
+          <button type="button" class="burger-menu-item" data-open-config>Edit Criteria...</button>
+          <button type="button" class="burger-menu-item" data-reset-config>Reset Scores and Ranking...</button>
+        </div>
+      </div>
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"></div>
         <div class="brand-copy">
@@ -25,20 +49,7 @@
         </div>
       </div>
       <nav class="menu" aria-label="Board controls">
-        <div class="file-menu-container">
-          <button type="button" class="file-menu-button" data-file-menu>File</button>
-          <div class="file-menu-dropdown" data-file-menu-dropdown hidden>
-            <button type="button" data-file-new>New</button>
-            <button type="button" data-file-open>Open</button>
-            <button type="button" data-file-save>Save</button>
-            <button type="button" data-file-save-as>Save As</button>
-            <button type="button" data-file-delete>Delete</button>
-          </div>
-        </div>
         <span class="current-ranking-name" data-current-ranking-name></span>
-        <button type="button" data-open-add-candidate>Add Candidate</button>
-        <button type="button" data-open-config>Config</button>
-        <button type="button" data-reset-config>Reset</button>
       </nav>
     </header>
 
@@ -48,8 +59,16 @@
       <aside class="right-rail" aria-label="Candidate list and host safe area">
         <section class="unranked-panel" aria-label="Unranked candidates">
           <div class="panel-header">
-            <b>Unranked</b>
-            <span data-unranked-count>0 candidates</span>
+            <div class="panel-header-left">
+              <b>Unranked</b>
+              <span class="count-bubble" data-unranked-count>0 of 0</span>
+            </div>
+            <button type="button" class="add-candidate-btn" data-open-add-candidate aria-label="Add Candidate">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
           <div class="unranked-list" data-drop-zone="Unranked" data-unranked-list></div>
         </section>

@@ -19,14 +19,38 @@ let nameInputCallback = null;
 /**
  * Initialize file menu event listeners
  */
+let submenuCloseTimer = null;
+
 export function initFileMenu() {
-  // File menu dropdown toggle
-  els.fileMenuButton.addEventListener("click", toggleFileMenu);
+  // Burger menu dropdown toggle
+  els.burgerButton.addEventListener("click", toggleBurgerMenu);
+
+  // File submenu toggle — use timer to avoid closing when moving between parent and submenu
+  const fileSubmenuItem = document.querySelector('[data-submenu="file"]');
+  const fileSubmenuPanel = document.querySelector('[data-submenu-panel="file"]');
+
+  if (fileSubmenuItem && fileSubmenuPanel) {
+    fileSubmenuItem.addEventListener("mouseenter", () => {
+      clearTimeout(submenuCloseTimer);
+      openFileSubmenu();
+    });
+    fileSubmenuItem.addEventListener("mouseleave", (event) => {
+      // Don't close if moving into the submenu panel
+      if (event.relatedTarget && fileSubmenuPanel.contains(event.relatedTarget)) return;
+      submenuCloseTimer = setTimeout(() => closeFileSubmenu(), 100);
+    });
+    fileSubmenuPanel.addEventListener("mouseenter", () => {
+      clearTimeout(submenuCloseTimer);
+    });
+    fileSubmenuPanel.addEventListener("mouseleave", () => {
+      submenuCloseTimer = setTimeout(() => closeFileSubmenu(), 100);
+    });
+  }
   
   // Close dropdown when clicking outside
   document.addEventListener("click", (event) => {
-    if (!els.fileMenuButton.contains(event.target) && !els.fileMenuDropdown.contains(event.target)) {
-      closeFileMenu();
+    if (!els.burgerButton.contains(event.target) && !els.burgerDropdown.contains(event.target)) {
+      closeBurgerMenu();
     }
   });
   
@@ -51,25 +75,42 @@ export function initFileMenu() {
 }
 
 /**
- * Toggle file menu dropdown visibility
+ * Toggle burger menu dropdown visibility
  */
-function toggleFileMenu(event) {
+function toggleBurgerMenu(event) {
   event.stopPropagation();
-  els.fileMenuDropdown.hidden = !els.fileMenuDropdown.hidden;
+  els.burgerDropdown.hidden = !els.burgerDropdown.hidden;
 }
 
 /**
- * Close file menu dropdown
+ * Close burger menu dropdown
  */
-function closeFileMenu() {
-  els.fileMenuDropdown.hidden = true;
+export function closeBurgerMenu() {
+  els.burgerDropdown.hidden = true;
+  closeFileSubmenu();
+}
+
+/**
+ * Open file submenu
+ */
+function openFileSubmenu() {
+  const panel = document.querySelector('[data-submenu-panel="file"]');
+  if (panel) panel.hidden = false;
+}
+
+/**
+ * Close file submenu
+ */
+function closeFileSubmenu() {
+  const panel = document.querySelector('[data-submenu-panel="file"]');
+  if (panel) panel.hidden = true;
 }
 
 /**
  * Handle "New" action - create a new empty ranking
  */
 async function handleNew() {
-  closeFileMenu();
+  closeBurgerMenu();
   
   // Auto-save current ranking if it has a name
   if (state.currentRankingName) {
@@ -110,7 +151,7 @@ async function handleNew() {
  * Handle "Open" action - show list of saved rankings
  */
 async function handleOpen() {
-  closeFileMenu();
+  closeBurgerMenu();
   await showOpenRankingModal();
 }
 
@@ -118,7 +159,7 @@ async function handleOpen() {
  * Handle "Save" action - save current ranking
  */
 async function handleSave() {
-  closeFileMenu();
+  closeBurgerMenu();
   
   if (!state.currentRankingName) {
     // No name yet, prompt for one
@@ -134,7 +175,7 @@ async function handleSave() {
  * Handle "Save As" action - save with new name
  */
 async function handleSaveAs() {
-  closeFileMenu();
+  closeBurgerMenu();
   
   showNameInputModal("Save Ranking As", async (name) => {
     const sanitizedName = sanitizeRankingName(name);
@@ -159,7 +200,7 @@ async function handleSaveAs() {
  * Handle "Delete" action - delete current ranking
  */
 async function handleDelete() {
-  closeFileMenu();
+  closeBurgerMenu();
   
   if (!state.currentRankingName) {
     showToast("No ranking is currently loaded.");

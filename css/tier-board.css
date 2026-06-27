@@ -185,6 +185,52 @@
   letter-spacing: 0.12em;
 }
 
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.count-bubble {
+  min-width: 42px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #67d7ff;
+  background: rgba(13, 60, 70, 0.8);
+  border: 1px solid rgba(103, 215, 255, 0.4);
+  font-size: 13px;
+  font-weight: 950;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.add-candidate-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f7f8fb;
+  background: rgba(4, 6, 12, 0.88);
+  border: 2px solid rgba(103, 215, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.add-candidate-btn:hover {
+  background: rgba(103, 215, 255, 0.2);
+  border-color: rgba(103, 215, 255, 0.95);
+  color: #fff;
+}
+
+.add-candidate-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .unranked-list {
   min-height: 0;
   overflow: auto;
