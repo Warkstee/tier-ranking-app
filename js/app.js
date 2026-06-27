@@ -23,6 +23,7 @@ import {
 import { render, renderTierBoard, renderUnranked } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
+import { initFileMenu, loadMostRecentRanking } from "./file-menu.js";
 
 let modalTitleFrame = 0;
 
@@ -34,8 +35,16 @@ boot();
  */
 async function boot() {
   wireStaticControls();
-  const config = await loadConfig({ fallbackToDefault: true });
-  applyConfig(config);
+  initFileMenu();
+  
+  // Try to load the most recent ranking first
+  const loaded = await loadMostRecentRanking();
+  
+  // If no rankings exist, fall back to default config
+  if (!loaded) {
+    const config = await loadConfig({ fallbackToDefault: true });
+    applyConfig(config);
+  }
 }
 
 /**

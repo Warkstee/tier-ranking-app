@@ -72,7 +72,8 @@ export const state = {
   selectedId: null,
   configText: DEFAULT_CONFIG,
   configFormat: "json",
-  configSource: "bundled config"
+  configSource: "bundled config",
+  currentRankingName: null
 };
 
 /**
@@ -104,5 +105,23 @@ export const els = {
   addNameInput: document.querySelector("[data-add-candidate-name]"),
   addImageInput: document.querySelector("[data-add-candidate-image]"),
   closeAddCandidate: document.querySelector("[data-close-add-candidate]"),
-  cancelAddCandidate: document.querySelector("[data-cancel-add-candidate]")
+  cancelAddCandidate: document.querySelector("[data-cancel-add-candidate]"),
+  fileMenuButton: document.querySelector("[data-file-menu]"),
+  fileMenuDropdown: document.querySelector("[data-file-menu-dropdown]"),
+  fileNew: document.querySelector("[data-file-new]"),
+  fileOpen: document.querySelector("[data-file-open]"),
+  fileSave: document.querySelector("[data-file-save]"),
+  fileSaveAs: document.querySelector("[data-file-save-as]"),
+  fileDelete: document.querySelector("[data-file-delete]"),
+  currentRankingName: document.querySelector("[data-current-ranking-name]"),
+  nameInputModal: document.querySelector("[data-name-input-modal]"),
+  nameInputTitle: document.querySelector("[data-name-input-title]"),
+  nameInputField: document.querySelector("[data-name-input-field]"),
+  nameInputForm: document.querySelector("[data-name-input-form]"),
+  closeNameInput: document.querySelector("[data-close-name-input]"),
+  cancelNameInput: document.querySelector("[data-cancel-name-input]"),
+  openRankingModal: document.querySelector("[data-open-ranking-modal]"),
+  openRankingList: document.querySelector("[data-open-ranking-list]"),
+  closeOpenRanking: document.querySelector("[data-close-open-ranking]"),
+  closeOpenRankingFooter: document.querySelector("[data-close-open-ranking-footer]")
 };

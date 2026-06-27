@@ -1,0 +1,373 @@
+/* File Menu Component Styles */
+
+.file-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.file-menu-button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.file-menu-button:hover {
+  background: var(--panel);
+  border-color: var(--accent);
+}
+
+.file-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  min-width: 150px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.file-menu-dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.file-menu-dropdown button:hover {
+  background: var(--panel);
+}
+
+.file-menu-dropdown button:not(:last-child) {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.current-ranking-name {
+  display: inline-block;
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.current-ranking-name:not(:empty)::before {
+  content: "📄 ";
+}
+
+/* Name Input Modal */
+.name-input-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.name-input-modal:not([hidden]) {
+  display: flex;
+}
+
+.name-input-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.name-input-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.name-input-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.name-input-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.name-input-close:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.name-input-form {
+  padding: 1.5rem;
+}
+
+.name-input-form .form-field {
+  margin-bottom: 1rem;
+}
+
+.name-input-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.name-input-form input {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.name-input-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.name-input-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.name-input-footer button {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.name-input-footer button[type="button"] {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.name-input-footer button[type="button"]:hover {
+  background: var(--panel);
+}
+
+.name-input-footer button[type="submit"] {
+  background: var(--accent);
+  color: #000;
+  border: 1px solid var(--accent);
+}
+
+.name-input-footer button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+/* Open Ranking Modal */
+.open-ranking-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.open-ranking-modal:not([hidden]) {
+  display: flex;
+}
+
+.open-ranking-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.open-ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.open-ranking-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.open-ranking-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.open-ranking-close:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.open-ranking-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+}
+
+.open-ranking-list:empty::after {
+  content: "No saved rankings yet.";
+  display: block;
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.ranking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+}
+
+.ranking-item:hover {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+
+.ranking-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-item-name {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranking-item-date {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.ranking-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ranking-item-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ranking-item-actions button:first-child {
+  background: var(--accent);
+  color: #000;
+  border: 1px solid var(--accent);
+}
+
+.ranking-item-actions button:first-child:hover {
+  opacity: 0.9;
+}
+
+.ranking-item-actions button:last-child {
+  background: var(--panel);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.ranking-item-actions button:last-child:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.open-ranking-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.open-ranking-footer button {
+  padding: 0.5rem 1.5rem;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.open-ranking-footer button:hover {
+  background: var(--panel);
+}

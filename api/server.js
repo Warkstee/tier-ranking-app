@@ -10,8 +10,8 @@
  * Exposes POST /api/uploadimg for uploading candidate images to /app/assets/candidates/.
  */
 import { createServer } from "http";
-import { writeFile, mkdir } from "fs/promises";
-import { createWriteStream } from "fs";
+import { writeFile, mkdir, readdir, stat, unlink, readFile } from "fs/promises";
+import { createWriteStream, existsSync } from "fs";
 import { pipeline } from "stream/promises";
 import { join, basename } from "path";
 import Busboy from "busboy";
@@ -19,6 +19,7 @@ import Busboy from "busboy";
 const PORT = 3001;
 const CONFIG_PATH = "/app/tier-ranking.json";
 const UPLOAD_DIR = "/app/assets/candidates";
+const RANKINGS_DIR = "/app/rankings";
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -26,6 +27,21 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/webp"
 ]);
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Ensure rankings directory exists
+if (!existsSync(RANKINGS_DIR)) {
+  await mkdir(RANKINGS_DIR, { recursive: true });
+}
+
+// Helper: Sanitize ranking name for use as filename
+function sanitizeRankingName(name) {
+  if (!name) return null;
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 100);
+}
 
 const server = createServer(async (req, res) => {
 
@@ -78,6 +94,116 @@ const server = createServer(async (req, res) => {
       console.error("Failed to write config:", err);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Failed to write config" }));
+    }
+    return;
+  }
+
+  // GET /api/rankings - List all saved rankings
+  if (req.method === "GET" && req.url === "/api/rankings") {
+    try {
+      const files = await readdir(RANKINGS_DIR);
+      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      
+      const rankings = await Promise.all(
+        jsonFiles.map(async (filename) => {
+          const filePath = join(RANKINGS_DIR, filename);
+          const stats = await stat(filePath);
+          return {
+            name: filename.replace('.json', ''),
+            modifiedAt: stats.mtime.toISOString()
+          };
+        })
+      );
+      
+      // Sort by modification time, most recent first
+      rankings.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(rankings));
+    } catch (err) {
+      console.error("Failed to list rankings:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to list rankings" }));
+    }
+    return;
+  }
+
+  // GET /api/rankings/:name - Load a specific ranking
+  if (req.method === "GET" && req.url.startsWith("/api/rankings/")) {
+    const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
+    if (!name) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid ranking name" }));
+      return;
+    }
+    
+    try {
+      const filePath = join(RANKINGS_DIR, `${name}.json`);
+      const data = await readFile(filePath, "utf8");
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(data);
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Ranking not found" }));
+      } else {
+        console.error("Failed to load ranking:", err);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to load ranking" }));
+      }
+    }
+    return;
+  }
+
+  // POST /api/rankings/:name - Save a ranking
+  if (req.method === "POST" && req.url.startsWith("/api/rankings/")) {
+    const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
+    if (!name) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid ranking name" }));
+      return;
+    }
+    
+    try {
+      const body = await readBody(req);
+      const filePath = join(RANKINGS_DIR, `${name}.json`);
+      await writeFile(filePath, body, "utf8");
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, name }));
+    } catch (err) {
+      console.error("Failed to save ranking:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to save ranking" }));
+    }
+    return;
+  }
+
+  // DELETE /api/rankings/:name - Delete a ranking
+  if (req.method === "DELETE" && req.url.startsWith("/api/rankings/")) {
+    const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
+    if (!name) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid ranking name" }));
+      return;
+    }
+    
+    try {
+      const filePath = join(RANKINGS_DIR, `${name}.json`);
+      await unlink(filePath);
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true }));
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Ranking not found" }));
+      } else {
+        console.error("Failed to delete ranking:", err);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to delete ranking" }));
+      }
     }
     return;
   }

@@ -269,6 +269,7 @@ export function syncConfigFromState() {
 
 /**
  * Persists the current configuration text to the backend API.
+ * Also saves to the current ranking if one is set.
  * @returns {Promise<void>}
  */
 export async function persistConfig() {
@@ -280,6 +281,24 @@ export async function persistConfig() {
     });
     if (!response.ok) {
       throw new Error(`Server responded with ${response.status}`);
+    }
+    
+    // Also save to current ranking if one is set
+    if (state.currentRankingName) {
+      const data = {
+        title: state.title,
+        tiers: state.tiers,
+        facets: state.facets,
+        candidates: state.candidates,
+        min: state.min,
+        max: state.max
+      };
+      
+      await fetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
     }
   } catch (err) {
     console.error("Failed to persist config:", err);
