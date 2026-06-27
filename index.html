@@ -31,10 +31,17 @@
             <svg class="submenu-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             <div class="burger-submenu" data-submenu-panel="file" hidden>
               <button type="button" data-file-new>New Ranking File</button>
-              <button type="button" data-file-open>Open File...</button>
+              <div class="submenu-item-with-flyout" data-flyout-trigger="open">
+                <button type="button" data-file-open>Open File...</button>
+              </div>
               <button type="button" data-file-save>Save File...</button>
               <button type="button" data-file-save-as>Save As...</button>
-              <button type="button" data-file-delete>Delete File...</button>
+              <div class="submenu-item-with-flyout" data-flyout-trigger="delete">
+                <button type="button" data-file-delete>Delete File...</button>
+              </div>
+              <div class="ranking-flyout" data-ranking-flyout hidden>
+                <div class="ranking-flyout-list" data-ranking-flyout-list></div>
+              </div>
             </div>
           </div>
           <button type="button" class="burger-menu-item" data-open-config>Edit Criteria...</button>
@@ -42,10 +49,15 @@
         </div>
       </div>
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="12" width="5" height="9" rx="1" fill="#111"/>
+            <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
+            <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
+          </svg>
+        </div>
         <div class="brand-copy">
           <h1 data-title>S-Tier Ranking Board</h1>
-          <span>tier board</span>
         </div>
       </div>
       <nav class="menu" aria-label="Board controls">
@@ -176,18 +188,6 @@
       </article>
     </section>
 
-    <section class="open-ranking-modal" aria-label="Open ranking" data-open-ranking-modal hidden>
-      <article class="open-ranking-panel">
-        <header class="open-ranking-header">
-          <h2>Open Ranking</h2>
-          <button class="open-ranking-close" type="button" aria-label="Close dialog" data-close-open-ranking>x</button>
-        </header>
-        <div class="open-ranking-list" data-open-ranking-list></div>
-        <footer class="open-ranking-footer">
-          <button type="button" data-close-open-ranking-footer>Close</button>
-        </footer>
-      </article>
-    </section>
   </main>
 
   <script src="./js/app.js" type="module"></script>

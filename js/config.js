@@ -90,7 +90,7 @@ export function parseJsonConfig(text) {
   let facets = normalizeRubric(data.rubric);
 
   if (!rawCandidates.length) {
-    throw new Error("tier-ranking.json needs a candidates list.");
+    // Empty candidates list is valid (e.g. newly created ranking)
   }
 
   if (!facets.length) {

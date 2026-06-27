@@ -51,19 +51,27 @@
 }
 
 .add-candidate-close {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  color: #f7f8fc;
-  background: #1d1f2a;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  font-size: 22px;
-  font-weight: 950;
+  border-radius: 50%;
+  color: #f7f8fb;
+  font-size: 16px;
   line-height: 1;
+  font-weight: 950;
+  background: rgba(4, 6, 12, 0.88);
+  border: 2px solid rgba(41, 99, 215, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.44);
   cursor: pointer;
+}
+
+.add-candidate-close:hover {
+  background: rgba(41, 99, 215, 0.25);
+  border-color: rgba(41, 99, 215, 0.95);
 }
 
 .add-candidate-form {
@@ -101,4 +109,9 @@
   color: #111217;
   background: #ffd76a;
   border-color: rgba(255, 255, 255, 0.28);
+}
+
+.add-candidate-footer button[type="submit"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

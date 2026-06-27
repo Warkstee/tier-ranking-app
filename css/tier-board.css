@@ -232,7 +232,7 @@
 }
 
 .unranked-list {
-  min-height: 0;
+  min-height: 120px;
   overflow: auto;
   display: grid;
   align-content: start;

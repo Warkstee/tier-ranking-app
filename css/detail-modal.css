@@ -87,38 +87,43 @@
   position: absolute;
   top: 18px;
   right: 18px;
-  width: 58px;
-  height: 58px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   color: #f7f8fb;
-  font-size: 32px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 950;
   background: rgba(4, 6, 12, 0.88);
-  border: 5px solid rgba(41, 99, 215, 0.78);
+  border: 2px solid rgba(41, 99, 215, 0.78);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 20px 38px rgba(0, 0, 0, 0.44);
+    0 4px 12px rgba(0, 0, 0, 0.44);
   cursor: pointer;
+}
+
+.modal-close:hover {
+  background: rgba(41, 99, 215, 0.25);
+  border-color: rgba(41, 99, 215, 0.95);
 }
 
 .modal-delete {
   position: absolute;
   top: 18px;
-  right: 88px;
-  width: 58px;
-  height: 58px;
+  right: 56px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   color: #f7f8fb;
   background: rgba(4, 6, 12, 0.88);
-  border: 5px solid rgba(255, 75, 114, 0.78);
+  border: 2px solid rgba(255, 75, 114, 0.78);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 20px 38px rgba(0, 0, 0, 0.44);
+    0 4px 12px rgba(0, 0, 0, 0.44);
   cursor: pointer;
 }
 
@@ -128,25 +133,25 @@
 }
 
 .modal-delete svg {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
 }
 
 .modal-edit {
   position: absolute;
   top: 18px;
-  right: 158px;
-  width: 58px;
-  height: 58px;
+  right: 94px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   color: #f7f8fb;
   background: rgba(4, 6, 12, 0.88);
-  border: 5px solid rgba(255, 215, 106, 0.78);
+  border: 2px solid rgba(255, 215, 106, 0.78);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 20px 38px rgba(0, 0, 0, 0.44);
+    0 4px 12px rgba(0, 0, 0, 0.44);
   cursor: pointer;
 }
 
@@ -156,8 +161,8 @@
 }
 
 .modal-edit svg {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
 }
 
 .edit-image-upload {
@@ -245,10 +250,14 @@
   box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
 }
 
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
 .modal-save {
-  position: absolute;
-  top: 18px;
-  right: 96px;
   height: 38px;
   display: grid;
   place-items: center;
@@ -269,9 +278,6 @@
 }
 
 .modal-cancel {
-  position: absolute;
-  top: 18px;
-  right: 18px;
   height: 38px;
   display: grid;
   place-items: center;

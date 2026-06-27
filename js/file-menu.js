@@ -20,6 +20,8 @@ let nameInputCallback = null;
  * Initialize file menu event listeners
  */
 let submenuCloseTimer = null;
+let flyoutCloseTimer = null;
+let flyoutMode = "open";
 
 export function initFileMenu() {
   // Burger menu dropdown toggle
@@ -46,6 +48,27 @@ export function initFileMenu() {
       submenuCloseTimer = setTimeout(() => closeFileSubmenu(), 100);
     });
   }
+
+  // Ranking flyout hover — show on hover over "Open File..." or "Delete File..." wrappers
+  const flyoutTriggers = document.querySelectorAll('[data-flyout-trigger]');
+  if (flyoutTriggers.length && els.rankingFlyout) {
+    flyoutTriggers.forEach(trigger => {
+      trigger.addEventListener("mouseenter", () => {
+        clearTimeout(flyoutCloseTimer);
+        flyoutMode = trigger.dataset.flyoutTrigger || "open";
+        showRankingFlyout();
+      });
+      trigger.addEventListener("mouseleave", () => {
+        flyoutCloseTimer = setTimeout(() => closeRankingFlyout(), 150);
+      });
+    });
+    els.rankingFlyout.addEventListener("mouseenter", () => {
+      clearTimeout(flyoutCloseTimer);
+    });
+    els.rankingFlyout.addEventListener("mouseleave", () => {
+      flyoutCloseTimer = setTimeout(() => closeRankingFlyout(), 150);
+    });
+  }
   
   // Close dropdown when clicking outside
   document.addEventListener("click", (event) => {
@@ -66,10 +89,6 @@ export function initFileMenu() {
   els.closeNameInput.addEventListener("click", closeNameInputModal);
   els.cancelNameInput.addEventListener("click", closeNameInputModal);
   
-  // Open ranking modal
-  els.closeOpenRanking.addEventListener("click", closeOpenRankingModal);
-  els.closeOpenRankingFooter.addEventListener("click", closeOpenRankingModal);
-  
   // Update display on init
   updateCurrentRankingDisplay();
 }
@@ -88,6 +107,7 @@ function toggleBurgerMenu(event) {
 export function closeBurgerMenu() {
   els.burgerDropdown.hidden = true;
   closeFileSubmenu();
+  closeRankingFlyout();
 }
 
 /**
@@ -148,11 +168,11 @@ async function handleNew() {
 }
 
 /**
- * Handle "Open" action - show list of saved rankings
+ * Handle "Open" action - show ranking flyout
  */
 async function handleOpen() {
-  closeBurgerMenu();
-  await showOpenRankingModal();
+  // Don't close the burger menu — keep it open so the flyout can appear
+  await showRankingFlyout();
 }
 
 /**
@@ -197,38 +217,19 @@ async function handleSaveAs() {
 }
 
 /**
- * Handle "Delete" action - delete current ranking
+ * Handle "Delete" action - show ranking flyout for deletion
  */
 async function handleDelete() {
-  closeBurgerMenu();
-  
-  if (!state.currentRankingName) {
-    showToast("No ranking is currently loaded.");
-    return;
-  }
-  
-  const confirmed = confirm(`Are you sure you want to delete "${state.currentRankingName}"? This cannot be undone.`);
-  if (!confirmed) return;
-  
-  try {
-    await deleteRankingFromServer(state.currentRankingName);
-    showToast(`Deleted ranking: ${state.currentRankingName}`);
-    
-    // Reset to unsaved state
-    state.currentRankingName = null;
-    updateCurrentRankingDisplay();
-  } catch (error) {
-    console.error("Failed to delete ranking:", error);
-    showToast("Failed to delete ranking.");
-  }
+  // Don't close the burger menu — keep it open so the flyout can appear
+  await showRankingFlyout();
 }
 
 /**
  * Show name input modal
  */
 function showNameInputModal(title, callback) {
-  // Close any open modals first
-  closeOpenRankingModal();
+  // Close any open flyouts first
+  closeRankingFlyout();
   
   els.nameInputTitle.textContent = title;
   els.nameInputField.value = "";
@@ -261,81 +262,84 @@ function handleNameInputSubmit(event) {
 }
 
 /**
- * Show open ranking modal with list of saved rankings
+ * Show ranking flyout with list of saved rankings
  */
-async function showOpenRankingModal() {
-  // Close any open modals first
-  closeNameInputModal();
-  
-  els.openRankingModal.hidden = false;
-  els.openRankingList.innerHTML = "<p>Loading...</p>";
-  
+async function showRankingFlyout() {
+  if (!els.rankingFlyout || !els.rankingFlyoutList) return;
+
+  // Ensure the parent submenu is open
+  openFileSubmenu();
+
+  // Position flyout next to the active trigger
+  const activeTrigger = document.querySelector(`[data-flyout-trigger="${flyoutMode}"]`);
+  if (activeTrigger) {
+    const rect = activeTrigger.getBoundingClientRect();
+    const submenuRect = document.querySelector('[data-submenu-panel="file"]').getBoundingClientRect();
+    els.rankingFlyout.style.top = `${rect.top - submenuRect.top}px`;
+    els.rankingFlyout.style.left = `${rect.right - submenuRect.left + 2}px`;
+  }
+
+  els.rankingFlyout.hidden = false;
+  els.rankingFlyoutList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:1rem;font-size:0.875rem;'>Loading...</p>";
+
   try {
     const rankings = await fetchRankings();
-    
+
     if (rankings.length === 0) {
-      els.openRankingList.innerHTML = "";
+      els.rankingFlyoutList.innerHTML = "";
       return;
     }
-    
-    els.openRankingList.innerHTML = rankings.map(ranking => {
+
+    els.rankingFlyoutList.innerHTML = rankings.map(ranking => {
       const date = new Date(ranking.modifiedAt).toLocaleString();
       return `
-        <div class="ranking-item" data-ranking-name="${ranking.name}">
-          <div class="ranking-item-info">
-            <div class="ranking-item-name">${escapeHtml(ranking.name)}</div>
-            <div class="ranking-item-date">Modified: ${date}</div>
-          </div>
-          <div class="ranking-item-actions">
-            <button type="button" data-action="open">Open</button>
-            <button type="button" data-action="delete">Delete</button>
+        <div class="ranking-flyout-item" data-ranking-name="${escapeAttr(ranking.name)}">
+          <div class="ranking-flyout-item-info">
+            <div class="ranking-flyout-item-name">${escapeHtml(ranking.name)}</div>
+            <div class="ranking-flyout-item-date">Modified: ${date}</div>
           </div>
         </div>
       `;
     }).join("");
-    
-    // Wire up action buttons
-    els.openRankingList.querySelectorAll(".ranking-item").forEach(item => {
+
+    // Wire up click on item — behavior depends on flyout mode (open vs delete)
+    els.rankingFlyoutList.querySelectorAll(".ranking-flyout-item").forEach(item => {
       const name = item.dataset.rankingName;
-      
-      item.querySelector('[data-action="open"]').addEventListener("click", async () => {
-        await openRanking(name);
-        closeOpenRankingModal();
-      });
-      
-      item.querySelector('[data-action="delete"]').addEventListener("click", async () => {
-        const confirmed = confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`);
-        if (!confirmed) return;
-        
-        try {
-          await deleteRankingFromServer(name);
-          showToast(`Deleted ranking: ${name}`);
-          
-          // If this was the current ranking, clear it
-          if (state.currentRankingName === name) {
-            state.currentRankingName = null;
-            updateCurrentRankingDisplay();
+      item.addEventListener("click", async () => {
+        if (flyoutMode === "delete") {
+          const confirmed = confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`);
+          if (!confirmed) return;
+          try {
+            await deleteRankingFromServer(name);
+            showToast(`Deleted ranking: ${name}`);
+            if (state.currentRankingName === name) {
+              state.currentRankingName = null;
+              updateCurrentRankingDisplay();
+            }
+            await showRankingFlyout();
+          } catch (error) {
+            console.error("Failed to delete ranking:", error);
+            showToast("Failed to delete ranking.");
           }
-          
-          // Refresh the list
-          await showOpenRankingModal();
-        } catch (error) {
-          console.error("Failed to delete ranking:", error);
-          showToast("Failed to delete ranking.");
+        } else {
+          await openRanking(name);
+          closeBurgerMenu();
         }
       });
     });
   } catch (error) {
     console.error("Failed to load rankings:", error);
-    els.openRankingList.innerHTML = "<p>Failed to load rankings.</p>";
+    els.rankingFlyoutList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:1rem;font-size:0.875rem;'>Failed to load rankings.</p>";
   }
 }
 
 /**
- * Close open ranking modal
+ * Close ranking flyout
  */
-function closeOpenRankingModal() {
-  els.openRankingModal.hidden = true;
+function closeRankingFlyout() {
+  if (els.rankingFlyout) {
+    els.rankingFlyout.hidden = true;
+  }
 }
 
 /**
@@ -466,6 +470,13 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * Escape attribute value
+ */
+function escapeAttr(text) {
+  return text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /**

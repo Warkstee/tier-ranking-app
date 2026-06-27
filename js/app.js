@@ -75,6 +75,11 @@ function wireStaticControls() {
   els.cancelAddCandidate.addEventListener("click", closeAddCandidateModal);
   els.addCandidateForm.addEventListener("submit", handleAddCandidateSubmit);
 
+  // Disable Add button until name is entered
+  els.addNameInput.addEventListener("input", () => {
+    els.submitAddCandidate.disabled = !els.addNameInput.value.trim();
+  });
+
   els.modal.addEventListener("click", (event) => {
     if (event.target === els.modal) {
       closeModal();
@@ -121,9 +126,9 @@ async function resetFromDisk() {
     showToast(`Reset from ${config.source}.`);
   } catch {
     if (!els.configModal.hidden) {
-      setConfigStatus("Could not reload tier-ranking.json.", "error");
+      setConfigStatus("Could not reload ranking JSON file.", "error");
     }
-    showToast("Could not refresh tier-ranking.json.");
+    showToast("Could not refresh ranking JSON file.");
   } finally {
     els.resetConfig.disabled = false;
   }
@@ -158,6 +163,8 @@ function openAddCandidateModal() {
   els.addCandidateForm.reset();
   els.addCandidateModal.hidden = false;
   els.addNameInput.focus();
+  // Disable Add button until name is entered
+  els.submitAddCandidate.disabled = !els.addNameInput.value.trim();
 }
 
 /**

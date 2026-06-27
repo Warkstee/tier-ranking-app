@@ -4,7 +4,7 @@
  * A minimal Node.js HTTP server.
  * 
  * Exposes POST /api/config endpoint for persisting the tier ranking board's JSON configuration to
- * disk. Writes are performed directly to the mounted tier-ranking.json file, which is shared with the nginx
+ * disk. Writes are performed directly to the mounted ranking JSON file, which is shared with the nginx
  * container via a Docker bind mount.
  *
  * Exposes POST /api/uploadimg for uploading candidate images to /app/assets/candidates/.

@@ -106,6 +106,7 @@ export const els = {
   addImageInput: document.querySelector("[data-add-candidate-image]"),
   closeAddCandidate: document.querySelector("[data-close-add-candidate]"),
   cancelAddCandidate: document.querySelector("[data-cancel-add-candidate]"),
+  submitAddCandidate: document.querySelector("[data-submit-add-candidate]"),
   burgerButton: document.querySelector("[data-burger-menu]"),
   burgerDropdown: document.querySelector("[data-burger-dropdown]"),
   fileNew: document.querySelector("[data-file-new]"),
@@ -120,8 +121,6 @@ export const els = {
   nameInputForm: document.querySelector("[data-name-input-form]"),
   closeNameInput: document.querySelector("[data-close-name-input]"),
   cancelNameInput: document.querySelector("[data-cancel-name-input]"),
-  openRankingModal: document.querySelector("[data-open-ranking-modal]"),
-  openRankingList: document.querySelector("[data-open-ranking-list]"),
-  closeOpenRanking: document.querySelector("[data-close-open-ranking]"),
-  closeOpenRankingFooter: document.querySelector("[data-close-open-ranking-footer]")
+  rankingFlyout: document.querySelector("[data-ranking-flyout]"),
+  rankingFlyoutList: document.querySelector("[data-ranking-flyout-list]")
 };

@@ -209,8 +209,6 @@ function renderEditModal(candidate) {
       </div>
     </div>
     <div class="detail-body">
-      <button class="modal-save" type="button">Save</button>
-      <button class="modal-cancel" type="button">Cancel</button>
       <div class="edit-fields">
         <div class="form-field">
           <label for="edit-candidate-name">Name</label>
@@ -221,6 +219,10 @@ function renderEditModal(candidate) {
           <label for="edit-candidate-description">Description</label>
           <textarea id="edit-candidate-description" rows="4" data-edit-description-input>${escapeHtml(candidate.description)}</textarea>
         </div>
+      </div>
+      <div class="edit-actions">
+        <button class="modal-cancel" type="button">Cancel</button>
+        <button class="modal-save" type="button">Save</button>
       </div>
     </div>
   `;

@@ -61,12 +61,16 @@
   height: 34px;
   flex: 0 0 34px;
   border-radius: 10px;
-  background:
-    linear-gradient(135deg, transparent 0 17%, var(--brand-a) 18% 42%, transparent 43%),
-    linear-gradient(315deg, transparent 0 17%, var(--brand-b) 18% 42%, transparent 43%),
-    #10121a;
+  background: #fff;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 0 26px rgba(0, 164, 220, 0.24);
+  display: grid;
+  place-items: center;
+}
+
+.brand-mark svg {
+  width: 22px;
+  height: 22px;
 }
 
 .brand-copy {
@@ -149,7 +153,7 @@
   height: 100%;
   align-self: stretch;
   display: grid;
-  grid-template-rows: minmax(260px, 1fr) minmax(0, 1fr);
+  grid-template-rows: 1fr 0;
   gap: 14px;
 }
 
