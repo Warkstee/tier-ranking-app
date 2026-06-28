@@ -2,12 +2,12 @@
  * Configuration Management
  * 
  * Handles loading, parsing, exporting, and persisting the tier ranking configuration.
- * Supports JSON and Markdown formats, with automatic syncing to the backend API.
+ * Supports JSON format with automatic syncing to the backend API.
  * Also manages the config editor draft state and UI interactions.
  */
 
 import { state, els, DEFAULT_CONFIG } from "./state.js";
-import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, formatNumber, cell, showToast, escapeHtml } from "./utils.js";
+import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, showToast, escapeHtml } from "./utils.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
 import { attachReorderable } from "./drag.js";
 
@@ -21,16 +21,12 @@ import { attachReorderable } from "./drag.js";
 let configDraft = null;
 
 /**
- * Parses configuration text based on the specified format.
- * @param {string} text - The configuration text to parse
- * @param {string} format - The format type ("json" or "markdown")
+ * Parses JSON configuration text into the application's data model.
+ * @param {string} text - The JSON configuration text to parse
  * @returns {Object} Parsed configuration with title, tiers, facets, and candidates
  */
-export function parseConfig(text, format) {
-  if (format === "json") {
-    return parseJsonConfig(text);
-  }
-  return parseMarkdownConfig(text);
+export function parseConfig(text) {
+  return parseJsonConfig(text);
 }
 
 /**
@@ -85,67 +81,13 @@ export function parseJsonConfig(text) {
   return { title, tiers, min, max, facets, candidates };
 }
 
-/**
- * Parses Markdown configuration text into the application's data model.
- * @param {string} markdown - Markdown configuration text
- * @returns {Object} Parsed configuration with title, tiers, facets, and candidates
- * @throws {Error} If candidates table is missing
- */
-export function parseMarkdownConfig(markdown) {
-  const lines = markdown.split(/\r?\n/);
-  const titleLine = lines.find((line) => line.trim().startsWith("#"));
-  const title = titleLine ? titleLine.trim() : "S-Tier Ranking Board";
-  const tiers = parseListSetting(lines, "tiers", ["S", "A", "B", "C", "D", "F"]);
-  const facetRows = parseMarkdownTable(lines, "## Facets");
-  const primaryCandidateRows = parseMarkdownTable(lines, "## Candidates");
-  const candidateRows = primaryCandidateRows.length
-    ? primaryCandidateRows
-    : parseMarkdownTable(lines, "## Clients");
 
-  let facets = facetRows.map((row) => ({
-    id: slugify(row.Facet || row.facet || row.Name || row.name),
-    name: row.Facet || row.facet || row.Name || row.name,
-    weight: toNumber(row.Weight ?? row.weight, 1)
-  })).filter((facet) => facet.name);
-
-  if (!candidateRows.length) {
-    throw new Error("The config needs a ## Candidates table.");
-  }
-
-  if (!facets.length) {
-    const reserved = new Set(["Name", "Image", "Description", "Tier"]);
-    facets = Object.keys(candidateRows[0])
-      .filter((header) => !reserved.has(header))
-      .map((header) => ({ id: slugify(header), name: header, weight: 1, max: 10 }));
-  }
-
-  const candidates = candidateRows.map((row, index) => {
-    const name = row.Name || row.name || `Candidate ${index + 1}`;
-    const scores = {};
-    facets.forEach((facet) => {
-      scores[facet.id] = clamp(toNumber(row[facet.name], 0), 0, 10);
-    });
-    return {
-      id: `${slugify(name)}-${index + 1}`,
-      name,
-      image: row.Image || row.image || "./assets/candidates/atlas.svg",
-      description: row.Description || row.description || "",
-      tier: normalizeTier(row.Tier || row.tier || "Unranked", tiers),
-      scores
-    };
-  });
-
-  return { title, tiers, facets, candidates };
-}
 
 /**
- * Exports the current configuration state to the appropriate format.
- * @returns {string} Serialized configuration text
+ * Exports the current configuration state as JSON.
+ * @returns {string} JSON-formatted configuration text
  */
 export function exportConfig() {
-  if (state.configFormat === "markdown") {
-    return exportMarkdown();
-  }
   return exportJson();
 }
 
@@ -181,46 +123,7 @@ export function exportJson() {
   }, null, 2);
 }
 
-/**
- * Exports the current configuration state as Markdown.
- * @returns {string} Markdown-formatted configuration text
- */
-export function exportMarkdown() {
-  const facetHeader = "| Facet | Weight |\n| --- | ---: |";
-  const facetRows = state.facets
-    .map((facet) => `| ${cell(facet.name)} | ${formatNumber(facet.weight)} |`)
-    .join("\n");
 
-  const scoreHeaders = state.facets.map((facet) => facet.name);
-  const candidateHeader = ["Name", "Image", "Description", "Tier", ...scoreHeaders];
-  const candidateAlign = ["---", "---", "---", "---", ...scoreHeaders.map(() => "---:")];
-  const candidateRows = state.candidates.map((candidate) => {
-    const values = [
-      candidate.name,
-      candidate.image,
-      candidate.description,
-      candidate.tier,
-      ...state.facets.map((facet) => formatNumber(candidate.scores[facet.id] ?? 0))
-    ];
-    return `| ${values.map(cell).join(" | ")} |`;
-  }).join("\n");
-
-return `${state.title}
-
-tiers: [${state.tiers.join(", ")}]
-
-## Facets
-
-${facetHeader}
-${facetRows}
-
-## Candidates
-
-| ${candidateHeader.map(cell).join(" | ")} |
-| ${candidateAlign.join(" | ")} |
-${candidateRows}
-`;
-}
 
 let saveTimer = 0;
 
@@ -280,8 +183,7 @@ export async function persistConfig() {
  * @returns {string} JSON configuration text
  */
 export function getEditableJson() {
-  if (state.configFormat === "json") return state.configText;
-  return exportJson();
+  return state.configText;
 }
 
 /**
@@ -710,7 +612,7 @@ export function closeConfigEditor() {
   configDraft = null;
 
   // Restore state from the last saved config
-  const saved = parseConfig(state.configText, state.configFormat);
+  const saved = parseConfig(state.configText);
   state.facets = saved.facets;
   state.min = saved.min ?? 0;
   state.max = saved.max ?? 10;
@@ -804,77 +706,4 @@ export function applyEditorConfig() {
   showToast("Applied config.");
 }
 
-/**
- * Parses a scalar setting from Markdown lines.
- * @param {Array} lines - Array of Markdown lines
- * @param {string} key - The setting key to find
- * @param {string} fallback - Default value if not found
- * @returns {string} The setting value or fallback
- */
-function parseScalarSetting(lines, key, fallback) {
-  const prefix = `${key}:`;
-  const found = lines.find((line) => line.trim().toLowerCase().startsWith(prefix.toLowerCase()));
-  if (!found) return fallback;
-  const value = found.slice(found.indexOf(":") + 1).trim();
-  return value || fallback;
-}
 
-/**
- * Parses a list setting from Markdown lines (e.g., "tiers: [S, A, B]").
- * @param {Array} lines - Array of Markdown lines
- * @param {string} key - The setting key to find
- * @param {Array} fallback - Default array if not found
- * @returns {Array} Array of parsed values or fallback
- */
-function parseListSetting(lines, key, fallback) {
-  const raw = parseScalarSetting(lines, key, "");
-  if (!raw) return fallback;
-  const match = raw.match(/^\[(.*)\]$/);
-  const source = match ? match[1] : raw;
-  const values = source.split(",").map((value) => value.trim()).filter(Boolean);
-  return values.length ? values : fallback;
-}
-
-/**
- * Parses a Markdown table under a specific heading.
- * @param {Array} lines - Array of Markdown lines
- * @param {string} heading - The heading to search for (e.g., "## Facets")
- * @returns {Array} Array of row objects with column headers as keys
- */
-function parseMarkdownTable(lines, heading) {
-  const start = lines.findIndex((line) => line.trim().toLowerCase() === heading.toLowerCase());
-  if (start === -1) return [];
-  const table = [];
-  for (let index = start + 1; index < lines.length; index += 1) {
-    const line = lines[index].trim();
-    if (!line && !table.length) continue;
-    if (!line.startsWith("|")) {
-      if (table.length) break;
-      continue;
-    }
-    table.push(splitTableRow(line));
-  }
-
-  if (table.length < 2) return [];
-  const headers = table[0];
-  return table.slice(2).map((cells) => {
-    const row = {};
-    headers.forEach((header, index) => {
-      row[header] = cells[index] ?? "";
-    });
-    return row;
-  });
-}
-
-/**
- * Splits a Markdown table row into individual cells.
- * @param {string} line - The table row line
- * @returns {Array} Array of cell values
- */
-function splitTableRow(line) {
-  return line
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split("|")
-    .map((cell) => cell.trim());
-}

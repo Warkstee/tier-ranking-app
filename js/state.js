@@ -17,7 +17,7 @@ export { DEFAULT_CONFIG };
  * @property {Object[]} candidates - Array of candidate objects
  * @property {string|null} selectedId - ID of the currently selected candidate
  * @property {string} configText - Current configuration text
- * @property {string} configFormat - Configuration format ("json" or "markdown")
+
  * @property {string} configSource - Source of the current configuration
  */
 export const state = {
@@ -29,7 +29,7 @@ export const state = {
   candidates: [],
   selectedId: null,
   configText: DEFAULT_CONFIG,
-  configFormat: "json",
+
   configSource: "bundled config",
   currentRankingName: null
 };

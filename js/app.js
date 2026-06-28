@@ -160,10 +160,10 @@ async function resetScoresAndRankings() {
 
 /**
  * Applies a parsed config object to the application state and re-renders the UI.
- * @param {Object} config - The config object containing text, format, and source
+ * @param {Object} config - The config object containing text and source
  */
 function applyConfig(config) {
-  const parsed = parseConfig(config.text, config.format);
+  const parsed = parseConfig(config.text);
   state.title = parsed.title;
   state.tiers = parsed.tiers;
   state.facets = parsed.facets;
@@ -171,7 +171,6 @@ function applyConfig(config) {
   state.min = parsed.min ?? 0;   // Add support for min/max from config
   state.max = parsed.max ?? 10;
   state.configText = config.text;
-  state.configFormat = config.format;
   state.configSource = config.source;
   state.selectedId = null;
   closeModal();
