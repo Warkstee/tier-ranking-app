@@ -110,22 +110,24 @@ export function initTitleEdit() {
  */
 export function renderTierBoard() {
   els.tierBoard.replaceChildren();
-  state.tiers.forEach((tier) => {
+  // Sort tiers by position before rendering
+  const sortedTiers = [...state.tiers].sort((a, b) => a.position - b.position);
+  sortedTiers.forEach((tier) => {
     const lane = document.createElement("section");
     lane.className = "tier-lane";
-    lane.dataset.tierLane = tier;
+    lane.dataset.tierLane = tier.id;
 
     const label = document.createElement("div");
     label.className = "tier-label";
-    label.dataset.tier = tier;
-    label.textContent = tier;
+    label.dataset.tier = tier.position;
+    label.textContent = tier.name;
 
     const cards = document.createElement("div");
     cards.className = "tier-cards";
-    cards.dataset.dropZone = tier;
-    cards.dataset.tierCards = tier;
+    cards.dataset.dropZone = tier.id;
+    cards.dataset.tierCards = tier.id;
 
-    const candidates = state.candidates.filter((candidate) => candidate.tier === tier);
+    const candidates = state.candidates.filter((candidate) => candidate.tierId === tier.id);
     if (candidates.length) {
       candidates.forEach((candidate) => cards.append(createCandidateCard(candidate)));
     } else {
@@ -144,7 +146,7 @@ export function renderTierBoard() {
  * Renders the unranked candidates list in the right rail.
  */
 export function renderUnranked() {
-  const unranked = state.candidates.filter((candidate) => candidate.tier === "Unranked");
+  const unranked = state.candidates.filter((candidate) => !candidate.tierId);
   els.unrankedList.replaceChildren();
   unranked.forEach((candidate) => els.unrankedList.append(createCandidateRow(candidate)));
   els.unrankedCount.textContent = `${unranked.length} of ${state.candidates.length}`;

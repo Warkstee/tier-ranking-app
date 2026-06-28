@@ -17,7 +17,13 @@ import {
   hideConfigEditor,
   applyEditorConfig,
   wireConfigEditorControls,
-  syncOpenConfigEditor
+  syncOpenConfigEditor,
+  openTierEditor,
+  closeTierEditor,
+  hideTierEditor,
+  applyTierEditor,
+  addTier,
+  wireTierEditorControls
 } from "./config.js";
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
@@ -53,12 +59,18 @@ async function boot() {
  */
 function wireStaticControls() {
   els.openConfig.addEventListener("click", () => { closeBurgerMenu(); openConfigEditor(); });
+  els.openTierEditor.addEventListener("click", () => { closeBurgerMenu(); openTierEditor(); });
   els.resetConfig.addEventListener("click", () => { closeBurgerMenu(); resetScoresAndRankings(); });
   els.closeConfig.addEventListener("click", hideConfigEditor); // X button - preserves draft
   els.cancelConfig.addEventListener("click", closeConfigEditor); // Cancel button - discards draft
   els.applyConfigEdit.addEventListener("click", applyEditorConfig);
+  els.closeTierEditor.addEventListener("click", hideTierEditor); // X button - preserves draft
+  els.cancelTier.addEventListener("click", closeTierEditor); // Cancel button - discards draft
+  els.applyTierEditor.addEventListener("click", applyTierEditor);
+  els.addTier.addEventListener("click", addTier);
 
   wireConfigEditorControls();
+  wireTierEditorControls();
 
   els.addNameInput.addEventListener("input", () => {
     const remaining = 23 - els.addNameInput.value.length;
@@ -137,7 +149,7 @@ async function resetScoresAndRankings() {
       }
       
       // Move to unranked
-      candidate.tier = "Unranked";
+      candidate.tierId = null;
     });
     
     // Re-render the UI

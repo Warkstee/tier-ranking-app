@@ -157,7 +157,14 @@ async function handleNew() {
     // Reset to default config
     state.currentRankingName = sanitizedName;
     state.title = "S-Tier Ranking Board";
-    state.tiers = ["S", "A", "B", "C", "D", "F"];
+    state.tiers = [
+      { id: "tier-1", name: "S", position: 1 },
+      { id: "tier-2", name: "A", position: 2 },
+      { id: "tier-3", name: "B", position: 3 },
+      { id: "tier-4", name: "C", position: 4 },
+      { id: "tier-5", name: "D", position: 5 },
+      { id: "tier-6", name: "F", position: 6 }
+    ];
     state.facets = [];
     state.candidates = [];
     state.min = 0;
@@ -430,7 +437,14 @@ async function openRanking(name) {
     
     // Apply the loaded data to state
     state.title = data.title || "S-Tier Ranking Board";
-    state.tiers = data.tiers || ["S", "A", "B", "C", "D", "F"];
+    state.tiers = data.tiers || [
+      { id: "tier-1", name: "S", position: 1 },
+      { id: "tier-2", name: "A", position: 2 },
+      { id: "tier-3", name: "B", position: 3 },
+      { id: "tier-4", name: "C", position: 4 },
+      { id: "tier-5", name: "D", position: 5 },
+      { id: "tier-6", name: "F", position: 6 }
+    ];
     state.facets = data.facets || [];
     state.candidates = data.candidates || [];
     state.min = data.min ?? 0;

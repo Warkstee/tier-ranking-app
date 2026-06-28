@@ -22,7 +22,14 @@ export { DEFAULT_CONFIG };
  */
 export const state = {
   title: "S-Tier Ranking Board",
-  tiers: ["S", "A", "B", "C", "D", "F"],
+  tiers: [
+    { id: "tier-1", name: "S", position: 1 },
+    { id: "tier-2", name: "A", position: 2 },
+    { id: "tier-3", name: "B", position: 3 },
+    { id: "tier-4", name: "C", position: 4 },
+    { id: "tier-5", name: "D", position: 5 },
+    { id: "tier-6", name: "F", position: 6 }
+  ],
   min: 0,
   max: 10,
   facets: [],
@@ -84,5 +91,13 @@ export const els = {
   closeNameInput: document.querySelector("[data-close-name-input]"),
   cancelNameInput: document.querySelector("[data-cancel-name-input]"),
   rankingFlyout: document.querySelector("[data-ranking-flyout]"),
-  rankingFlyoutList: document.querySelector("[data-ranking-flyout-list]")
+  rankingFlyoutList: document.querySelector("[data-ranking-flyout-list]"),
+  openTierEditor: document.querySelector("[data-open-tier-editor]"),
+  tierEditorModal: document.querySelector("[data-tier-editor-modal]"),
+  tiersList: document.querySelector("[data-tiers-list]"),
+  addTier: document.querySelector("[data-add-tier]"),
+  closeTierEditor: document.querySelector("[data-close-tier]"),
+  cancelTier: document.querySelector("[data-cancel-tier]"),
+  applyTierEditor: document.querySelector("[data-apply-tier]"),
+  tierStatus: document.querySelector("[data-tier-status]")
 };

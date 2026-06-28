@@ -118,12 +118,17 @@ function setActiveDropZone(zone) {
  * @param {string} candidateId - The ID of the candidate to move
  * @param {string} tier - The target tier name
  */
-function moveCandidate(candidateId, tier) {
+function moveCandidate(candidateId, tierId) {
   const candidate = getCandidate(candidateId);
   if (!candidate) return;
-  const normalized = String(tier || "Unranked").trim();
-  const match = state.tiers.find((t) => t.toLowerCase() === normalized.toLowerCase());
-  candidate.tier = match || "Unranked";
+  // tierId is the drop zone's data-drop-zone value, which is now the tier's id
+  // If tierId is "Unranked", set to null
+  if (tierId === "Unranked" || !tierId) {
+    candidate.tierId = null;
+  } else {
+    const match = state.tiers.find((t) => t.id === tierId);
+    candidate.tierId = match ? match.id : null;
+  }
   renderTierBoard();
   renderUnranked();
   syncConfigFromState();
@@ -288,6 +293,7 @@ function onReorderPointerUp(event) {
   const fromIndex = reorderDrag.fromIndex;
   const draggedItem = reorderDrag.item;
   const callback = reorderDrag.onReorder;
+  const itemSelector = reorderDrag.itemSelector;
 
   reorderDrag.ghost?.remove();
   draggedItem.classList.remove("dragging");
@@ -298,7 +304,7 @@ function onReorderPointerUp(event) {
 
   if (wasDrag) {
     // The item is already in its final DOM position — find its new index
-    const items = [...draggedItem.parentElement.querySelectorAll(".facet-row")];
+    const items = [...draggedItem.parentElement.querySelectorAll(itemSelector)];
     const toIndex = items.indexOf(draggedItem);
 
     if (toIndex !== -1 && toIndex !== fromIndex) {

@@ -45,12 +45,16 @@
   text-transform: uppercase;
 }
 
-.tier-label[data-tier="S"] { background: #ff747b; }
-.tier-label[data-tier="A"] { background: #ffc07c; }
-.tier-label[data-tier="B"] { background: #f8df78; }
-.tier-label[data-tier="C"] { background: #a9f371; }
-.tier-label[data-tier="D"] { background: #76b9f2; }
-.tier-label[data-tier="F"] { background: #d46df0; }
+.tier-label[data-tier="1"] { background: #ff747b; }
+.tier-label[data-tier="2"] { background: #ffc07c; }
+.tier-label[data-tier="3"] { background: #f8df78; }
+.tier-label[data-tier="4"] { background: #a9f371; }
+.tier-label[data-tier="5"] { background: #76b9f2; }
+.tier-label[data-tier="6"] { background: #d46df0; }
+.tier-label[data-tier="7"] { background: #4dd0e1; }
+.tier-label[data-tier="8"] { background: #f06292; }
+.tier-label[data-tier="9"] { background: #7986cb; }
+.tier-label[data-tier="10"] { background: #a1887f; }
 
 .tier-cards {
   min-height: var(--lane-min-h);

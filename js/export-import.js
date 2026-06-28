@@ -171,7 +171,14 @@ export async function importRanking(file) {
     
     // Apply the imported data to state
     state.title = data.title || "S-Tier Ranking Board";
-    state.tiers = data.tiers || ["S", "A", "B", "C", "D", "F"];
+    state.tiers = data.tiers || [
+      { id: "tier-1", name: "S", position: 1 },
+      { id: "tier-2", name: "A", position: 2 },
+      { id: "tier-3", name: "B", position: 3 },
+      { id: "tier-4", name: "C", position: 4 },
+      { id: "tier-5", name: "D", position: 5 },
+      { id: "tier-6", name: "F", position: 6 }
+    ];
     state.facets = data.facets || [];
     state.candidates = data.candidates || [];
     state.min = data.min ?? 0;

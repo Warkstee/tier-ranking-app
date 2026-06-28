@@ -48,6 +48,7 @@
             </div>
           </div>
           <button type="button" class="burger-menu-item" data-open-config>Edit Criteria...</button>
+          <button type="button" class="burger-menu-item" data-open-tier-editor>Edit Tiers...</button>
           <button type="button" class="burger-menu-item" data-reset-config>Reset Scores & Rankings...</button>
         </div>
       </div>
@@ -101,6 +102,39 @@
       <div class="modal-layout">
         <article class="detail-card" data-detail-card></article>
       </div>
+    </section>
+
+    <section class="tier-editor-modal" aria-label="Tier editor" data-tier-editor-modal hidden>
+      <article class="tier-editor-panel">
+        <header class="tier-editor-header">
+          <div>
+            <h2>Tiers</h2>
+          </div>
+          <button class="tier-editor-close" type="button" aria-label="Close tier editor" data-close-tier>x</button>
+        </header>
+
+        <div class="tier-editor-content">
+          <section class="tier-editor-section">
+            <h3>Ranking Tiers</h3>
+            <div class="tiers-list" data-tiers-list></div>
+            <button type="button" class="btn-add-tier" data-add-tier>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Tier
+            </button>
+          </section>
+        </div>
+
+        <footer class="tier-editor-footer">
+          <p data-tier-status role="status" aria-live="polite"></p>
+          <div class="tier-editor-actions">
+            <button type="button" data-cancel-tier>Cancel</button>
+            <button type="button" data-apply-tier>Apply Changes</button>
+          </div>
+        </footer>
+      </article>
     </section>
 
     <section class="config-modal" aria-label="Configuration editor" data-config-modal hidden>
