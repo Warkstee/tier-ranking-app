@@ -14,15 +14,45 @@ A browser-based app for ranking candidates into tiers using weighted scoring cri
 - **In-browser configuration** — Edit tiers, scoring criteria, and score ranges without touching config files
 - **Auto-save** — Changes are saved automatically as you work
 
-## Quick Start
+## Self-Hosted Deployment
+
+Deploy on your local machine, or a remote server, using the pre-built image, via Docker. Create a directory with a `compose.yml` and the required data volumes:
+
+```sh
+mkdir tier-ranking-app && cd tier-ranking-app
+mkdir -p data/rankings data/candidates
+```
+
+Create `compose.yml`:
+
+```yaml
+services:
+  tier-ranking-app:
+    image: ghcr.io/warkstee/tier-ranking-app:latest
+    ports:
+      - "4173:80"
+    volumes:
+      - ./data/rankings:/app/rankings
+      - ./data/candidates:/usr/share/nginx/html/assets/candidates
+    restart: unless-stopped
+```
+
+Then start the container:
 
 ```sh
 docker compose up -d
 ```
 
-Open `http://127.0.0.1:4173/`.
+Open `http://127.0.0.1:4173/` (local machine) / `http://<server-ip>:4173/` (remote server)
 
-Rankings are persisted in `./data/rankings/` and candidate images in `./data/candidates/`.
+To update to a newer version:
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+Make sure the port `4173` has been opened in the firewall
 
 ## Configuration
 

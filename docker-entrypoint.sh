@@ -12,5 +12,13 @@ if [ -d "$MOUNTED_CANDIDATES" ] && [ -z "$(ls -A "$MOUNTED_CANDIDATES")" ]; then
   cp -r "$DEFAULT_CANDIDATES"/* "$MOUNTED_CANDIDATES"/ 2>/dev/null || true
 fi
 
+# Start API server in background
+echo "Starting API server..."
+node /app/api/server.js &
+API_PID=$!
+
+# Ensure API server is stopped when container stops
+trap "kill $API_PID 2>/dev/null" EXIT
+
 # Execute the main command (nginx)
 exec "$@"
