@@ -9,6 +9,7 @@
 import { state, els, DEFAULT_CONFIG } from "./state.js";
 import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, formatNumber, cell, showToast, escapeHtml } from "./utils.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
+import { attachReorderable } from "./drag.js";
 
 /**
  * Draft state for the config editor.
@@ -455,6 +456,16 @@ export function renderFacetEditor() {
   if (!els.facetsList || !configDraft) return;
   els.facetsList.innerHTML = configDraft.facets.map((facet) => `
     <div class="facet-row" data-facet-id="${facet.id}">
+      <div class="drag-handle" aria-label="Drag to reorder">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <circle cx="5" cy="3" r="1.5"/>
+          <circle cx="11" cy="3" r="1.5"/>
+          <circle cx="5" cy="8" r="1.5"/>
+          <circle cx="11" cy="8" r="1.5"/>
+          <circle cx="5" cy="13" r="1.5"/>
+          <circle cx="11" cy="13" r="1.5"/>
+        </svg>
+      </div>
       <div class="form-field">
         <label>Name</label>
         <input type="text" value="${escapeHtml(facet.name)}" data-facet-name="${facet.id}" autocomplete="off" spellcheck="false">
@@ -473,6 +484,14 @@ export function renderFacetEditor() {
       </button>
     </div>
   `).join("");
+
+  // Wire up drag-to-reorder
+  attachReorderable(els.facetsList, ".facet-row", (fromIndex, toIndex) => {
+    const [moved] = configDraft.facets.splice(fromIndex, 1);
+    configDraft.facets.splice(toIndex, 0, moved);
+    renderFacetEditor();
+    updateApplyButtonState();
+  });
 }
 
 /**

@@ -139,13 +139,49 @@
 
 .facet-row {
   display: grid;
-  grid-template-columns: 1fr 120px 42px;
+  grid-template-columns: 28px 1fr 120px 42px;
   gap: 12px;
   align-items: end;
   padding: 14px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  transition: opacity 0.15s ease;
+}
+
+.facet-row.dragging {
+  opacity: 0.3;
+}
+
+.drag-handle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 38px;
+  color: rgba(255, 255, 255, 0.2);
+  cursor: grab;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.drag-handle:hover {
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Override the candidate-card ghost width for facet row reordering */
+.facets-list .drag-ghost {
+  width: auto;
+  min-width: 400px;
+  max-width: 760px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  pointer-events: none;
 }
 
 .facet-row .form-field {
