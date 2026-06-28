@@ -6,6 +6,8 @@
  * - Open existing rankings
  * - Save current ranking
  * - Save ranking with new name
+ * - Export ranking to local file
+ * - Import ranking from local file
  * - Delete rankings
  */
 
@@ -13,6 +15,7 @@ import { state, els } from "./state.js";
 import { syncConfigFromState } from "./config.js";
 import { render } from "./render.js";
 import { showToast } from "./utils.js";
+import { exportRanking, importRanking } from "./export-import.js";
 
 let nameInputCallback = null;
 
@@ -82,6 +85,9 @@ export function initFileMenu() {
   els.fileOpen.addEventListener("click", handleOpen);
   els.fileSave.addEventListener("click", handleSave);
   els.fileSaveAs.addEventListener("click", handleSaveAs);
+  els.fileExport.addEventListener("click", handleExport);
+  els.fileImport.addEventListener("click", handleImport);
+  els.fileImportInput.addEventListener("change", handleImportFile);
   els.fileDelete.addEventListener("click", handleDelete);
   
   // Name input modal
@@ -222,6 +228,74 @@ async function handleSaveAs() {
 async function handleDelete() {
   // Don't close the burger menu — keep it open so the flyout can appear
   await showRankingFlyout();
+}
+
+/**
+ * Handle "Export" action - download current ranking as ZIP file with images
+ */
+async function handleExport() {
+  closeBurgerMenu();
+  await exportRanking();
+}
+
+/**
+ * Handle "Import" action - trigger file input
+ */
+function handleImport() {
+  closeBurgerMenu();
+  els.fileImportInput.value = "";
+  els.fileImportInput.click();
+}
+
+/**
+ * Handle imported file selection
+ */
+async function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const success = await importRanking(file);
+  
+  if (success) {
+    syncConfigFromState();
+    render();
+    updateCurrentRankingDisplay();
+    
+    // Auto-save using the imported filename (without extension)
+    const rankingName = file.name.replace(/\.zip$/i, "");
+    const sanitizedName = sanitizeRankingName(rankingName);
+    
+    // Check if ranking already exists
+    const rankings = await fetchRankings();
+    const exists = rankings.some(r => r.name === sanitizedName);
+    
+    if (exists) {
+      const overwrite = confirm(`A ranking named "${rankingName}" already exists. Overwrite?`);
+      if (!overwrite) {
+        // Fall back to name input modal so user can choose a different name
+        showNameInputModal("Save Imported Ranking As", async (name) => {
+          const newName = sanitizeRankingName(name);
+          const newExists = rankings.some(r => r.name === newName);
+          
+          if (newExists) {
+            const newOverwrite = confirm(`A ranking named "${name}" already exists. Overwrite?`);
+            if (!newOverwrite) return;
+          }
+          
+          state.currentRankingName = newName;
+          await saveRankingToServer(newName);
+          updateCurrentRankingDisplay();
+          showToast(`Imported and saved ranking as: ${name}`);
+        });
+        return;
+      }
+    }
+    
+    state.currentRankingName = sanitizedName;
+    await saveRankingToServer(sanitizedName);
+    updateCurrentRankingDisplay();
+    showToast(`Imported and saved ranking: ${rankingName}`);
+  }
 }
 
 /**

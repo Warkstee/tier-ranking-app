@@ -36,6 +36,9 @@
               </div>
               <button type="button" data-file-save>Save File...</button>
               <button type="button" data-file-save-as>Save As...</button>
+              <button type="button" data-file-export>Export to File...</button>
+              <button type="button" data-file-import>Import from File...</button>
+              <input type="file" accept=".zip" data-file-import-input hidden>
               <div class="submenu-item-with-flyout" data-flyout-trigger="delete">
                 <button type="button" data-file-delete>Delete File...</button>
               </div>
@@ -195,6 +198,7 @@
 
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="./js/app.js" type="module"></script>
 </body>
 </html>
