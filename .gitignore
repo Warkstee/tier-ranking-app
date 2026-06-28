@@ -12,8 +12,8 @@ node_modules
 # Build outputs
 /dist
 
-# Asset folder
-/assets
+# Data folder
+/data
 
 # Log files
 *.log

@@ -6,9 +6,8 @@
  * management, and rendering modules.
  */
 
-import { state, els } from "./state.js";
+import { state, els, DEFAULT_CONFIG } from "./state.js";
 import { 
-  loadConfig, 
   parseConfig, 
   syncConfigFromState, 
   setConfigStatus, 
@@ -41,9 +40,9 @@ async function boot() {
   // Try to load the most recent ranking first
   const loaded = await loadMostRecentRanking();
   
-  // If no rankings exist, fall back to default config
+  // If no rankings exist, use the bundled default config
   if (!loaded) {
-    const config = await loadConfig({ fallbackToDefault: true });
+    const config = { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
     applyConfig(config);
   }
 }

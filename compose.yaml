@@ -2,16 +2,15 @@ services:
   api:
     build: ./api
     volumes:
-      - ./tier-ranking.json:/app/tier-ranking.json
-      - ./assets/candidates:/app/assets/candidates
+      - ./data/rankings:/app/rankings
+      - ./data/candidates:/app/assets/candidates
   tier-ranking-app:
     image: ghcr.io/ironicbadger/tier-ranking-app:latest
     build: .
     ports:
       - "4173:80"
     volumes:
-      - ./tier-ranking.json:/usr/share/nginx/html/tier-ranking.json:ro
-      - ./assets/candidates:/usr/share/nginx/html/assets/candidates
+      - ./data/candidates:/usr/share/nginx/html/assets/candidates
     depends_on:
       - api
       

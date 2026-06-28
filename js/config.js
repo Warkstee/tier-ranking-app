@@ -21,40 +21,6 @@ import { attachReorderable } from "./drag.js";
 let configDraft = null;
 
 /**
- * Loads configuration from disk, trying configured sources in order.
- * Falls back to bundled default config if all sources fail and fallbackToDefault is true.
- * @param {Object} options - Load options
- * @param {boolean} options.fallbackToDefault - Whether to use bundled config as fallback
- * @returns {Promise<Object>} Config object with text, format, and source properties
- */
-export async function loadConfig({ fallbackToDefault = false } = {}) {
-  const sources = [
-    { path: "./tier-ranking.json", format: "json" }
-  ];
-
-  for (const source of sources) {
-    try {
-      const response = await fetch(`${source.path}?refresh=${Date.now()}`, { cache: "no-store" });
-      if (!response.ok) continue;
-      return {
-        text: await response.text(),
-        format: source.format,
-        source: source.path.replace("./", "")
-      };
-    } catch {
-      // Try the next config path before falling back to the bundled sample.
-    }
-  }
-
-  if (fallbackToDefault) {
-    showToast("Using bundled config because tier-ranking.json was not fetched.");
-    return { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
-  }
-
-  throw new Error("Could not load tier-ranking.json.");
-}
-
-/**
  * Parses configuration text based on the specified format.
  * @param {string} text - The configuration text to parse
  * @param {string} format - The format type ("json" or "markdown")
@@ -269,37 +235,39 @@ export function syncConfigFromState() {
 }
 
 /**
- * Persists the current configuration text to the backend API.
- * Also saves to the current ranking if one is set.
+ * Persists the current configuration to the backend API.
+ * If no ranking name is set, auto-saves to a default ranking named "untitled".
  * @returns {Promise<void>}
  */
 export async function persistConfig() {
   try {
-    const response = await fetch("/api/config", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: state.configText
-    });
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
+    // If no ranking name is set, auto-save to "untitled"
+    if (!state.currentRankingName) {
+      state.currentRankingName = "untitled";
+      // Update the UI to show the ranking name
+      const rankingNameEl = document.querySelector("[data-current-ranking-name]");
+      if (rankingNameEl) {
+        rankingNameEl.textContent = state.currentRankingName;
+      }
     }
     
-    // Also save to current ranking if one is set
-    if (state.currentRankingName) {
-      const data = {
-        title: state.title,
-        tiers: state.tiers,
-        facets: state.facets,
-        candidates: state.candidates,
-        min: state.min,
-        max: state.max
-      };
-      
-      await fetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+    const data = {
+      title: state.title,
+      tiers: state.tiers,
+      facets: state.facets,
+      candidates: state.candidates,
+      min: state.min,
+      max: state.max
+    };
+    
+    const response = await fetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
     }
   } catch (err) {
     console.error("Failed to persist config:", err);

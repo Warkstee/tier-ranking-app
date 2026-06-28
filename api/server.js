@@ -3,11 +3,9 @@
  *
  * A minimal Node.js HTTP server.
  * 
- * Exposes POST /api/config endpoint for persisting the tier ranking board's JSON configuration to
- * disk. Writes are performed directly to the mounted ranking JSON file, which is shared with the nginx
- * container via a Docker bind mount.
- *
- * Exposes POST /api/uploadimg for uploading candidate images to /app/assets/candidates/.
+ * Exposes endpoints for managing tier ranking boards:
+ * - GET/POST/DELETE /api/rankings/:name for managing named rankings
+ * - POST /api/uploadimg for uploading candidate images to /app/assets/candidates/
  */
 import { createServer } from "http";
 import { writeFile, mkdir, readdir, stat, unlink, readFile } from "fs/promises";
@@ -17,7 +15,6 @@ import { join, basename } from "path";
 import Busboy from "busboy";
 
 const PORT = 3001;
-const CONFIG_PATH = "/app/tier-ranking.json";
 const UPLOAD_DIR = "/app/assets/candidates";
 const RANKINGS_DIR = "/app/rankings";
 const ALLOWED_MIME_TYPES = new Set([
@@ -47,58 +44,36 @@ const server = createServer(async (req, res) => {
 
   /**
    * @swagger
-   * /api/v1/activities:
-   *   post:
-   *     summary: Ingest activity data
-   *     tags: [Activities]
-   *     security:
-   *       - bearerAuth: []
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - activityData
-   *               - userId
-   *             properties:
-   *               activityData:
-   *                 type: object
-   *                 description: The activity data to be ingested
-   *               userId:
-   *                 type: string
-   *                 description: The ID of the user associated with this activity
+   * /api/rankings:
+   *   get:
+   *     summary: List all saved rankings
+   *     description: >
+   *       Returns a list of all saved rankings with their names and
+   *       modification timestamps. Results are sorted by modification
+   *       time, with the most recently modified ranking first.
+   *     tags: [Rankings]
    *     responses:
-   *       201:
-   *         description: Activity data ingested successfully
-   *       400:
-   *         description: Bad request
+   *       200:
+   *         description: List of rankings retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   name:
+   *                     type: string
+   *                     description: The ranking name (sanitized filename without .json extension)
+   *                     example: "my-ranking"
+   *                   modifiedAt:
+   *                     type: string
+   *                     format: date-time
+   *                     description: ISO 8601 timestamp of last modification
+   *                     example: "2026-06-28T10:30:00.000Z"
+   *       500:
+   *         description: Failed to list rankings
    */
-  if (req.method === "POST" && req.url === "/api/config") {
-    try {
-      const body = await readBody(req);
-
-      if (!body.trim()) {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Empty body" }));
-        return;
-      }
-
-      // Write file
-      await writeFile(CONFIG_PATH, body, "utf8");
-
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
-    } catch (err) {
-      console.error("Failed to write config:", err);
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Failed to write config" }));
-    }
-    return;
-  }
-
-  // GET /api/rankings - List all saved rankings
   if (req.method === "GET" && req.url === "/api/rankings") {
     try {
       const files = await readdir(RANKINGS_DIR);
@@ -128,7 +103,38 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/rankings/:name - Load a specific ranking
+  /**
+   * @swagger
+   * /api/rankings/{name}:
+   *   get:
+   *     summary: Load a specific ranking
+   *     description: >
+   *       Retrieves the full JSON data for a specific ranking by name.
+   *       The name is sanitized to prevent path traversal attacks.
+   *     tags: [Rankings]
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ranking name (will be sanitized)
+   *         example: "my-ranking"
+   *     responses:
+   *       200:
+   *         description: Ranking data retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               description: The full ranking JSON data
+   *       400:
+   *         description: Invalid ranking name
+   *       404:
+   *         description: Ranking not found
+   *       500:
+   *         description: Failed to load ranking
+   */
   if (req.method === "GET" && req.url.startsWith("/api/rankings/")) {
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {
@@ -156,7 +162,51 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/rankings/:name - Save a ranking
+  /**
+   * @swagger
+   * /api/rankings/{name}:
+   *   post:
+   *     summary: Save a ranking
+   *     description: >
+   *       Saves or updates a ranking with the specified name. The ranking
+   *       data is written as JSON to the rankings directory. The name is
+   *       sanitized to prevent path traversal attacks.
+   *     tags: [Rankings]
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ranking name (will be sanitized)
+   *         example: "my-ranking"
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             description: The ranking data to save
+   *     responses:
+   *       200:
+   *         description: Ranking saved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 name:
+   *                   type: string
+   *                   description: The sanitized ranking name
+   *                   example: "my-ranking"
+   *       400:
+   *         description: Invalid ranking name
+   *       500:
+   *         description: Failed to save ranking
+   */
   if (req.method === "POST" && req.url.startsWith("/api/rankings/")) {
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {
@@ -180,7 +230,41 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  // DELETE /api/rankings/:name - Delete a ranking
+  /**
+   * @swagger
+   * /api/rankings/{name}:
+   *   delete:
+   *     summary: Delete a ranking
+   *     description: >
+   *       Deletes a ranking file by name. The name is sanitized to prevent
+   *       path traversal attacks.
+   *     tags: [Rankings]
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ranking name (will be sanitized)
+   *         example: "my-ranking"
+   *     responses:
+   *       200:
+   *         description: Ranking deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *       400:
+   *         description: Invalid ranking name
+   *       404:
+   *         description: Ranking not found
+   *       500:
+   *         description: Failed to delete ranking
+   */
   if (req.method === "DELETE" && req.url.startsWith("/api/rankings/")) {
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {

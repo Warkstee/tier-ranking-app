@@ -5,50 +5,8 @@
  * Contains the default configuration, mutable application state, and cached DOM queries.
  */
 
-/**
- * Default configuration JSON used when no config file is available.
- * @type {string}
- */
-export const DEFAULT_CONFIG = `{
-  "title": "#S-Tier Ranking Board",
-  "tiers": ["S", "A", "B", "C", "D", "F"],
-  "min": 0,
-  "max": 10,
-  "rubric": [
-    {
-      "id": "ease",
-      "name": "Ease of use",
-      "weight": 1
-    },
-    {
-      "id": "performance",
-      "name": "Performance",
-      "weight": 1
-    }
-  ],
-  "candidates": [
-    {
-      "name": "Atlas",
-      "image": "./assets/candidates/atlas.svg",
-      "description": "Polished all-rounder.",
-      "tier": "Unranked",
-      "scores": {
-        "ease": 8,
-        "performance": 9
-      }
-    },
-    {
-      "name": "Beacon",
-      "image": "./assets/candidates/beacon.svg",
-      "description": "Friendly and quick to learn.",
-      "tier": "Unranked",
-      "scores": {
-        "ease": 9,
-        "performance": 7
-      }
-    }
-  ]
-}`;
+import { DEFAULT_CONFIG } from "./default-config.js";
+export { DEFAULT_CONFIG };
 
 /**
  * Mutable application state object.

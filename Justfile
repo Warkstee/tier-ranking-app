@@ -11,7 +11,9 @@ run: build
     docker run --rm -p {{port}}:80 {{image}}
 
 run-config: build
-    docker run --rm -p {{port}}:80 -v "$PWD/tier-ranking.json:/usr/share/nginx/html/tier-ranking.json:ro" {{image}}
+    docker run --rm -p {{port}}:80 \
+      -v "$PWD/data/candidates:/usr/share/nginx/html/assets/candidates" \
+      {{image}}
 
 compose:
     docker compose up -d
