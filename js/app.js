@@ -23,7 +23,7 @@ import {
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
-import { initFileMenu, loadMostRecentRanking, closeBurgerMenu } from "./file-menu.js";
+import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 
 let modalTitleFrame = 0;
 
@@ -54,7 +54,7 @@ async function boot() {
  */
 function wireStaticControls() {
   els.openConfig.addEventListener("click", () => { closeBurgerMenu(); openConfigEditor(); });
-  els.resetConfig.addEventListener("click", () => { closeBurgerMenu(); resetFromDisk(); });
+  els.resetConfig.addEventListener("click", () => { closeBurgerMenu(); resetScoresAndRankings(); });
   els.closeConfig.addEventListener("click", hideConfigEditor); // X button - preserves draft
   els.cancelConfig.addEventListener("click", closeConfigEditor); // Cancel button - discards draft
   els.applyConfigEdit.addEventListener("click", applyEditorConfig);
@@ -114,22 +114,46 @@ function wireStaticControls() {
 }
 
 /**
- * Reloads the config from disk and applies it to the application state.
+ * Resets all candidate scores to minimum and moves them to unranked.
+ * Shows confirmation dialog before proceeding.
  * @returns {Promise<void>}
  */
-async function resetFromDisk() {
+async function resetScoresAndRankings() {
+  const confirmed = confirm(
+    "This will reset all scores to their minimum values and move all candidates to the unranked pool. This action cannot be undone. Continue?"
+  );
+  
+  if (!confirmed) return;
+  
   els.resetConfig.disabled = true;
+  
   try {
-    const config = await loadConfig();
-    applyConfig(config);
-    syncOpenConfigEditor();
-    setConfigStatus(`Reloaded ${config.source}.`, "ok");
-    showToast(`Reset from ${config.source}.`);
-  } catch {
-    if (!els.configModal.hidden) {
-      setConfigStatus("Could not reload ranking JSON file.", "error");
+    // Reset all candidates
+    state.candidates.forEach(candidate => {
+      // Reset all facet scores to minimum
+      if (candidate.scores) {
+        Object.keys(candidate.scores).forEach(facetId => {
+          candidate.scores[facetId] = state.min;
+        });
+      }
+      
+      // Move to unranked
+      candidate.tier = "Unranked";
+    });
+    
+    // Re-render the UI
+    render();
+    
+    // Auto-save if we have a ranking name
+    if (state.currentRankingName) {
+      await saveRankingToServer(state.currentRankingName);
+      showToast("All scores and rankings have been reset and saved.");
+    } else {
+      showToast("All scores and rankings have been reset.");
     }
-    showToast("Could not refresh ranking JSON file.");
+  } catch (error) {
+    console.error("Failed to reset scores and rankings:", error);
+    showToast("Reset completed but failed to auto-save. Please save manually.");
   } finally {
     els.resetConfig.disabled = false;
   }

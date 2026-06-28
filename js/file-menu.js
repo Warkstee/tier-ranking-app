@@ -388,7 +388,7 @@ function updateCurrentRankingDisplay() {
 /**
  * Save current state to server
  */
-async function saveRankingToServer(name) {
+export async function saveRankingToServer(name) {
   const data = {
     title: state.title,
     tiers: state.tiers,
