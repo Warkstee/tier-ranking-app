@@ -111,24 +111,29 @@
 }
 
 .name-input-close {
-  background: transparent;
-  border: none;
-  color: var(--muted);
-  font-size: 1.5rem;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #f7f8fb;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 950;
+  background: rgba(4, 6, 12, 0.88);
+  border: 2px solid rgba(41, 99, 215, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.44);
   cursor: pointer;
   padding: 0;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.25rem;
   transition: all 0.2s;
 }
 
 .name-input-close:hover {
-  background: var(--panel-2);
-  color: var(--text);
+  background: rgba(41, 99, 215, 0.25);
+  border-color: rgba(41, 99, 215, 0.95);
 }
 
 .name-input-form {
