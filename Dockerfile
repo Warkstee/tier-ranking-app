@@ -1,5 +1,10 @@
 # Stage 1: Build API dependencies
-FROM node:alpine AS api-builder
+# Node 22 LTS 
+FROM node:22-alpine AS api-builder
+
+# Install build dependencies for native modules (required for better-sqlite3)
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 COPY api/package.json api/server.js ./
 RUN npm install --omit=dev
