@@ -8,8 +8,8 @@
  * - POST /api/uploadimg for uploading candidate images to /app/assets/candidates/
  */
 import { createServer } from "http";
-import { writeFile, mkdir, readdir, stat, unlink, readFile } from "fs/promises";
-import { createWriteStream, existsSync } from "fs";
+import { mkdir } from "fs/promises";
+import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { join, basename } from "path";
 import Busboy from "busboy";
@@ -29,7 +29,6 @@ initDatabase();
 
 const PORT = 3001;
 const UPLOAD_DIR = "/usr/share/nginx/html/assets/candidates";
-const RANKINGS_DIR = "/app/rankings";
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -37,11 +36,6 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/webp"
 ]);
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-// Ensure rankings directory exists
-if (!existsSync(RANKINGS_DIR)) {
-  await mkdir(RANKINGS_DIR, { recursive: true });
-}
 
 // Helper: Sanitize ranking name for use as filename
 function sanitizeRankingName(name) {
@@ -243,25 +237,19 @@ const server = createServer(async (req, res) => {
     if (!user) return;
     
     try {
-      const files = await readdir(RANKINGS_DIR);
-      const jsonFiles = files.filter(f => f.endsWith('.json'));
+      const db = getDb();
+      const rankings = db.prepare(
+        'SELECT name, title, updated_at FROM rankings WHERE user_id = ? ORDER BY updated_at DESC'
+      ).all(user.userId);
       
-      const rankings = await Promise.all(
-        jsonFiles.map(async (filename) => {
-          const filePath = join(RANKINGS_DIR, filename);
-          const stats = await stat(filePath);
-          return {
-            name: filename.replace('.json', ''),
-            modifiedAt: stats.mtime.toISOString()
-          };
-        })
-      );
-      
-      // Sort by modification time, most recent first
-      rankings.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+      const result = rankings.map(r => ({
+        name: r.name,
+        title: r.title,
+        modifiedAt: r.updated_at
+      }));
       
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(rankings));
+      res.end(JSON.stringify(result));
     } catch (err) {
       console.error("Failed to list rankings:", err);
       res.writeHead(500, { "Content-Type": "application/json" });
@@ -314,20 +302,23 @@ const server = createServer(async (req, res) => {
     }
     
     try {
-      const filePath = join(RANKINGS_DIR, `${name}.json`);
-      const data = await readFile(filePath, "utf8");
+      const db = getDb();
+      const ranking = db.prepare(
+        'SELECT data_json FROM rankings WHERE user_id = ? AND name = ?'
+      ).get(user.userId, name);
       
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(data);
-    } catch (err) {
-      if (err.code === "ENOENT") {
+      if (!ranking) {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Ranking not found" }));
-      } else {
-        console.error("Failed to load ranking:", err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Failed to load ranking" }));
+        return;
       }
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(ranking.data_json);
+    } catch (err) {
+      console.error("Failed to load ranking:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to load ranking" }));
     }
     return;
   }
@@ -390,8 +381,18 @@ const server = createServer(async (req, res) => {
     
     try {
       const body = await readBody(req);
-      const filePath = join(RANKINGS_DIR, `${name}.json`);
-      await writeFile(filePath, body, "utf8");
+      const data = JSON.parse(body);
+      const title = data.title || null;
+      
+      const db = getDb();
+      db.prepare(`
+        INSERT INTO rankings (user_id, name, title, data_json, updated_at)
+        VALUES (?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(user_id, name) DO UPDATE SET
+          title = excluded.title,
+          data_json = excluded.data_json,
+          updated_at = datetime('now')
+      `).run(user.userId, name, title, body);
       
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: true, name }));
@@ -450,20 +451,23 @@ const server = createServer(async (req, res) => {
     }
     
     try {
-      const filePath = join(RANKINGS_DIR, `${name}.json`);
-      await unlink(filePath);
+      const db = getDb();
+      const result = db.prepare(
+        'DELETE FROM rankings WHERE user_id = ? AND name = ?'
+      ).run(user.userId, name);
+      
+      if (result.changes === 0) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Ranking not found" }));
+        return;
+      }
       
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: true }));
     } catch (err) {
-      if (err.code === "ENOENT") {
-        res.writeHead(404, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Ranking not found" }));
-      } else {
-        console.error("Failed to delete ranking:", err);
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Failed to delete ranking" }));
-      }
+      console.error("Failed to delete ranking:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Failed to delete ranking" }));
     }
     return;
   }
@@ -515,10 +519,9 @@ const server = createServer(async (req, res) => {
     if (!user) return;
     
     try {
-      await mkdir(UPLOAD_DIR, { recursive: true });
-
-      // Debug: log incoming headers
-      //console.log("Upload request headers:", req.headers);
+      // Create user-specific upload directory
+      const userUploadDir = join(UPLOAD_DIR, String(user.userId));
+      await mkdir(userUploadDir, { recursive: true });
 
       const busboy = Busboy({
         headers: req.headers,
@@ -550,8 +553,8 @@ const server = createServer(async (req, res) => {
           return;
         }
 
-        const fullPath = join(UPLOAD_DIR, sanitized);
-        uploadedPath = `./assets/candidates/${sanitized}`;
+        const fullPath = join(userUploadDir, sanitized);
+        uploadedPath = `./assets/candidates/${user.userId}/${sanitized}`;
 
         file.on("limit", () => {
           fileError = "File size limit exceeded";

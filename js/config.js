@@ -176,6 +176,15 @@ export function syncConfigFromState() {
 }
 
 /**
+ * Cancels any pending autosave operation.
+ * Should be called when logging out to prevent saving stale data under a different user.
+ */
+export function cancelPendingSave() {
+  window.clearTimeout(saveTimer);
+  saveTimer = 0;
+}
+
+/**
  * Persists the current configuration to the backend API.
  * If no ranking name is set, auto-saves to a default ranking named "untitled".
  * @returns {Promise<void>}

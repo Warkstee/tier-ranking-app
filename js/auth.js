@@ -5,7 +5,8 @@
  * Provides functions for login, signup, logout, and checking auth status.
  */
 
-import { els } from './state.js';
+import { state, els } from './state.js';
+import { cancelPendingSave } from './config.js';
 
 // Auth state
 let currentUser = null;
@@ -174,6 +175,10 @@ async function handleLogout() {
   } catch (error) {
     console.error('Logout error:', error);
   }
+  
+  // Cancel any pending autosave to prevent saving stale data under a different user
+  cancelPendingSave();
+  state.currentRankingName = null;
   
   currentUser = null;
   showAuthUI();

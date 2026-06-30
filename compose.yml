@@ -5,7 +5,6 @@ services:
     ports:
       - "4173:80"
     volumes:
-      - ./data/rankings:/app/rankings
       - ./data/candidates:/usr/share/nginx/html/assets/candidates
       - db-data:/app/data
     environment:
