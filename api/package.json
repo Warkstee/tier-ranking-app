@@ -7,7 +7,9 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.7.0",
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }

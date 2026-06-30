@@ -13,9 +13,22 @@ import { createWriteStream, existsSync } from "fs";
 import { pipeline } from "stream/promises";
 import { join, basename } from "path";
 import Busboy from "busboy";
+import { initDatabase, getDb } from "./db.js";
+import { 
+  hashPassword, 
+  verifyPassword, 
+  generateToken, 
+  verifyToken, 
+  setAuthCookie, 
+  clearAuthCookie, 
+  extractToken 
+} from "./auth.js";
+
+// Initialize database on startup
+initDatabase();
 
 const PORT = 3001;
-const UPLOAD_DIR = "/app/assets/candidates";
+const UPLOAD_DIR = "/usr/share/nginx/html/assets/candidates";
 const RANKINGS_DIR = "/app/rankings";
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -41,6 +54,136 @@ function sanitizeRankingName(name) {
 }
 
 const server = createServer(async (req, res) => {
+
+  // Auth endpoints
+  if (req.method === "POST" && req.url === "/api/auth/signup") {
+    try {
+      const body = await readBody(req);
+      const { username, password } = JSON.parse(body);
+      
+      // Validate username
+      if (!username || typeof username !== 'string' || username.length < 3 || username.length > 30) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Username must be 3-30 characters" }));
+        return;
+      }
+      
+      // Validate username format (alphanumeric only)
+      if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Username must be alphanumeric" }));
+        return;
+      }
+      
+      // Validate password
+      if (!password || typeof password !== 'string' || password.length < 8) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Password must be at least 8 characters" }));
+        return;
+      }
+      
+      const db = getDb();
+      
+      // Check if username already exists
+      const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+      if (existing) {
+        res.writeHead(409, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Username already exists" }));
+        return;
+      }
+      
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const result = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
+      const userId = result.lastInsertRowid;
+      
+      // Generate token and set cookie
+      const token = generateToken(userId, username);
+      setAuthCookie(res, token);
+      
+      res.writeHead(201, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, userId, username }));
+    } catch (err) {
+      console.error("Signup error:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Signup failed" }));
+    }
+    return;
+  }
+  
+  if (req.method === "POST" && req.url === "/api/auth/login") {
+    try {
+      const body = await readBody(req);
+      const { username, password } = JSON.parse(body);
+      
+      if (!username || !password) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Username and password required" }));
+        return;
+      }
+      
+      const db = getDb();
+      const user = db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username);
+      
+      if (!user) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid credentials" }));
+        return;
+      }
+      
+      const validPassword = await verifyPassword(password, user.password_hash);
+      if (!validPassword) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid credentials" }));
+        return;
+      }
+      
+      // Generate token and set cookie
+      const token = generateToken(user.id, user.username);
+      setAuthCookie(res, token);
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, userId: user.id, username: user.username }));
+    } catch (err) {
+      console.error("Login error:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Login failed" }));
+    }
+    return;
+  }
+  
+  if (req.method === "POST" && req.url === "/api/auth/logout") {
+    clearAuthCookie(res);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true }));
+    return;
+  }
+  
+  if (req.method === "GET" && req.url === "/api/auth/me") {
+    try {
+      const token = extractToken(req);
+      if (!token) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Not authenticated" }));
+        return;
+      }
+      
+      const payload = verifyToken(token);
+      if (!payload) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid token" }));
+        return;
+      }
+      
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ userId: payload.userId, username: payload.username }));
+    } catch (err) {
+      console.error("Auth check error:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Auth check failed" }));
+    }
+    return;
+  }
 
   /**
    * @swagger
