@@ -57,19 +57,50 @@
 }
 
 .current-ranking-name {
-  display: inline-block;
-  margin-left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 0.5rem;
   font-size: 0.9rem;
-  color: var(--muted);
-  font-style: italic;
+  color: var(--text);
+  font-weight: 600;
 }
 
-.current-ranking-name:not(:empty)::before {
-  content: "📄 ";
+.current-ranking-name .file-icon {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.current-ranking-name .file-name {
+  white-space: nowrap;
+}
+
+.current-ranking-name .file-status-pill {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.current-ranking-name .file-status-pill.saved {
+  background: rgba(34, 197, 94, 0.15);
+  color: rgb(34, 197, 94);
+}
+
+.current-ranking-name .file-status-pill.draft {
+  background: rgba(251, 191, 36, 0.15);
+  color: rgb(251, 191, 36);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.current-ranking-name .file-status-pill.draft:hover {
+  background: rgba(251, 191, 36, 0.25);
 }
 
 /* Name Input Modal */

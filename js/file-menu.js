@@ -11,7 +11,7 @@
  * - Delete rankings
  */
 
-import { state, els } from "./state.js";
+import { state, els, markDirty, markClean, updateCurrentRankingDisplay } from "./state.js";
 import { syncConfigFromState } from "./config.js";
 import { render } from "./render.js";
 import { showToast } from "./utils.js";
@@ -90,6 +90,26 @@ export function initFileMenu() {
   els.fileImport.addEventListener("click", handleImport);
   els.fileImportInput.addEventListener("change", handleImportFile);
   els.fileDelete.addEventListener("click", handleDelete);
+  
+  // Click on draft pill to save
+  els.fileStatus.addEventListener("click", () => {
+    if (state.isDirty) {
+      handleSave();
+    }
+  });
+  els.fileStatus.style.cursor = "pointer";
+  
+  // Change text to "SAVE" on hover when in draft state
+  els.fileStatus.addEventListener("mouseenter", () => {
+    if (state.isDirty) {
+      els.fileStatus.textContent = "SAVE";
+    }
+  });
+  els.fileStatus.addEventListener("mouseleave", () => {
+    if (state.isDirty) {
+      els.fileStatus.textContent = "DRAFT";
+    }
+  });
   
   // Name input modal
   els.nameInputForm.addEventListener("submit", handleNameInputSubmit);
@@ -466,14 +486,6 @@ async function openRanking(name) {
 /**
  * Update the current ranking name display in the header
  */
-function updateCurrentRankingDisplay() {
-  if (state.currentRankingName) {
-    els.currentRankingName.textContent = state.currentRankingName;
-  } else {
-    els.currentRankingName.textContent = "";
-  }
-}
-
 /**
  * Save current state to server
  */
@@ -497,6 +509,7 @@ export async function saveRankingToServer(name) {
     throw new Error(`Failed to save ranking: ${response.statusText}`);
   }
   
+  markClean();
   return response.json();
 }
 

@@ -48,6 +48,30 @@
   letter-spacing: 0;
 }
 
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-brand-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 26px rgba(0, 164, 220, 0.24);
+  display: grid;
+  place-items: center;
+
+}
+
+.auth-brand-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
 .auth-content {
   padding: 20px;
   display: flex;

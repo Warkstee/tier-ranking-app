@@ -38,7 +38,8 @@ export const state = {
   configText: DEFAULT_CONFIG,
 
   configSource: "bundled config",
-  currentRankingName: null
+  currentRankingName: null,
+  isDirty: false
 };
 
 /**
@@ -85,6 +86,8 @@ export const els = {
   fileImportInput: document.querySelector("[data-file-import-input]"),
   fileDelete: document.querySelector("[data-file-delete]"),
   currentRankingName: document.querySelector("[data-current-ranking-name]"),
+  fileName: document.querySelector("[data-file-name]"),
+  fileStatus: document.querySelector("[data-file-status]"),
   nameInputModal: document.querySelector("[data-name-input-modal]"),
   nameInputTitle: document.querySelector("[data-name-input-title]"),
   nameInputField: document.querySelector("[data-name-input-field]"),
@@ -101,17 +104,54 @@ export const els = {
   cancelTier: document.querySelector("[data-cancel-tier]"),
   applyTierEditor: document.querySelector("[data-apply-tier]"),
   tierStatus: document.querySelector("[data-tier-status]"),
-  // Auth elements
-  authOverlay: document.querySelector("[data-auth-overlay]"),
-  authTitle: document.querySelector("[data-auth-title]"),
-  authForm: document.querySelector("[data-auth-form]"),
-  authError: document.querySelector("[data-auth-error]"),
-  authUsername: document.querySelector("[data-auth-username]"),
-  authPassword: document.querySelector("[data-auth-password]"),
-  authSubmit: document.querySelector("[data-auth-submit]"),
-  authToggle: document.querySelector("[data-auth-toggle]"),
-  authToggleText: document.querySelector("[data-auth-toggle-text]"),
+  // Login elements
+  loginOverlay: document.querySelector("[data-login-overlay]"),
+  loginForm: document.querySelector("[data-login-form]"),
+  loginError: document.querySelector("[data-login-error]"),
+  loginUsername: document.querySelector("[data-login-username]"),
+  loginPassword: document.querySelector("[data-login-password]"),
+  loginSubmit: document.querySelector("[data-login-submit]"),
+  showSignup: document.querySelector("[data-show-signup]"),
+  // Signup elements
+  signupOverlay: document.querySelector("[data-signup-overlay]"),
+  signupForm: document.querySelector("[data-signup-form]"),
+  signupError: document.querySelector("[data-signup-error]"),
+  signupUsername: document.querySelector("[data-signup-username]"),
+  signupPassword: document.querySelector("[data-signup-password]"),
+  signupPasswordConfirm: document.querySelector("[data-signup-password-confirm]"),
+  signupSubmit: document.querySelector("[data-signup-submit]"),
+  showLogin: document.querySelector("[data-show-login]"),
   userInfo: document.querySelector("[data-user-info]"),
   userUsername: document.querySelector("[data-user-username]"),
   userLogout: document.querySelector("[data-user-logout]")
 };
+
+/**
+ * Update the current ranking display in the top bar
+ */
+export function updateCurrentRankingDisplay() {
+  if (state.currentRankingName) {
+    els.fileName.textContent = state.currentRankingName;
+    els.fileStatus.textContent = state.isDirty ? "Draft" : "Saved";
+    els.fileStatus.className = "file-status-pill " + (state.isDirty ? "draft" : "saved");
+  } else {
+    els.fileName.textContent = "";
+    els.fileStatus.textContent = "";
+  }
+}
+
+/**
+ * Mark the current file as dirty (unsaved changes)
+ */
+export function markDirty() {
+  state.isDirty = true;
+  updateCurrentRankingDisplay();
+}
+
+/**
+ * Mark the current file as clean (saved)
+ */
+export function markClean() {
+  state.isDirty = false;
+  updateCurrentRankingDisplay();
+}

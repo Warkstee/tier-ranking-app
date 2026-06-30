@@ -6,7 +6,7 @@
  * with visual feedback and automatic state synchronization.
  */
 
-import { state, els } from "./state.js";
+import { state, els, markDirty } from "./state.js";
 import { renderTierBoard, renderUnranked, getCandidate } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 
@@ -132,6 +132,7 @@ function moveCandidate(candidateId, tierId) {
   renderTierBoard();
   renderUnranked();
   syncConfigFromState();
+  markDirty();
 }
 
 // ============================================================================

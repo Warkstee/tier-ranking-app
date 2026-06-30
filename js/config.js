@@ -6,7 +6,7 @@
  * Also manages the config editor draft state and UI interactions.
  */
 
-import { state, els, DEFAULT_CONFIG } from "./state.js";
+import { state, els, DEFAULT_CONFIG, markDirty } from "./state.js";
 import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, showToast, escapeHtml } from "./utils.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
 import { attachReorderable } from "./drag.js";
@@ -733,6 +733,7 @@ export function applyEditorConfig() {
   import("./render.js").then(({ render }) => {
     render();
   });
+  markDirty();
   setConfigStatus("Applied configuration.", "ok");
   els.app.classList.remove("config-open");
   els.configModal.hidden = true;
@@ -1058,6 +1059,7 @@ export function applyTierEditor() {
   import("./render.js").then(({ render }) => {
     render();
   });
+  markDirty();
   setTierStatus("Applied tier configuration.", "ok");
   els.tierEditorModal.hidden = true;
   showToast("Applied tier config.");

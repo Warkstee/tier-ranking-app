@@ -6,7 +6,7 @@
  * progress bars and input fields.
  */
 
-import { state, els } from "./state.js";
+import { state, els, markDirty } from "./state.js";
 import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumber, showToast } from "./utils.js";
 import { renderTierBoard, renderUnranked, getCandidate, overallScore, overallRank, formatRank } from "./render.js";
 import { syncConfigFromState } from "./config.js";
@@ -136,6 +136,7 @@ export function renderModal(candidate) {
   // Wire up delete button to remove the candidate
   els.detailCard.querySelector(".modal-delete").addEventListener("click", () => {
     deleteCandidate(candidate.id);
+    markDirty();
   });
 
   // Wire up close button to close the modal
@@ -159,6 +160,7 @@ export function renderModal(candidate) {
       }
       updateScoresForCandidate(candidate);
       syncConfigFromState();
+      markDirty();
     });
   });
 

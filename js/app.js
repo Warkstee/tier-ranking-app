@@ -6,7 +6,7 @@
  * management, and rendering modules.
  */
 
-import { state, els, DEFAULT_CONFIG } from "./state.js";
+import { state, els, DEFAULT_CONFIG, markDirty } from "./state.js";
 import { 
   parseConfig, 
   syncConfigFromState, 
@@ -306,6 +306,7 @@ async function handleAddCandidateSubmit(event) {
   state.candidates.push(newCandidate);
   renderUnranked();
   syncConfigFromState();
+  markDirty();
   closeAddCandidateModal();
   showToast(`Added "${name}" to Unranked.`);
 }

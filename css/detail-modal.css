@@ -10,9 +10,8 @@
   overflow: hidden;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    radial-gradient(circle at 58% 42%, rgba(33, 52, 68, 0.55), rgba(9, 10, 15, 0.16) 30%, rgba(4, 5, 9, 0.82) 72%),
-    linear-gradient(90deg, rgba(5, 6, 10, 0.98) 0%, rgba(9, 10, 15, 0.86) 54%, rgba(5, 6, 10, 0.94) 100%);
+  background: rgba(5, 6, 10, 0.4);
+  backdrop-filter: blur(16px);
 }
 
 .detail-modal[hidden] {
@@ -487,6 +486,7 @@
   flex: 1 1 0;
   min-width: 0;
   height: 8px;
+  margin-top: 8px;
   border-radius: 999px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.035)),

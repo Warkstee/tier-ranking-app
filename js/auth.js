@@ -10,7 +10,6 @@ import { cancelPendingSave } from './config.js';
 
 // Auth state
 let currentUser = null;
-let authMode = 'login'; // 'login' or 'signup'
 
 /**
  * Initialize authentication
@@ -38,47 +37,49 @@ export async function initAuth() {
  * Wire up auth UI event listeners
  */
 function wireAuthUI() {
-  // Auth form submission
-  els.authForm.addEventListener('submit', handleAuthSubmit);
-  
-  // Submit button click (button is outside form, so manually trigger submission)
-  els.authSubmit.addEventListener('click', (e) => {
+  // Login form submission
+  els.loginForm.addEventListener('submit', handleLoginSubmit);
+  els.loginSubmit.addEventListener('click', (e) => {
     e.preventDefault();
-    els.authForm.requestSubmit();
+    els.loginForm.requestSubmit();
   });
   
-  // Auth mode toggle (login/signup)
-  els.authToggle.addEventListener('click', toggleAuthMode);
+  // Signup form submission
+  els.signupForm.addEventListener('submit', handleSignupSubmit);
+  els.signupSubmit.addEventListener('click', (e) => {
+    e.preventDefault();
+    els.signupForm.requestSubmit();
+  });
+  
+  // Switch between modals
+  els.showSignup.addEventListener('click', showSignupModal);
+  els.showLogin.addEventListener('click', showLoginModal);
   
   // Logout button
   els.userLogout.addEventListener('click', handleLogout);
 }
 
 /**
- * Handle auth form submission
+ * Handle login form submission
  * @param {Event} event - Form submit event
  */
-async function handleAuthSubmit(event) {
+async function handleLoginSubmit(event) {
   event.preventDefault();
   
-  const username = els.authUsername.value.trim();
-  const password = els.authPassword.value;
+  const username = els.loginUsername.value.trim();
+  const password = els.loginPassword.value;
   
   if (!username || !password) {
-    showAuthError('Please enter username and password');
+    showLoginError('Please enter username and password');
     return;
   }
   
   // Disable submit button
-  els.authSubmit.disabled = true;
-  els.authSubmit.textContent = authMode === 'login' ? 'Signing in...' : 'Creating account...';
+  els.loginSubmit.disabled = true;
+  els.loginSubmit.textContent = 'Signing in...';
   
   try {
-    if (authMode === 'login') {
-      await login(username, password);
-    } else {
-      await signup(username, password);
-    }
+    await login(username, password);
     
     // Get current user after successful auth
     const user = await getCurrentUser();
@@ -88,35 +89,86 @@ async function handleAuthSubmit(event) {
       // Dispatch event so app.js can initialize controls
       window.dispatchEvent(new CustomEvent('auth:authenticated'));
     } else {
-      showAuthError('Authentication failed. Please try again.');
+      showLoginError('Authentication failed. Please try again.');
     }
   } catch (error) {
     console.error('Auth error:', error);
-    showAuthError(error.message || 'Authentication failed. Please try again.');
+    showLoginError(error.message || 'Login failed. Please try again.');
   } finally {
     // Re-enable submit button
-    els.authSubmit.disabled = false;
-    els.authSubmit.textContent = authMode === 'login' ? 'Sign In' : 'Sign Up';
+    els.loginSubmit.disabled = false;
+    els.loginSubmit.textContent = 'Sign In';
   }
 }
 
 /**
- * Toggle between login and signup modes
+ * Handle signup form submission
+ * @param {Event} event - Form submit event
  */
-function toggleAuthMode() {
-  authMode = authMode === 'login' ? 'signup' : 'login';
+async function handleSignupSubmit(event) {
+  event.preventDefault();
   
-  // Update UI
-  els.authTitle.textContent = authMode === 'login' ? 'Sign In' : 'Sign Up';
-  els.authSubmit.textContent = authMode === 'login' ? 'Sign In' : 'Sign Up';
-  els.authToggleText.textContent = authMode === 'login' ? "Don't have an account?" : 'Already have an account?';
-  els.authToggle.textContent = authMode === 'login' ? 'Sign Up' : 'Sign In';
+  const username = els.signupUsername.value.trim();
+  const password = els.signupPassword.value;
+  const passwordConfirm = els.signupPasswordConfirm.value;
   
-  // Update password autocomplete
-  els.authPassword.autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
+  if (!username || !password) {
+    showSignupError('Please enter username and password');
+    return;
+  }
   
-  // Clear any errors
-  hideAuthError();
+  if (password !== passwordConfirm) {
+    showSignupError('Passwords do not match');
+    return;
+  }
+  
+  // Disable submit button
+  els.signupSubmit.disabled = true;
+  els.signupSubmit.textContent = 'Creating account...';
+  
+  try {
+    await signup(username, password);
+    
+    // Get current user after successful auth
+    const user = await getCurrentUser();
+    if (user) {
+      currentUser = user;
+      showApp();
+      // Dispatch event so app.js can initialize controls
+      window.dispatchEvent(new CustomEvent('auth:authenticated'));
+    } else {
+      showSignupError('Authentication failed. Please try again.');
+    }
+  } catch (error) {
+    console.error('Auth error:', error);
+    showSignupError(error.message || 'Signup failed. Please try again.');
+  } finally {
+    // Re-enable submit button
+    els.signupSubmit.disabled = false;
+    els.signupSubmit.textContent = 'Sign Up';
+  }
+}
+
+/**
+ * Show signup modal
+ */
+function showSignupModal() {
+  els.loginOverlay.hidden = true;
+  els.signupOverlay.hidden = false;
+  els.signupForm.reset();
+  hideSignupError();
+  setTimeout(() => els.signupUsername.focus(), 100);
+}
+
+/**
+ * Show login modal
+ */
+function showLoginModal() {
+  els.signupOverlay.hidden = true;
+  els.loginOverlay.hidden = false;
+  els.loginForm.reset();
+  hideLoginError();
+  setTimeout(() => els.loginUsername.focus(), 100);
 }
 
 /**
@@ -206,26 +258,30 @@ async function getCurrentUser() {
 }
 
 /**
- * Show authentication UI (login/signup overlay)
+ * Show authentication UI (login overlay)
  */
 function showAuthUI() {
-  els.authOverlay.hidden = false;
+  els.loginOverlay.hidden = false;
+  els.signupOverlay.hidden = true;
   els.appShell.style.display = 'none';
   els.userInfo.hidden = true;
   
-  // Clear form
-  els.authForm.reset();
-  hideAuthError();
+  // Clear forms
+  els.loginForm.reset();
+  els.signupForm.reset();
+  hideLoginError();
+  hideSignupError();
   
   // Focus username field
-  setTimeout(() => els.authUsername.focus(), 100);
+  setTimeout(() => els.loginUsername.focus(), 100);
 }
 
 /**
  * Show main application (hide auth UI)
  */
 function showApp() {
-  els.authOverlay.hidden = true;
+  els.loginOverlay.hidden = true;
+  els.signupOverlay.hidden = true;
   els.appShell.style.display = '';
   
   // Update user info display
@@ -236,20 +292,37 @@ function showApp() {
 }
 
 /**
- * Show authentication error message
+ * Show login error message
  * @param {string} message - Error message to display
  */
-function showAuthError(message) {
-  els.authError.textContent = message;
-  els.authError.hidden = false;
+function showLoginError(message) {
+  els.loginError.textContent = message;
+  els.loginError.hidden = false;
 }
 
 /**
- * Hide authentication error message
+ * Hide login error message
  */
-function hideAuthError() {
-  els.authError.hidden = true;
-  els.authError.textContent = '';
+function hideLoginError() {
+  els.loginError.hidden = true;
+  els.loginError.textContent = '';
+}
+
+/**
+ * Show signup error message
+ * @param {string} message - Error message to display
+ */
+function showSignupError(message) {
+  els.signupError.textContent = message;
+  els.signupError.hidden = false;
+}
+
+/**
+ * Hide signup error message
+ */
+function hideSignupError() {
+  els.signupError.hidden = true;
+  els.signupError.textContent = '';
 }
 
 /**

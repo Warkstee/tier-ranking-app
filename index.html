@@ -37,8 +37,8 @@
               </div>
               <button type="button" data-file-save>Save File...</button>
               <button type="button" data-file-save-as>Save As...</button>
-              <button type="button" data-file-export>Export to File...</button>
-              <button type="button" data-file-import>Import from File...</button>
+              <button type="button" data-file-export>Download File...</button>
+              <button type="button" data-file-import>Upload File...</button>
               <input type="file" accept=".zip" data-file-import-input hidden>
               <div class="submenu-item-with-flyout" data-flyout-trigger="delete">
                 <button type="button" data-file-delete>Delete File...</button>
@@ -71,7 +71,14 @@
         </div>
       </div>
       <nav class="menu" aria-label="Board controls">
-        <span class="current-ranking-name" data-current-ranking-name></span>
+        <div class="current-ranking-name" data-current-ranking-name>
+          <svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span class="file-name" data-file-name></span>
+          <span class="file-status-pill" data-file-status></span>
+        </div>
       </nav>
       <div class="user-info" data-user-info hidden>
         <span class="user-info-username" data-user-username></span>
@@ -237,30 +244,81 @@
 
   </main>
 
-  <!-- Authentication overlay -->
-  <section class="auth-overlay" data-auth-overlay hidden>
+  <!-- Login overlay -->
+  <section class="auth-overlay" data-login-overlay hidden>
     <article class="auth-panel">
       <header class="auth-header">
-        <h2 data-auth-title>Sign In</h2>
+        <div class="auth-brand">
+          <div class="auth-brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="12" width="5" height="9" rx="1" fill="#111"/>
+              <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
+              <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
+            </svg>
+          </div>
+          <h2>Sign In</h2>
+        </div>
       </header>
       <div class="auth-content">
-        <form class="auth-form" data-auth-form>
-          <div class="auth-error" data-auth-error hidden></div>
+        <form class="auth-form" data-login-form>
+          <div class="auth-error" data-login-error hidden></div>
           <div class="form-field">
-            <label for="auth-username">Username</label>
-            <input type="text" id="auth-username" name="username" required autocomplete="username" data-auth-username>
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" name="username" required autocomplete="username" data-login-username>
           </div>
           <div class="form-field">
-            <label for="auth-password">Password</label>
-            <input type="password" id="auth-password" name="password" required autocomplete="current-password" data-auth-password>
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" required autocomplete="current-password" data-login-password>
           </div>
         </form>
       </div>
       <footer class="auth-footer">
-        <button type="submit" class="auth-submit" data-auth-submit>Sign In</button>
+        <button type="submit" class="auth-submit" data-login-submit>Sign In</button>
         <div class="auth-toggle">
-          <span data-auth-toggle-text>Don't have an account?</span>
-          <button type="button" data-auth-toggle>Sign Up</button>
+          <span>Don't have an account?</span>
+          <button type="button" data-show-signup>Sign Up</button>
+        </div>
+      </footer>
+    </article>
+  </section>
+
+  <!-- Signup overlay -->
+  <section class="auth-overlay" data-signup-overlay hidden>
+    <article class="auth-panel">
+      <header class="auth-header">
+        <div class="auth-brand">
+          <div class="auth-brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="12" width="5" height="9" rx="1" fill="#111"/>
+              <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
+              <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
+            </svg>
+          </div>
+          <h2>Sign Up</h2>
+        </div>
+      </header>
+      <div class="auth-content">
+        <form class="auth-form" data-signup-form>
+          <div class="auth-error" data-signup-error hidden></div>
+          <div class="form-field">
+            <label for="signup-username">Username</label>
+            <input type="text" id="signup-username" name="username" required autocomplete="username" data-signup-username>
+          </div>
+          <div class="form-field">
+            <label for="signup-password">Password</label>
+            <input type="password" id="signup-password" name="password" required autocomplete="new-password" data-signup-password>
+          </div>
+          <div class="form-field">
+            <label for="signup-password-confirm">Confirm Password</label>
+            <input type="password" id="signup-password-confirm" name="password-confirm" required autocomplete="new-password" data-signup-password-confirm>
+          </div>
+        </form>
+      </div>
+      <footer class="auth-footer">
+        <button type="submit" class="auth-submit" data-signup-submit>Sign Up</button>
+        <div class="auth-toggle">
+          <span>Already have an account?</span>
+          <button type="button" data-show-login>Sign In</button>
         </div>
       </footer>
     </article>
