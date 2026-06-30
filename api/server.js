@@ -53,6 +53,27 @@ function sanitizeRankingName(name) {
     .substring(0, 100);
 }
 
+// Helper: Require authentication - returns user payload or sends 401 and returns null
+function requireAuth(req, res) {
+  const token = extractToken(req);
+  
+  if (!token) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Authentication required" }));
+    return null;
+  }
+  
+  const payload = verifyToken(token);
+  
+  if (!payload) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Invalid or expired token" }));
+    return null;
+  }
+  
+  return payload;
+}
+
 const server = createServer(async (req, res) => {
 
   // Auth endpoints
@@ -218,6 +239,9 @@ const server = createServer(async (req, res) => {
    *         description: Failed to list rankings
    */
   if (req.method === "GET" && req.url === "/api/rankings") {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    
     try {
       const files = await readdir(RANKINGS_DIR);
       const jsonFiles = files.filter(f => f.endsWith('.json'));
@@ -279,6 +303,9 @@ const server = createServer(async (req, res) => {
    *         description: Failed to load ranking
    */
   if (req.method === "GET" && req.url.startsWith("/api/rankings/")) {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -351,6 +378,9 @@ const server = createServer(async (req, res) => {
    *         description: Failed to save ranking
    */
   if (req.method === "POST" && req.url.startsWith("/api/rankings/")) {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -409,6 +439,9 @@ const server = createServer(async (req, res) => {
    *         description: Failed to delete ranking
    */
   if (req.method === "DELETE" && req.url.startsWith("/api/rankings/")) {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    
     const name = sanitizeRankingName(req.url.split('/api/rankings/')[1]);
     if (!name) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -478,6 +511,9 @@ const server = createServer(async (req, res) => {
    *         description: Upload failed
    */
   if (req.method === "POST" && req.url === "/api/uploadimg") {
+    const user = requireAuth(req, res);
+    if (!user) return;
+    
     try {
       await mkdir(UPLOAD_DIR, { recursive: true });
 
