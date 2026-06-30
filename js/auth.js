@@ -262,3 +262,26 @@ export function isAuthenticated() {
 export function getCurrentUserObject() {
   return currentUser;
 }
+
+/**
+ * Wrapper around fetch() that includes credentials and handles 401 responses
+ * All API calls should use this instead of raw fetch()
+ * @param {string} url - URL to fetch
+ * @param {Object} options - Fetch options
+ * @returns {Promise<Response>} Fetch response
+ */
+export async function apiFetch(url, options = {}) {
+  // Always include credentials (cookies) for authentication
+  options.credentials = 'include';
+  
+  const response = await fetch(url, options);
+  
+  // Handle 401 Unauthorized - redirect to login
+  if (response.status === 401) {
+    currentUser = null;
+    showAuthUI();
+    throw new Error('Authentication required. Please log in.');
+  }
+  
+  return response;
+}

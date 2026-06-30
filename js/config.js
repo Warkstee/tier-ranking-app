@@ -10,6 +10,7 @@ import { state, els, DEFAULT_CONFIG } from "./state.js";
 import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, showToast, escapeHtml } from "./utils.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
 import { attachReorderable } from "./drag.js";
+import { apiFetch } from "./auth.js";
 
 /**
  * Draft state for the config editor.
@@ -200,7 +201,7 @@ export async function persistConfig() {
       max: state.max
     };
     
-    const response = await fetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
+    const response = await apiFetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)

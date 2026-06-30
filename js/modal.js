@@ -10,6 +10,7 @@ import { state, els } from "./state.js";
 import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumber, showToast } from "./utils.js";
 import { renderTierBoard, renderUnranked, getCandidate, overallScore, overallRank, formatRank } from "./render.js";
 import { syncConfigFromState } from "./config.js";
+import { apiFetch } from "./auth.js";
 
 let editMode = false;
 
@@ -269,7 +270,7 @@ async function handleEditSave(candidate) {
       const formData = new FormData();
       formData.append("image", imageFile);
       
-      const response = await fetch("/api/uploadimg", {
+      const response = await apiFetch("/api/uploadimg", {
         method: "POST",
         body: formData
       });

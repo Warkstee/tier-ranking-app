@@ -8,6 +8,7 @@
 
 import { state } from "./state.js";
 import { showToast } from "./utils.js";
+import { apiFetch } from "./auth.js";
 
 /**
  * Export ranking as ZIP file with images
@@ -38,7 +39,7 @@ export async function exportRanking() {
       
       try {
         // Fetch the image from the server
-        const response = await fetch(candidate.image);
+        const response = await apiFetch(candidate.image);
         if (!response.ok) {
           console.warn(`Failed to fetch image: ${candidate.image}`);
           return;
@@ -140,7 +141,7 @@ export async function importRanking(file) {
           formData.append("image", blob, path);
           
           // Upload to server
-          const response = await fetch("/api/uploadimg", {
+          const response = await apiFetch("/api/uploadimg", {
             method: "POST",
             body: formData
           });

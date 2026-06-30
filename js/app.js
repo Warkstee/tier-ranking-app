@@ -29,7 +29,7 @@ import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
-import { initAuth } from "./auth.js";
+import { initAuth, apiFetch } from "./auth.js";
 
 let modalTitleFrame = 0;
 
@@ -255,7 +255,7 @@ async function handleAddCandidateSubmit(event) {
       const formData = new FormData();
       formData.append("image", imageFile);
       
-      const response = await fetch("/api/uploadimg", {
+      const response = await apiFetch("/api/uploadimg", {
         method: "POST",
         body: formData
       });

@@ -16,6 +16,7 @@ import { syncConfigFromState } from "./config.js";
 import { render } from "./render.js";
 import { showToast } from "./utils.js";
 import { exportRanking, importRanking } from "./export-import.js";
+import { apiFetch } from "./auth.js";
 
 let nameInputCallback = null;
 
@@ -486,7 +487,7 @@ export async function saveRankingToServer(name) {
     max: state.max
   };
   
-  const response = await fetch(`/api/rankings/${encodeURIComponent(name)}`, {
+  const response = await apiFetch(`/api/rankings/${encodeURIComponent(name)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
@@ -503,7 +504,7 @@ export async function saveRankingToServer(name) {
  * Load ranking from server
  */
 async function loadRankingFromServer(name) {
-  const response = await fetch(`/api/rankings/${encodeURIComponent(name)}`);
+  const response = await apiFetch(`/api/rankings/${encodeURIComponent(name)}`);
   
   if (!response.ok) {
     throw new Error(`Failed to load ranking: ${response.statusText}`);
@@ -516,7 +517,7 @@ async function loadRankingFromServer(name) {
  * Delete ranking from server
  */
 async function deleteRankingFromServer(name) {
-  const response = await fetch(`/api/rankings/${encodeURIComponent(name)}`, {
+  const response = await apiFetch(`/api/rankings/${encodeURIComponent(name)}`, {
     method: "DELETE"
   });
   
@@ -531,7 +532,7 @@ async function deleteRankingFromServer(name) {
  * Fetch list of all rankings from server
  */
 async function fetchRankings() {
-  const response = await fetch("/api/rankings");
+  const response = await apiFetch("/api/rankings");
   
   if (!response.ok) {
     throw new Error(`Failed to fetch rankings: ${response.statusText}`);
