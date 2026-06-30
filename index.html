@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="./css/add-candidate.css?v=3">
   <link rel="stylesheet" href="./css/components.css?v=3">
   <link rel="stylesheet" href="./css/file-menu.css?v=3">
+  <link rel="stylesheet" href="./css/auth.css?v=3">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
@@ -72,6 +73,10 @@
       <nav class="menu" aria-label="Board controls">
         <span class="current-ranking-name" data-current-ranking-name></span>
       </nav>
+      <div class="user-info" data-user-info hidden>
+        <span class="user-info-username" data-user-username></span>
+        <button type="button" class="user-info-logout" data-user-logout>Logout</button>
+      </div>
     </header>
 
     <section class="workspace">
@@ -231,6 +236,35 @@
     </section>
 
   </main>
+
+  <!-- Authentication overlay -->
+  <section class="auth-overlay" data-auth-overlay hidden>
+    <article class="auth-panel">
+      <header class="auth-header">
+        <h2 data-auth-title>Sign In</h2>
+      </header>
+      <div class="auth-content">
+        <form class="auth-form" data-auth-form>
+          <div class="auth-error" data-auth-error hidden></div>
+          <div class="form-field">
+            <label for="auth-username">Username</label>
+            <input type="text" id="auth-username" name="username" required autocomplete="username" data-auth-username>
+          </div>
+          <div class="form-field">
+            <label for="auth-password">Password</label>
+            <input type="password" id="auth-password" name="password" required autocomplete="current-password" data-auth-password>
+          </div>
+        </form>
+      </div>
+      <footer class="auth-footer">
+        <button type="submit" class="auth-submit" data-auth-submit>Sign In</button>
+        <div class="auth-toggle">
+          <span data-auth-toggle-text>Don't have an account?</span>
+          <button type="button" data-auth-toggle>Sign Up</button>
+        </div>
+      </footer>
+    </article>
+  </section>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="./js/app.js" type="module"></script>

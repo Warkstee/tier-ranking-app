@@ -47,6 +47,7 @@ export const state = {
  */
 export const els = {
   app: document.querySelector("[data-app-shell]"),
+  appShell: document.querySelector("[data-app-shell]"),
   title: document.querySelector("[data-title]"),
   titleEditBtn: document.querySelector("[data-title-edit]"),
   openConfig: document.querySelector("[data-open-config]"),
@@ -99,5 +100,18 @@ export const els = {
   closeTierEditor: document.querySelector("[data-close-tier]"),
   cancelTier: document.querySelector("[data-cancel-tier]"),
   applyTierEditor: document.querySelector("[data-apply-tier]"),
-  tierStatus: document.querySelector("[data-tier-status]")
+  tierStatus: document.querySelector("[data-tier-status]"),
+  // Auth elements
+  authOverlay: document.querySelector("[data-auth-overlay]"),
+  authTitle: document.querySelector("[data-auth-title]"),
+  authForm: document.querySelector("[data-auth-form]"),
+  authError: document.querySelector("[data-auth-error]"),
+  authUsername: document.querySelector("[data-auth-username]"),
+  authPassword: document.querySelector("[data-auth-password]"),
+  authSubmit: document.querySelector("[data-auth-submit]"),
+  authToggle: document.querySelector("[data-auth-toggle]"),
+  authToggleText: document.querySelector("[data-auth-toggle-text]"),
+  userInfo: document.querySelector("[data-user-info]"),
+  userUsername: document.querySelector("[data-user-username]"),
+  userLogout: document.querySelector("[data-user-logout]")
 };

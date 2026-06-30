@@ -29,16 +29,41 @@ import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render
 import { openModal, closeModal } from "./modal.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
+import { initAuth } from "./auth.js";
 
 let modalTitleFrame = 0;
 
 boot();
 
+// Listen for successful authentication to initialize the app
+window.addEventListener('auth:authenticated', () => {
+  initializeApp();
+});
+
 /**
- * Bootstraps the application by wiring up controls and loading the initial config.
+ * Bootstraps the application by checking authentication and initializing if needed.
  * @returns {Promise<void>}
  */
 async function boot() {
+  // Initialize authentication first
+  const isAuthenticated = await initAuth();
+  
+  // If not authenticated, stop here (auth UI will be shown)
+  if (!isAuthenticated) {
+    return;
+  }
+  
+  // User is authenticated, initialize the app
+  await initializeApp();
+}
+
+/**
+ * Initializes the application by wiring up controls and loading the initial config.
+ * Called after successful authentication.
+ * @returns {Promise<void>}
+ */
+export async function initializeApp() {
+  // Wire up all controls
   wireStaticControls();
   initFileMenu();
   initTitleEdit();
