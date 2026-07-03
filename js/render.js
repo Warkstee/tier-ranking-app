@@ -5,7 +5,7 @@
  * candidate cards, and score calculations.
  */
 
-import { state, els } from "./state.js";
+import { state, els, markDirty } from "./state.js";
 import { escapeHtml, escapeAttr, formatNumber, clamp, toNumber } from "./utils.js";
 import { attachPointer } from "./drag.js";
 
@@ -81,7 +81,11 @@ function saveTitleEdit(newTitle) {
     return;
   }
   
-  state.title = newTitle;
+  // Only change status to "Draft" if the title actually changed
+  if (state.title !== newTitle) {
+    state.title = newTitle;
+    markDirty();
+  }
   render();
 }
 
