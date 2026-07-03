@@ -1,6 +1,6 @@
 services:
   tier-ranking-app:
-    image: ghcr.io/warkstee/tier-ranking-app:latest
+    image: ghcr.io/warkstee/tier-ranking-app:dev
     build: .
     ports:
       - "4173:80"

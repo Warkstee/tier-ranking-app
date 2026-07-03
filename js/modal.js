@@ -220,7 +220,8 @@ function renderEditModal(candidate) {
         </div>
         <div class="form-field">
           <label for="edit-candidate-description">Description</label>
-          <textarea id="edit-candidate-description" rows="4" data-edit-description-input>${escapeHtml(candidate.description)}</textarea>
+          <textarea id="edit-candidate-description" rows="4" maxlength="325" data-edit-description-input>${escapeHtml(candidate.description)}</textarea>
+          <span class="char-counter" data-edit-description-counter>${Math.max(0, 325 - candidate.description.length)} characters remaining</span>
         </div>
       </div>
       <div class="edit-actions">
@@ -232,13 +233,32 @@ function renderEditModal(candidate) {
 
   const nameInput = els.detailCard.querySelector("[data-edit-name-input]");
   const charCounter = els.detailCard.querySelector("[data-edit-char-counter]");
+  const descriptionInput = els.detailCard.querySelector("[data-edit-description-input]");
+  const descriptionCounter = els.detailCard.querySelector("[data-edit-description-counter]");
+
   nameInput.addEventListener("input", () => {
     const remaining = 23 - nameInput.value.length;
     charCounter.textContent = `${remaining} character${remaining !== 1 ? "s" : ""} remaining`;
     charCounter.dataset.tone = remaining <= 5 ? "warning" : "";
   });
+
+  const updateDescriptionCounter = () => {
+    const remaining = 325 - descriptionInput.value.length;
+    descriptionCounter.textContent = `${remaining} character${remaining !== 1 ? "s" : ""} remaining`;
+    descriptionCounter.dataset.tone = remaining <= 20 ? "warning" : "";
+  };
+
+  descriptionInput.addEventListener("input", () => {
+    if (descriptionInput.value.length > 325) {
+      descriptionInput.value = descriptionInput.value.slice(0, 325);
+    }
+    updateDescriptionCounter();
+  });
+
   nameInput.focus();
   nameInput.select();
+
+  updateDescriptionCounter();
 
   els.detailCard.querySelector(".modal-save").addEventListener("click", () => {
     handleEditSave(candidate);
@@ -300,7 +320,7 @@ async function handleEditSave(candidate) {
   }
 
   candidate.name = name;
-  candidate.description = descriptionInput.value.trim();
+  candidate.description = descriptionInput.value.trim().slice(0, 325);
 
   editMode = false;
   renderTierBoard();

@@ -291,6 +291,8 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* Standard property which will replace web-kit-line-clamp eventually. Not supported yet, but worth including */
+  line-clamp: 2; 
 }
 
 .candidate-row .score-pill {

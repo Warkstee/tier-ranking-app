@@ -193,6 +193,13 @@ export function createCandidateRow(candidate) {
     </div>
     <span class="score-pill" data-score-pill="${escapeAttr(candidate.id)}">${overallScore(candidate)}</span>
   `;
+  // Apply line-clamp via inline styles to survive corporate CSS sanitization
+  const p = row.querySelector("p");
+  p.style.display = "-webkit-box";
+  p.style.webkitBoxOrient = "vertical";
+  p.style.webkitLineClamp = "2";
+  p.style.overflow = "hidden";
+
   attachPointer(row, candidate.id);
   return row;
 }
