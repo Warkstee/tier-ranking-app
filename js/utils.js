@@ -149,3 +149,38 @@ export function showToast(message) {
   document.querySelector("[data-app-shell]")?.append(toast);
   toastTimer = window.setTimeout(() => toast.remove(), 2300);
 }
+
+/**
+ * Generates an SVG data URI with the candidate's initials as a placeholder image.
+ * @param {string} name - The candidate name to extract initials from
+ * @returns {string} Data URI containing the SVG image
+ */
+export function generateInitialsSVG(name) {
+  const words = name.trim().split(/\s+/);
+  const initials = words.length >= 2
+    ? (words[0][0] + words[1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+  
+  // Generate a consistent color based on the name
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash % 360);
+  const color1 = `hsl(${hue}, 55%, 65%)`;
+  const color2 = `hsl(${(hue + 30) % 360}, 50%, 55%)`;
+  
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${color1}"/>
+        <stop offset="100%" stop-color="${color2}"/>
+      </linearGradient>
+    </defs>
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <rect x="40" y="60" width="120" height="80" rx="16" fill="rgba(0,0,0,0.20)"/>
+    <text x="100" y="100" font-size="56" fill="white" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-weight="bold">${initials}</text>
+  </svg>`;
+  
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}

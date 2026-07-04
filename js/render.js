@@ -6,8 +6,28 @@
  */
 
 import { state, els, markDirty } from "./state.js";
-import { escapeHtml, escapeAttr, formatNumber, clamp, toNumber } from "./utils.js";
+import { escapeHtml, escapeAttr, formatNumber, clamp, toNumber, generateInitialsSVG } from "./utils.js";
 import { attachPointer } from "./drag.js";
+
+/**
+ * Handles image load errors by replacing the broken image with an initials-based SVG placeholder.
+ * @param {HTMLImageElement} img - The image element that failed to load
+ * @param {string} name - The candidate name to use for generating initials
+ */
+export function handleImageError(img, name) {
+  img.onerror = null;
+  img.src = generateInitialsSVG(name);
+}
+
+/**
+ * Attaches an error handler to an image element that replaces it with an initials-based
+ * SVG placeholder if the image fails to load.
+ * @param {HTMLImageElement} img - The image element to protect
+ * @param {string} name - The candidate name for generating initials
+ */
+export function attachImageFallback(img, name) {
+  img.addEventListener("error", () => handleImageError(img, name), { once: true });
+}
 
 /**
  * Main render function that updates the title and re-renders the entire board.
@@ -171,6 +191,7 @@ export function createCandidateCard(candidate) {
     <span class="score-pill" data-score-pill="${escapeAttr(candidate.id)}">${overallScore(candidate)}</span>
     <h3>${escapeHtml(candidate.name)}</h3>
   `;
+  attachImageFallback(card.querySelector("img"), candidate.name);
   attachPointer(card, candidate.id);
   return card;
 }
@@ -193,6 +214,7 @@ export function createCandidateRow(candidate) {
     </div>
     <span class="score-pill" data-score-pill="${escapeAttr(candidate.id)}">${overallScore(candidate)}</span>
   `;
+  attachImageFallback(row.querySelector("img"), candidate.name);
   // Apply line-clamp via inline styles to survive corporate CSS sanitization
   const p = row.querySelector("p");
   p.style.display = "-webkit-box";

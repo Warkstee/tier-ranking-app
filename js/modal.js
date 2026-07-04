@@ -8,7 +8,7 @@
 
 import { state, els, markDirty } from "./state.js";
 import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumber, showToast } from "./utils.js";
-import { renderTierBoard, renderUnranked, getCandidate, overallScore, overallRank, formatRank } from "./render.js";
+import { renderTierBoard, renderUnranked, getCandidate, overallScore, overallRank, formatRank, attachImageFallback } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 import { apiFetch } from "./auth.js";
 
@@ -126,6 +126,9 @@ export function renderModal(candidate) {
 
   // Adjust title font size to fit within available width
   fitModalTitle();
+
+  // Attach image fallback
+  attachImageFallback(els.detailCard.querySelector(".detail-media img"), candidate.name);
 
   // Wire up edit button to switch to edit mode
   els.detailCard.querySelector(".modal-edit").addEventListener("click", () => {
@@ -259,6 +262,9 @@ function renderEditModal(candidate) {
   nameInput.select();
 
   updateDescriptionCounter();
+
+  // Attach image fallback
+  attachImageFallback(els.detailCard.querySelector(".detail-media img"), candidate.name);
 
   els.detailCard.querySelector(".modal-save").addEventListener("click", () => {
     handleEditSave(candidate);

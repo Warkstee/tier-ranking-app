@@ -8,7 +8,7 @@
 
 import { state, els, markDirty } from "./state.js";
 import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumber } from "./utils.js";
-import { getCandidate, overallScore, overallRank, formatRank } from "./render.js";
+import { getCandidate, overallScore, overallRank, formatRank, attachImageFallback } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 import { closeModal } from "./modal.js";
 
@@ -61,6 +61,10 @@ function renderCompareModal() {
   
   // Wire up close button
   compareCard.querySelector(".modal-close").addEventListener("click", closeCompareModal);
+  
+  // Attach image fallbacks
+  attachImageFallback(compareCard.querySelector('[data-compare-side="left"] .compare-media img'), candidateA.name);
+  attachImageFallback(compareCard.querySelector('[data-compare-side="right"] .compare-media img'), candidateB.name);
   
   // Wire up score listeners for both sides
   attachCompareScoreListeners(candidateA, "left");

@@ -2,7 +2,6 @@
  * Configuration Management
  * 
  * Handles loading, parsing, exporting, and persisting the tier ranking configuration.
- * Supports JSON format with automatic syncing to the backend API.
  * Also manages the config editor draft state and UI interactions.
  */
 
