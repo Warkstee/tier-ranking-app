@@ -35,6 +35,7 @@ export const state = {
   facets: [],
   candidates: [],
   selectedId: null,
+  compareIds: { left: null, right: null },
   configText: DEFAULT_CONFIG,
 
   configSource: "bundled config",

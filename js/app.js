@@ -27,6 +27,7 @@ import {
 } from "./config.js";
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
+import { openCompareModal } from "./compare-modal.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 import { initAuth, apiFetch } from "./auth.js";

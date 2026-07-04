@@ -9,6 +9,7 @@
 import { state, els, markDirty } from "./state.js";
 import { renderTierBoard, renderUnranked, getCandidate } from "./render.js";
 import { syncConfigFromState } from "./config.js";
+import { openCompareModal } from "./compare-modal.js";
 
 let drag = null;
 
@@ -29,7 +30,8 @@ export function attachPointer(element, candidateId) {
       startY: event.clientY,
       moved: false,
       ghost: null,
-      activeZone: null
+      activeZone: null,
+      targetCandidateId: null
     };
     element.setPointerCapture?.(event.pointerId);
     document.addEventListener("pointermove", onPointerMove);
@@ -61,6 +63,10 @@ function onPointerMove(event) {
   drag.ghost.style.top = `${event.clientY}px`;
 
   const zone = dropZoneFromPoint(event.clientX, event.clientY);
+  
+  // Check if hovering over another candidate for comparison
+  const targetCandidate = candidateFromPoint(event.clientX, event.clientY);
+  setCompareTarget(targetCandidate);
   setActiveDropZone(zone);
 }
 
@@ -73,17 +79,24 @@ function onPointerUp(event) {
   if (!drag) return;
 
   document.removeEventListener("pointermove", onPointerMove);
-  setActiveDropZone(null);
 
+  // Capture target candidate BEFORE clearing visual state
   const wasDrag = drag.moved;
   const candidateId = drag.candidateId;
+  const targetCandidateId = wasDrag ? drag.targetCandidateId : null;
   const zone = wasDrag ? dropZoneFromPoint(event.clientX, event.clientY) : null;
+
+  setActiveDropZone(null);
+  setCompareTarget(null);
 
   drag.ghost?.remove();
   drag.source.classList.remove("drag-hidden");
   drag = null;
 
-  if (wasDrag && zone) {
+  if (wasDrag && targetCandidateId && targetCandidateId !== candidateId) {
+    // Dropped on another candidate - open comparison modal
+    openCompareModal(candidateId, targetCandidateId);
+  } else if (wasDrag && zone) {
     moveCandidate(candidateId, zone.dataset.dropZone);
   } else if (!wasDrag) {
     // Import dynamically to avoid circular dependency
@@ -95,7 +108,49 @@ function onPointerUp(event) {
  * Finds the drop zone element at the given coordinates.
  * @param {number} x - The X coordinate
  * @param {number} y - The Y coordinate
- * @returns {HTMLElement|null} The drop zone element or null if none found
+ 
+
+/**
+ * Finds a candidate element at the given coordinates, but only if over the image.
+ * @param {number} x - The X coordinate
+ * @param {number} y - The Y coordinate
+ * @returns {HTMLElement|null} The candidate element or null if none found
+ */
+function candidateFromPoint(x, y) {
+  const element = document.elementFromPoint(x, y);
+  // Only activate comparison when hovering over the candidate's image
+  const img = element?.closest("img");
+  if (!img) return null;
+  return img.closest("[data-draggable-candidate]") || null;
+}
+
+/**
+ * Sets the compare target and updates visual feedback.
+ * @param {HTMLElement|null} candidateElement - The candidate element to highlight, or null to clear
+ */
+function setCompareTarget(candidateElement) {
+  if (!drag) return;
+  
+  let targetId = candidateElement?.dataset.draggableCandidate || null;
+  
+  // Don't highlight the candidate being dragged
+  if (targetId === drag.candidateId) {
+    targetId = null;
+    candidateElement = null;
+  }
+  
+  if (drag.targetCandidateId === targetId) return;
+  
+  // Remove highlight from previous target
+  document.querySelectorAll(".compare-target").forEach((el) => el.classList.remove("compare-target"));
+  
+  // Add highlight to new target
+  if (candidateElement) {
+    candidateElement.classList.add("compare-target");
+  }
+  
+  drag.targetCandidateId = targetId;
+}/* @returns {HTMLElement|null} The drop zone element or null if none found
  */
 function dropZoneFromPoint(x, y) {
   const element = document.elementFromPoint(x, y);
