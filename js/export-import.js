@@ -64,9 +64,11 @@ export async function exportRanking() {
     
     // Trigger download
     const url = URL.createObjectURL(zipBlob);
-    const filename = state.currentRankingName 
-      ? `${state.currentRankingName}.zip`
-      : "ranking.zip";
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const baseName = state.currentRankingName || "ranking";
+    const filename = `${baseName}-${timestamp}.zip`;
     
     const a = document.createElement("a");
     a.href = url;
