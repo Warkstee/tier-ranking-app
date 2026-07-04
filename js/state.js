@@ -40,7 +40,8 @@ export const state = {
 
   configSource: "bundled config",
   currentRankingName: null,
-  isDirty: false
+  isDirty: false,
+  ahpComparisons: {}
 };
 
 /**
@@ -68,6 +69,16 @@ export const els = {
   configStatus: document.querySelector("[data-config-status]"),
   closeConfig: document.querySelector("[data-close-config]"),
   applyConfigEdit: document.querySelector("[data-apply-config]"),
+  // AHP modal elements
+  ahpModal: document.querySelector("[data-ahp-modal]"),
+  ahpCard: document.querySelector(".ahp-panel"),
+  ahpCriteriaList: document.querySelector("[data-ahp-criteria-list]"),
+  ahpComparisons: document.querySelector("[data-ahp-comparisons]"),
+  ahpWeights: document.querySelector("[data-ahp-weights]"),
+  ahpStatus: document.querySelector("[data-ahp-status]"),
+  closeAhp: document.querySelector("[data-close-ahp]"),
+  cancelAhp: document.querySelector("[data-cancel-ahp]"),
+  applyAhp: document.querySelector("[data-apply-ahp]"),
   openAddCandidate: document.querySelector("[data-open-add-candidate]"),
   addCandidateModal: document.querySelector("[data-add-candidate-modal]"),
   addCandidateForm: document.querySelector("[data-add-candidate-form]"),

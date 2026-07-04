@@ -10,6 +10,7 @@ import { toNumber, clamp, uniqueId, humanizeId, configId, slugify, showToast, es
 import { renderTierBoard, renderUnranked } from "./render.js";
 import { attachReorderable } from "./drag.js";
 import { apiFetch } from "./auth.js";
+import { openAhpCalculator, applyAhpWeights, getAhpComparisons, closeAhpCalculator } from "./ahp.js";
 
 /**
  * Draft state for the config editor.
@@ -115,7 +116,10 @@ export function parseJsonConfig(text) {
     };
   });
 
-  return { title, tiers, min, max, facets, candidates };
+  // Parse AHP comparisons if present
+  const ahpComparisons = data.ahpComparisons && typeof data.ahpComparisons === "object" ? data.ahpComparisons : {};
+
+  return { title, tiers, min, max, facets, candidates, ahpComparisons };
 }
 
 
@@ -156,7 +160,8 @@ export function exportJson() {
     min: state.min ?? 0,
     max: state.max ?? 10,
     rubric,
-    candidates
+    candidates,
+    ahpComparisons: state.ahpComparisons || {}
   }, null, 2);
 }
 
@@ -206,7 +211,8 @@ export async function persistConfig() {
       facets: state.facets,
       candidates: state.candidates,
       min: state.min,
-      max: state.max
+      max: state.max,
+      ahpComparisons: state.ahpComparisons || {}
     };
     
     const response = await apiFetch(`/api/rankings/${encodeURIComponent(state.currentRankingName)}`, {
@@ -406,6 +412,17 @@ export function wireConfigEditorControls() {
   els.facetsList.addEventListener("input", handleFacetFieldChange);
   els.facetsList.addEventListener("click", handleFacetButtonClick);
   els.addFacet.addEventListener("click", addFacet);
+
+  // AHP calculator button
+  const ahpBtn = document.querySelector("[data-open-ahp]");
+  if (ahpBtn) {
+    ahpBtn.addEventListener("click", handleOpenAhp);
+  }
+
+  // Listen for AHP apply event
+  if (els.ahpModal) {
+    els.ahpModal.addEventListener("ahp:apply", handleAhpApply);
+  }
 }
 
 /**
@@ -576,6 +593,41 @@ export function handleFacetButtonClick(event) {
 
   renderFacetEditor();
   updateApplyButtonState();
+}
+
+/**
+ * Opens the AHP calculator modal with the current draft facets.
+ * Restores previously saved AHP comparisons if available.
+ */
+function handleOpenAhp() {
+  if (!configDraft) return;
+  openAhpCalculator(configDraft.facets, state.ahpComparisons || {});
+}
+
+/**
+ * Handles the AHP apply event: copies calculated weights back to configDraft
+ * and refreshes the facet editor.
+ */
+function handleAhpApply() {
+  const updatedFacets = applyAhpWeights();
+  if (updatedFacets.length === 0) return;
+
+  // Map updated weights back to configDraft facets (preserve order and IDs)
+  // Convert from decimal (0-1) to percentage (0-100) and round to 1 decimal
+  updatedFacets.forEach((updated) => {
+    const draftFacet = configDraft.facets.find((f) => f.id === updated.id);
+    if (draftFacet) {
+      draftFacet.weight = Math.round(updated.weight * 1000) / 10;
+    }
+  });
+
+  // Persist the pairwise comparisons to state for future restoration
+  state.ahpComparisons = getAhpComparisons();
+
+  closeAhpCalculator();
+  renderFacetEditor();
+  updateApplyButtonState();
+  setConfigStatus("AHP weights applied. You can fine-tune manually before applying.", "ok");
 }
 
 /**

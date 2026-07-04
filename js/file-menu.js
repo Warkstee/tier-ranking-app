@@ -470,6 +470,7 @@ async function openRanking(name) {
     state.candidates = data.candidates || [];
     state.min = data.min ?? 0;
     state.max = data.max ?? 10;
+    state.ahpComparisons = data.ahpComparisons || {};
     state.currentRankingName = name;
     
     syncConfigFromState();
@@ -496,7 +497,8 @@ export async function saveRankingToServer(name) {
     facets: state.facets,
     candidates: state.candidates,
     min: state.min,
-    max: state.max
+    max: state.max,
+    ahpComparisons: state.ahpComparisons || {} 
   };
   
   const response = await apiFetch(`/api/rankings/${encodeURIComponent(name)}`, {

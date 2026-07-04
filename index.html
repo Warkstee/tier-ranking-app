@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./css/detail-modal.css?v=3">
   <link rel="stylesheet" href="./css/compare-modal.css?v=3">
   <link rel="stylesheet" href="./css/config-modal.css?v=3">
+  <link rel="stylesheet" href="./css/ahp-modal.css?v=1">
   <link rel="stylesheet" href="./css/add-candidate.css?v=3">
   <link rel="stylesheet" href="./css/components.css?v=3">
   <link rel="stylesheet" href="./css/file-menu.css?v=3">
@@ -179,7 +180,20 @@
           </section>
 
           <section class="config-section">
-            <h3>Scoring Criteria</h3>
+            <div class="config-section-header">
+              <h3>Scoring Criteria</h3>
+              <button type="button" class="btn-ahp-calc" data-open-ahp aria-label="Calculate weights with AHP" title="Calculate weights with AHP">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="8" y1="10" x2="10" y2="10"/>
+                  <line x1="14" y1="10" x2="16" y2="10"/>
+                  <line x1="8" y1="14" x2="10" y2="14"/>
+                  <line x1="14" y1="14" x2="16" y2="14"/>
+                  <line x1="8" y1="18" x2="16" y2="18"/>
+                </svg>
+              </button>
+            </div>
             <div class="facets-list" data-facets-list></div>
             <button type="button" class="btn-add-facet" data-add-facet>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,6 +210,45 @@
           <div class="config-actions">
             <button type="button" data-cancel-config>Cancel</button>
             <button type="button" data-apply-config>Apply Changes</button>
+          </div>
+        </footer>
+      </article>
+    </section>
+
+    <section class="ahp-modal" aria-label="AHP Weight Calculator" data-ahp-modal hidden>
+      <article class="ahp-panel">
+        <header class="ahp-header">
+          <div>
+            <h2>AHP Weight Calculator</h2>
+            <p class="ahp-subtitle">Compare criteria pairwise to calculate priority weights</p>
+          </div>
+          <button class="ahp-close" type="button" aria-label="Close AHP calculator" data-close-ahp>x</button>
+        </header>
+
+        <div class="ahp-content">
+          <section class="ahp-section">
+            <h3><span class="ahp-step-number">1</span> Pairwise Comparisons</h3>
+            <div class="ahp-scale-legend">
+              <span><strong>1</strong> equal</span>
+              <span><strong>3</strong> moderate</span>
+              <span><strong>5</strong> strong</span>
+              <span><strong>7</strong> very strong</span>
+              <span><strong>9</strong> extreme</span>
+            </div>
+            <div class="ahp-comparisons" data-ahp-comparisons></div>
+          </section>
+
+          <section class="ahp-section">
+            <h3><span class="ahp-step-number">2</span> Priority Weights</h3>
+            <div class="ahp-weights" data-ahp-weights></div>
+          </section>
+        </div>
+
+        <footer class="ahp-footer">
+          <p data-ahp-status role="status" aria-live="polite"></p>
+          <div class="ahp-actions">
+            <button type="button" data-cancel-ahp>Cancel</button>
+            <button type="button" data-apply-ahp>Apply Weights</button>
           </div>
         </footer>
       </article>

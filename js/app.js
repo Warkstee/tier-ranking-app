@@ -28,6 +28,7 @@ import {
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { openCompareModal } from "./compare-modal.js";
+import { wireAhpControls } from "./ahp.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 import { initAuth, apiFetch } from "./auth.js";
@@ -97,6 +98,7 @@ function wireStaticControls() {
 
   wireConfigEditorControls();
   wireTierEditorControls();
+  wireAhpControls();
 
   els.addNameInput.addEventListener("input", () => {
     const remaining = 23 - els.addNameInput.value.length;
@@ -208,6 +210,7 @@ function applyConfig(config) {
   state.candidates = parsed.candidates;
   state.min = parsed.min ?? 0;   // Add support for min/max from config
   state.max = parsed.max ?? 10;
+  state.ahpComparisons = parsed.ahpComparisons || {};
   state.configText = config.text;
   state.configSource = config.source;
   state.selectedId = null;
