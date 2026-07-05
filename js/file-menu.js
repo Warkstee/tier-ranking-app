@@ -101,6 +101,16 @@ export function initFileMenu() {
   });
   els.fileStatus.style.cursor = "pointer";
   
+  // Ctrl+S / Cmd+S keyboard shortcut to save
+  document.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      event.preventDefault();
+      if (state.isDirty && !state.readOnly) {
+        handleSave();
+      }
+    }
+  });
+  
   // Change text to "SAVE" on hover when in draft state
   els.fileStatus.addEventListener("mouseenter", () => {
     if (state.isDirty) {
