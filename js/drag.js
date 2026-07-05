@@ -24,7 +24,7 @@ export function attachPointer(element, candidateId) {
   if (state.readOnly) {
     element.addEventListener("click", (event) => {
       if (event.target.closest("button,input,textarea")) return;
-      import("./modal.js").then(({ openModal }) => openModal(candidateId));
+      import("./detail-modal.js").then(({ openModal }) => openModal(candidateId));
     });
     return;
   }
@@ -110,7 +110,7 @@ function onPointerUp(event) {
     moveCandidate(candidateId, zone.dataset.dropZone);
   } else if (!wasDrag) {
     // Import dynamically to avoid circular dependency
-    import("./modal.js").then(({ openModal }) => openModal(candidateId));
+    import("./detail-modal.js").then(({ openModal }) => openModal(candidateId));
   }
 }
 

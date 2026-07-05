@@ -60,7 +60,7 @@ export function undo() {
 
   // If detail modal is open for this candidate, re-render modal scores
   if (state.selectedId === candidate.id) {
-    import("./modal.js").then(({ renderModal }) => renderModal(candidate));
+    import("./detail-modal.js").then(({ renderModal }) => renderModal(candidate));
   }
 
   // If compare modal is open and this candidate is being compared, re-render it

@@ -26,7 +26,7 @@ import {
   wireTierEditorControls
 } from "./config.js";
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
-import { openModal, closeModal } from "./modal.js";
+import { openModal, closeModal } from "./detail-modal.js";
 import { openCompareModal } from "./compare-modal.js";
 import { wireAhpControls, undoAhpSlider } from "./ahp.js";
 import { showToast, slugify } from "./utils.js";

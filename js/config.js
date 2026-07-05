@@ -338,8 +338,8 @@ export function createDraftFromState() {
  * Otherwise, a fresh draft is created from the current state.
  */
 export function openConfigEditor() {
-  // Import closeModal from modal.js to avoid circular dependency
-  import("./modal.js").then(({ closeModal }) => {
+  // Import closeModal from detail-modal.js to avoid circular dependency
+  import("./detail-modal.js").then(({ closeModal }) => {
     closeModal();
 
     // Reuse existing draft or create a new one from current state
@@ -810,8 +810,8 @@ let tierDraft = null;
  * Otherwise, a fresh draft is created from the current state.
  */
 export function openTierEditor() {
-  // Import closeModal from modal.js to avoid circular dependency
-  import("./modal.js").then(({ closeModal }) => {
+  // Import closeModal from detail-modal.js to avoid circular dependency
+  import("./detail-modal.js").then(({ closeModal }) => {
     closeModal();
 
     // Reuse existing draft or create a new one from current state
