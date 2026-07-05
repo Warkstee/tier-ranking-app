@@ -92,7 +92,13 @@ async function loadSharedRanking(token) {
     state.title = title || data.title || "Shared Ranking";
     state.tiers = data.tiers || state.tiers;
     state.facets = data.facets || [];
-    state.candidates = data.candidates || [];
+    
+    // Fix image paths - convert relative paths to absolute for shared view
+    state.candidates = (data.candidates || []).map(candidate => ({
+      ...candidate,
+      image: candidate.image?.startsWith('./') ? candidate.image.replace('./', '/') : candidate.image
+    }));
+    
     state.min = data.min ?? 0;
     state.max = data.max ?? 10;
     state.ahpComparisons = data.ahpComparisons || {};
