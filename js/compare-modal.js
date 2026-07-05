@@ -118,16 +118,16 @@ function renderCompareColumn(candidate, side) {
         <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
       </div>
       <div class="compare-meta">
-        <div class="compare-kicker" data-compare-score="${side}">OVERALL ${overallScore(candidate)}</div>
-        <div class="compare-kicker" data-compare-rank="${side}">${escapeHtml(formatRank(rank))}</div>
+        <div class="pill pill--overall" data-compare-score="${side}">OVERALL ${overallScore(candidate)}</div>
+        <div class="pill pill--rank" data-compare-rank="${side}">${escapeHtml(formatRank(rank))}</div>
       </div>
       <h2>${escapeHtml(candidate.name)}</h2>
       <p class="compare-description">${escapeHtml(candidate.description)}</p>
-      <div class="compare-table-wrap" aria-label="Review feature scores">
+      <div class="compare-table-wrap" aria-label="Review criteria scores">
         <table class="review-table">
           <thead>
             <tr>
-              <th scope="col">Feature</th>
+              <th scope="col">Criteria</th>
               <th scope="col">${scoreLabel}</th>
             </tr>
           </thead>

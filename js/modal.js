@@ -103,16 +103,16 @@ export function renderModal(candidate) {
       </button>
       <button class="modal-close" type="button" aria-label="Close">x</button>
       <div class="detail-meta">
-        <div class="detail-kicker" data-modal-score>OVERALL ${overallScore(candidate)}</div>
-        <div class="rank-kicker" data-modal-rank>${escapeHtml(formatRank(rank))}</div>
+        <div class="pill pill--overall" data-modal-score>OVERALL ${overallScore(candidate)}</div>
+        <div class="pill pill--rank" data-modal-rank>${escapeHtml(formatRank(rank))}</div>
       </div>
       <h2 data-modal-title>${escapeHtml(candidate.name)}</h2>
       <p class="detail-description">${escapeHtml(candidate.description)}</p>
-      <div class="review-table-wrap" aria-label="Review feature scores">
+      <div class="review-table-wrap" aria-label="Review criteria scores">
         <table class="review-table">
           <thead>
             <tr>
-              <th scope="col">Feature</th>
+              <th scope="col">Criteria</th>
               <th scope="col">${scoreLabel}</th>
             </tr>
           </thead>

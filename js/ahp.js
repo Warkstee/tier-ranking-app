@@ -200,10 +200,11 @@ function renderAhpComparisons() {
     if (ahpComparison.favoredId === null) {
       description = `${escapeHtml(leftName)} and ${escapeHtml(rightName)} are equally important`;
     } else {
-      const importanceLabels = { 2: "weak to moderate", 3: "moderate", 4: "moderate to strong", 5: "strong", 6: "strong to very strong", 7: "very strong", 8: "very strong to extreme", 9: "extreme" };
-      const label = importanceLabels[ahpComparison.degree] || "moderate";
+      const importanceLabels = { 2: "slightly to moderately", 3: "moderately", 4: "moderately to strongly", 5: "strongly", 6: "strongly to very strongly", 7: "very strongly", 8: "very strongly to extremely", 9: "extremely" };
+      const label = importanceLabels[ahpComparison.degree] || "moderately";
       const favoredName = ahpComparison.favoredId === pair.idA ? leftName : rightName;
-      description = `${escapeHtml(favoredName)} has <strong>${label}</strong> importance (<strong>${ahpComparison.degree}</strong>)`;
+      const otherName = ahpComparison.favoredId === pair.idA ? rightName : leftName;
+      description = `${escapeHtml(favoredName)} is <strong>${label}</strong> more important than ${escapeHtml(otherName)}`;
     }
 
     return `
@@ -278,10 +279,11 @@ function updateComparisonDescription(slider, ahpComparison, idA, idB) {
   if (ahpComparison.favoredId === null) {
     descriptionEl.innerHTML = `${escapeHtml(leftName)} and ${escapeHtml(rightName)} are equally important`;
   } else {
-    const importanceLabels = { 2: "weak to moderate", 3: "moderate", 4: "moderate to strong", 5: "strong", 6: "strong to very strong", 7: "very strong", 8: "very strong to extreme", 9: "extreme" };
-    const label = importanceLabels[ahpComparison.degree] || "moderate";
+    const importanceLabels = { 2: "slightly to moderately", 3: "moderately", 4: "moderately to strongly", 5: "strongly", 6: "strongly to very strongly", 7: "very strongly", 8: "very strongly to extremely", 9: "extremely" };
+    const label = importanceLabels[ahpComparison.degree] || "moderately";
     const favoredName = ahpComparison.favoredId === idA ? leftName : rightName;
-    descriptionEl.innerHTML = `${escapeHtml(favoredName)} has <strong>${label}</strong> importance (<strong>${ahpComparison.degree}</strong>)`;
+    const otherName = ahpComparison.favoredId === idA ? rightName : leftName;
+    descriptionEl.innerHTML = `${escapeHtml(favoredName)} is <strong>${label}</strong> more important than ${escapeHtml(otherName)}`;
   }
 }
 

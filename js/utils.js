@@ -166,7 +166,8 @@ export function generateInitialsSVG(name) {
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const hue = Math.abs(hash % 360);
+  // Multiply by a large prime to spread similar names across the hue spectrum
+  const hue = Math.abs((hash * 2654435761) % 360);
   const color1 = `hsl(${hue}, 55%, 65%)`;
   const color2 = `hsl(${(hue + 30) % 360}, 50%, 55%)`;
   

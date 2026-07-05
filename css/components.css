@@ -1,4 +1,30 @@
-/* Shared components - toast, drag ghost, responsive styles */
+/* Shared components - toast, drag ghost, pills, responsive styles */
+
+/* Shared pill/badge styles for modals (Overall score, Rank) */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.pill--overall {
+  color: #ffe178;
+  background: rgba(255, 207, 50, 0.14);
+  border: 1px solid rgba(255, 207, 50, 0.24);
+}
+
+.pill--rank {
+  color: #8fdcff;
+  background: rgba(0, 164, 220, 0.12);
+  border: 1px solid rgba(0, 164, 220, 0.25);
+}
 
 .drag-ghost {
   position: fixed;

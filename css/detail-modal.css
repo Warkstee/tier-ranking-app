@@ -304,29 +304,6 @@
   flex-wrap: wrap;
 }
 
-.detail-kicker,
-.rank-kicker {
-  width: max-content;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 15px;
-  line-height: 1;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-}
-
-.detail-kicker {
-  color: #ffe178;
-  background: rgba(255, 207, 50, 0.14);
-  border: 1px solid rgba(255, 207, 50, 0.24);
-}
-
-.rank-kicker {
-  color: #8fdcff;
-  background: rgba(0, 164, 220, 0.12);
-  border: 1px solid rgba(0, 164, 220, 0.25);
-}
-
 .detail-body h2 {
   margin: 0;
   max-width: 610px;
