@@ -11,6 +11,7 @@ import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumb
 import { getCandidate, overallScore, overallRank, formatRank, attachImageFallback } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 import { closeModal } from "./modal.js";
+import { saveUndo } from "./undo.js";
 
 /**
  * Opens the comparison modal for two candidates.
@@ -45,7 +46,7 @@ export function closeCompareModal() {
 /**
  * Renders the comparison modal with both candidates side-by-side.
  */
-function renderCompareModal() {
+export function renderCompareModal() {
   const candidateA = getCandidate(state.compareIds.left);
   const candidateB = getCandidate(state.compareIds.right);
   if (!candidateA || !candidateB) return;
@@ -169,6 +170,7 @@ function attachCompareScoreListeners(candidate, side) {
       
       const min = state.min ?? 0;
       const max = state.max ?? 10;
+      saveUndo(candidate);
       candidate.scores[facetId] = clamp(toNumber(input.value, min), min, max);
       input.value = candidate.scores[facetId];
       
@@ -194,6 +196,10 @@ function attachCompareScoreListeners(candidate, side) {
       event.stopPropagation();
       track.setPointerCapture?.(event.pointerId);
       track.classList.add("dragging");
+      
+      // Save undo snapshot once at the start of the drag
+      saveUndo(candidate);
+      
       setCompareScoreFromPointer(track, event.clientX, candidate, side);
       
       const onMove = (moveEvent) => {

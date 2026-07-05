@@ -28,11 +28,12 @@ import {
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./modal.js";
 import { openCompareModal } from "./compare-modal.js";
-import { wireAhpControls } from "./ahp.js";
+import { wireAhpControls, undoAhpSlider } from "./ahp.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 import { wireShareModalControls } from "./share-modal.js";
 import { initAuth, apiFetch } from "./auth.js";
+import { undo, clearUndo } from "./undo.js";
 
 let modalTitleFrame = 0;
 
@@ -230,6 +231,21 @@ function wireStaticControls() {
         closeModal();
       }
     }
+
+    // Ctrl+Z / Cmd+Z — undo last tier move, score change, or AHP slider adjustment
+    if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+      const tag = document.activeElement?.tagName;
+      if (tag === "TEXTAREA" || (tag === "INPUT" && document.activeElement.type === "text")) {
+        return; // Let the browser handle native text undo in text fields
+      }
+      event.preventDefault();
+      // If AHP modal is open, undo the last slider adjustment
+      if (!els.ahpModal.hidden) {
+        undoAhpSlider();
+      } else {
+        undo();
+      }
+    }
   });
 
   window.addEventListener("resize", () => {
@@ -303,6 +319,7 @@ function applyConfig(config) {
   state.configSource = config.source;
   state.selectedId = null;
   closeModal();
+  clearUndo();
   render();
 }
 

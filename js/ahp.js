@@ -22,6 +22,13 @@ let ahpDraft = null;
 let ahpFacets = null;
 
 /**
+ * Stores the last AHP slider action for single-step undo.
+ * Contains the pair ID and previous comparison value before the most recent change.
+ * @type {Object|null}
+ */
+let lastAhpAction = null;
+
+/**
  * Generates a consistent pair ID from two facet IDs.
  * Always returns the alphabetically sorted pair to ensure consistency.
  * Uses "::" as delimiter to avoid conflicts with hyphenated facet IDs.
@@ -232,15 +239,33 @@ function renderAhpComparisons() {
 
   // Wire up slider change events
   els.ahpComparisons.querySelectorAll("[data-ahp-slider]").forEach((slider) => {
+    let snapshotSaved = false;
+    
     slider.addEventListener("input", (e) => {
       const pairId = e.target.dataset.ahpSlider;
       const sliderPosition = parseInt(e.target.value, 10);
       const [idA, idB] = pairId.split("::");
       const ahpComparison = sliderPositionToAhp(sliderPosition, idA, idB);
+      
+      // Save undo snapshot only once at the start of the interaction
+      if (!snapshotSaved) {
+        lastAhpAction = { pairId, previous: { ...ahpDraft[pairId] } };
+        snapshotSaved = true;
+      }
+      
       ahpDraft[pairId] = ahpComparison;
       updateSliderBackground(e.target, sliderPosition);
       updateComparisonDescription(e.target, ahpComparison, idA, idB);
       renderAhpWeights();
+    });
+    
+    // Reset the flag when the user releases the slider
+    slider.addEventListener("pointerup", () => {
+      snapshotSaved = false;
+    });
+    
+    slider.addEventListener("change", () => {
+      snapshotSaved = false;
     });
   });
 
@@ -383,7 +408,25 @@ export function closeAhpCalculator() {
   }
   ahpDraft = null;
   ahpFacets = null;
+  lastAhpAction = null;
   setAhpStatus("");
+}
+
+/**
+ * Undoes the last AHP slider adjustment.
+ * Restores the previous comparison value and re-renders the UI.
+ * Single-step undo — only the most recent slider change can be reverted.
+ */
+export function undoAhpSlider() {
+  if (!lastAhpAction || !ahpDraft) return;
+
+  const { pairId, previous } = lastAhpAction;
+  ahpDraft[pairId] = previous;
+  lastAhpAction = null;
+
+  // Re-render the AHP modal
+  renderAhpComparisons();
+  renderAhpWeights();
 }
 
 /**

@@ -11,6 +11,7 @@ import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumb
 import { renderTierBoard, renderUnranked, getCandidate, overallScore, overallRank, formatRank, attachImageFallback } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 import { apiFetch } from "./auth.js";
+import { saveUndo } from "./undo.js";
 
 let editMode = false;
 
@@ -171,6 +172,7 @@ export function renderModal(candidate) {
       if (!input.value.trim()) return;
       const min = state.min ?? 0;
       const max = state.max ?? 10;
+      saveUndo(candidate);
       candidate.scores[facetId] = clamp(toNumber(input.value, min), min, max);
       input.value = candidate.scores[facetId];
       const track = els.detailCard.querySelector(`[data-progress-track="${cssEscape(facetId)}"]`);
@@ -188,12 +190,6 @@ export function renderModal(candidate) {
   // Wire up progress track click handlers for quick score adjustment
   // Skip in read-only mode
   if (!state.readOnly) {
-    els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
-      track.addEventListener("click", (event) => {
-        setScoreFromPointer(track, event.clientX);
-      });
-    });
-
     // Wire up progress track drag handlers for continuous score adjustment
     els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
       track.addEventListener("pointerdown", (event) => {
@@ -202,6 +198,11 @@ export function renderModal(candidate) {
         event.stopPropagation();
         track.setPointerCapture?.(event.pointerId);
         track.classList.add("dragging");
+        
+        // Save undo snapshot once at the start of the drag
+        const candidate = getCandidate(state.selectedId);
+        if (candidate) saveUndo(candidate);
+        
         setScoreFromPointer(track, event.clientX);
 
         const onMove = (moveEvent) => {

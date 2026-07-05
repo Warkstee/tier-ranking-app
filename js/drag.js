@@ -10,6 +10,7 @@ import { state, els, markDirty } from "./state.js";
 import { renderTierBoard, renderUnranked, getCandidate } from "./render.js";
 import { syncConfigFromState } from "./config.js";
 import { openCompareModal } from "./compare-modal.js";
+import { saveUndo } from "./undo.js";
 
 let drag = null;
 
@@ -185,6 +186,10 @@ function setActiveDropZone(zone) {
 function moveCandidate(candidateId, tierId) {
   const candidate = getCandidate(candidateId);
   if (!candidate) return;
+  
+  // Save undo snapshot before mutation
+  saveUndo(candidate);
+  
   // tierId is the drop zone's data-drop-zone value, which is now the tier's id
   // If tierId is "Unranked", set to null
   if (tierId === "Unranked" || !tierId) {
