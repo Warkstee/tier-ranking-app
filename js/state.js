@@ -41,7 +41,8 @@ export const state = {
   configSource: "bundled config",
   currentRankingName: null,
   isDirty: false,
-  ahpComparisons: {}
+  ahpComparisons: {},
+  readOnly: false
 };
 
 /**
@@ -96,6 +97,7 @@ export const els = {
   fileExport: document.querySelector("[data-file-export]"),
   fileImport: document.querySelector("[data-file-import]"),
   fileImportInput: document.querySelector("[data-file-import-input]"),
+  fileShare: document.querySelector("[data-file-share]"),
   fileDelete: document.querySelector("[data-file-delete]"),
   currentRankingName: document.querySelector("[data-current-ranking-name]"),
   fileName: document.querySelector("[data-file-name]"),
@@ -135,7 +137,14 @@ export const els = {
   showLogin: document.querySelector("[data-show-login]"),
   userInfo: document.querySelector("[data-user-info]"),
   userUsername: document.querySelector("[data-user-username]"),
-  userLogout: document.querySelector("[data-user-logout]")
+  userLogout: document.querySelector("[data-user-logout]"),
+  // Share modal elements
+  shareModal: document.querySelector("[data-share-modal]"),
+  shareClose: document.querySelector("[data-share-close]"),
+  shareLinkInput: document.querySelector("[data-share-link-input]"),
+  shareCopyBtn: document.querySelector("[data-share-copy-btn]"),
+  shareError: document.querySelector("[data-share-error]"),
+  shareCancel: document.querySelector("[data-share-cancel]")
 };
 
 /**

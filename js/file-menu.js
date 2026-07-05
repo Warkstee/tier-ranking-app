@@ -17,6 +17,7 @@ import { render } from "./render.js";
 import { showToast } from "./utils.js";
 import { exportRanking, importRanking } from "./export-import.js";
 import { apiFetch } from "./auth.js";
+import { openShareModal } from "./share-modal.js";
 
 let nameInputCallback = null;
 
@@ -89,6 +90,7 @@ export function initFileMenu() {
   els.fileExport.addEventListener("click", handleExport);
   els.fileImport.addEventListener("click", handleImport);
   els.fileImportInput.addEventListener("change", handleImportFile);
+  els.fileShare.addEventListener("click", handleShare);
   els.fileDelete.addEventListener("click", handleDelete);
   
   // Click on draft pill to save
@@ -223,6 +225,14 @@ async function handleSave() {
   
   await saveRankingToServer(state.currentRankingName);
   showToast(`Saved ranking: ${state.currentRankingName}`);
+}
+
+/**
+ * Handle "Share" action - open share modal
+ */
+function handleShare() {
+  closeBurgerMenu();
+  openShareModal();
 }
 
 /**

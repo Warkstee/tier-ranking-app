@@ -31,6 +31,7 @@ import { openCompareModal } from "./compare-modal.js";
 import { wireAhpControls } from "./ahp.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
+import { wireShareModalControls } from "./share-modal.js";
 import { initAuth, apiFetch } from "./auth.js";
 
 let modalTitleFrame = 0;
@@ -47,6 +48,14 @@ window.addEventListener('auth:authenticated', () => {
  * @returns {Promise<void>}
  */
 async function boot() {
+  // Check if we're accessing a shared ranking
+  const sharedPath = window.location.pathname.match(/^\/shared\/(.+)$/);
+  if (sharedPath) {
+    const token = sharedPath[1];
+    await loadSharedRanking(token);
+    return;
+  }
+
   // Initialize authentication first
   const isAuthenticated = await initAuth();
   
@@ -57,6 +66,78 @@ async function boot() {
   
   // User is authenticated, initialize the app
   await initializeApp();
+}
+
+/**
+ * Loads a shared ranking in read-only mode.
+ * @param {string} token - The share token from the URL
+ */
+async function loadSharedRanking(token) {
+  try {
+    const res = await fetch(`/api/shared/${token}`);
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Failed to load shared ranking" }));
+      showToast(err.error || "Failed to load shared ranking");
+      return;
+    }
+
+    const { title, data } = await res.json();
+    
+    // Set read-only mode
+    state.readOnly = true;
+    document.body.classList.add("read-only-mode");
+    
+    // Apply the ranking data
+    state.title = title || data.title || "Shared Ranking";
+    state.tiers = data.tiers || state.tiers;
+    state.facets = data.facets || [];
+    state.candidates = data.candidates || [];
+    state.min = data.min ?? 0;
+    state.max = data.max ?? 10;
+    state.ahpComparisons = data.ahpComparisons || {};
+    state.configText = data.configText || DEFAULT_CONFIG;
+    state.configSource = "shared ranking";
+    state.selectedId = null;
+    
+    // Wire up controls and render
+    wireStaticControls();
+    initTitleEdit();
+    render();
+    
+    // Hide mutation UI elements
+    hideMutationUI();
+    
+    // Show read-only indicator in filename pill
+    showReadOnlyIndicator();
+  } catch (err) {
+    console.error("Failed to load shared ranking:", err);
+    showToast("Failed to load shared ranking");
+  }
+}
+
+/**
+ * Hides UI elements that allow mutations in read-only mode.
+ */
+function hideMutationUI() {
+  // Hide burger menu (contains File menu, config, tier editor, reset)
+  if (els.burgerButton) els.burgerButton.hidden = true;
+  
+  // Hide add candidate button
+  if (els.openAddCandidate) els.openAddCandidate.hidden = true;
+  
+  // Hide title edit button
+  if (els.titleEditBtn) els.titleEditBtn.hidden = true;
+}
+
+/**
+ * Shows a read-only indicator in the filename pill area.
+ */
+function showReadOnlyIndicator() {
+  if (els.fileStatus) {
+    els.fileStatus.textContent = "Read-only";
+    els.fileStatus.className = "file-status-pill read-only";
+  }
 }
 
 /**
@@ -99,6 +180,7 @@ function wireStaticControls() {
   wireConfigEditorControls();
   wireTierEditorControls();
   wireAhpControls();
+  wireShareModalControls();
 
   els.addNameInput.addEventListener("input", () => {
     const remaining = 23 - els.addNameInput.value.length;

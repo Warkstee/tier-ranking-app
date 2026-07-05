@@ -19,6 +19,15 @@ let drag = null;
  * @param {string} candidateId - The ID of the candidate being dragged
  */
 export function attachPointer(element, candidateId) {
+  // In read-only mode, only attach click handler to open detail modal
+  if (state.readOnly) {
+    element.addEventListener("click", (event) => {
+      if (event.target.closest("button,input,textarea")) return;
+      import("./modal.js").then(({ openModal }) => openModal(candidateId));
+    });
+    return;
+  }
+  
   element.addEventListener("pointerdown", (event) => {
     if (event.button !== 0 || event.target.closest("button,input,textarea")) return;
     event.preventDefault();

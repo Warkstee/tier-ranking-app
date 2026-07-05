@@ -39,11 +39,18 @@ export function initDatabase() {
  * Run all migration files in order
  */
 function runMigrations() {
-  const migrationFile = join(__dirname, 'migrations', '001-initial-schema.sql');
-  const migrationSQL = readFileSync(migrationFile, 'utf-8');
-  
-  db.exec(migrationSQL);
-  console.log('Migrations completed');
+  const migrationsDir = join(__dirname, 'migrations');
+  const migrationFiles = [
+    '001-initial-schema.sql',
+    '002-shared-rankings.sql'
+  ];
+
+  for (const file of migrationFiles) {
+    const migrationSQL = readFileSync(join(migrationsDir, file), 'utf-8');
+    db.exec(migrationSQL);
+    console.log(`Migration ${file} applied`);
+  }
+  console.log('All migrations completed');
 }
 
 /**

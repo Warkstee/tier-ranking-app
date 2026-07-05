@@ -151,6 +151,15 @@ function renderCompareColumn(candidate, side) {
 function attachCompareScoreListeners(candidate, side) {
   const compareCard = document.querySelector("[data-compare-card]");
   
+  // In read-only mode, make inputs read-only and skip event listeners
+  if (state.readOnly) {
+    compareCard.querySelectorAll(`[data-compare-input^="${side}-"]`).forEach((input) => {
+      input.readOnly = true;
+      input.style.cursor = "default";
+    });
+    return;
+  }
+  
   // Wire up number inputs
   compareCard.querySelectorAll(`[data-compare-input^="${side}-"]`).forEach((input) => {
     input.addEventListener("input", () => {

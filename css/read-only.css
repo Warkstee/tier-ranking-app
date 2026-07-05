@@ -1,0 +1,32 @@
+/* Read-only indicator styles */
+
+.current-ranking-name .file-status-pill.read-only {
+  background: rgba(0, 164, 220, 0.15);
+  color: var(--brand-a);
+  cursor: default;
+}
+
+/* Hide edit buttons in read-only mode */
+body.read-only-mode [data-title-edit],
+body.read-only-mode [data-open-add-candidate],
+body.read-only-mode [data-burger-menu] {
+  display: none !important;
+}
+
+/* Disable progress bar hover effects in read-only mode */
+body.read-only-mode .progress-track {
+  cursor: default !important;
+}
+
+body.read-only-mode .progress-track:hover {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035) !important;
+}
+
+body.read-only-mode .progress-track:hover .progress-thumb {
+  opacity: 0 !important;
+}
+
+/* Change candidate cursor from grab to pointer in read-only mode */
+body.read-only-mode [data-draggable-candidate] {
+  cursor: pointer !important;
+}

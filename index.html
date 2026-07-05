@@ -4,17 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>S-Tier Ranking Board</title>
-  <link rel="stylesheet" href="./css/base.css?v=3">
-  <link rel="stylesheet" href="./css/layout.css?v=3">
-  <link rel="stylesheet" href="./css/tier-board.css?v=3">
-  <link rel="stylesheet" href="./css/detail-modal.css?v=3">
-  <link rel="stylesheet" href="./css/compare-modal.css?v=3">
-  <link rel="stylesheet" href="./css/config-modal.css?v=3">
-  <link rel="stylesheet" href="./css/ahp-modal.css?v=1">
-  <link rel="stylesheet" href="./css/add-candidate.css?v=3">
-  <link rel="stylesheet" href="./css/components.css?v=3">
-  <link rel="stylesheet" href="./css/file-menu.css?v=3">
-  <link rel="stylesheet" href="./css/auth.css?v=3">
+  <link rel="stylesheet" href="/css/base.css?v=3">
+  <link rel="stylesheet" href="/css/layout.css?v=3">
+  <link rel="stylesheet" href="/css/tier-board.css?v=3">
+  <link rel="stylesheet" href="/css/detail-modal.css?v=3">
+  <link rel="stylesheet" href="/css/compare-modal.css?v=3">
+  <link rel="stylesheet" href="/css/config-modal.css?v=3">
+  <link rel="stylesheet" href="/css/ahp-modal.css?v=1">
+  <link rel="stylesheet" href="/css/add-candidate.css?v=3">
+  <link rel="stylesheet" href="/css/components.css?v=3">
+  <link rel="stylesheet" href="/css/file-menu.css?v=3">
+  <link rel="stylesheet" href="/css/share-modal.css?v=1">
+  <link rel="stylesheet" href="/css/read-only.css?v=1">
+  <link rel="stylesheet" href="/css/auth.css?v=3">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
@@ -42,6 +44,7 @@
               <button type="button" data-file-export>Download File...</button>
               <button type="button" data-file-import>Upload File...</button>
               <input type="file" accept=".zip" data-file-import-input hidden>
+              <button type="button" data-file-share>Share...</button>
               <div class="submenu-item-with-flyout" data-flyout-trigger="delete">
                 <button type="button" data-file-delete>Delete File...</button>
               </div>
@@ -281,6 +284,26 @@
       </article>
     </section>
 
+    <section class="share-modal" aria-label="Share ranking" data-share-modal hidden>
+      <article class="share-panel">
+        <header class="share-header">
+          <h2>Share Ranking</h2>
+          <button class="share-close" type="button" aria-label="Close share dialog" data-share-close>x</button>
+        </header>
+        <div class="share-content">
+          <div class="share-link-field">
+            <input type="text" class="share-link-input" data-share-link-input readonly aria-label="Shareable link">
+            <button type="button" class="share-copy-btn" data-share-copy-btn>Copy</button>
+          </div>
+          <div class="share-error" data-share-error hidden></div>
+          <p class="share-info">Anyone with this link can <strong>view</strong> this ranking in read-only mode. They cannot make changes.</p>
+        </div>
+        <footer class="share-footer">
+          <button type="button" data-share-cancel>Close</button>
+        </footer>
+      </article>
+    </section>
+
     <section class="name-input-modal" aria-label="Enter ranking name" data-name-input-modal hidden>
       <article class="name-input-panel">
         <header class="name-input-header">
@@ -383,6 +406,6 @@
   </section>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="./js/app.js" type="module"></script>
+  <script src="/js/app.js" type="module"></script>
 </body>
 </html>

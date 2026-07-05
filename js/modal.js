@@ -85,11 +85,8 @@ export function renderModal(candidate) {
   const rank = overallRank(candidate);
 
   // Render the complete candidate details modal HTML structure with image, controls, title, description and score table
-  els.detailCard.innerHTML = `
-    <div class="detail-media">
-      <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
-    </div>
-    <div class="detail-body">
+  // Hide edit/delete buttons in read-only mode
+  const actionButtons = state.readOnly ? '' : `
       <button class="modal-edit" type="button" aria-label="Edit ${escapeAttr(candidate.name)}">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
@@ -101,6 +98,14 @@ export function renderModal(candidate) {
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
       </button>
+  `;
+  
+  els.detailCard.innerHTML = `
+    <div class="detail-media">
+      <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
+    </div>
+    <div class="detail-body">
+      ${actionButtons}
       <button class="modal-close" type="button" aria-label="Close">x</button>
       <div class="detail-meta">
         <div class="pill pill--overall" data-modal-score>OVERALL ${overallScore(candidate)}</div>
@@ -131,22 +136,35 @@ export function renderModal(candidate) {
   attachImageFallback(els.detailCard.querySelector(".detail-media img"), candidate.name);
 
   // Wire up edit button to switch to edit mode
-  els.detailCard.querySelector(".modal-edit").addEventListener("click", () => {
-    editMode = true;
-    renderModal(candidate);
-  });
+  const editBtn = els.detailCard.querySelector(".modal-edit");
+  if (editBtn) {
+    editBtn.addEventListener("click", () => {
+      editMode = true;
+      renderModal(candidate);
+    });
+  }
 
   // Wire up delete button to remove the candidate
-  els.detailCard.querySelector(".modal-delete").addEventListener("click", () => {
-    deleteCandidate(candidate.id);
-    markDirty();
-  });
+  const deleteBtn = els.detailCard.querySelector(".modal-delete");
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", () => {
+      deleteCandidate(candidate.id);
+      markDirty();
+    });
+  }
 
   // Wire up close button to close the modal
   els.detailCard.querySelector(".modal-close").addEventListener("click", closeModal);
 
   // Wire up score input fields to update candidate scores on change
+  // In read-only mode, make inputs read-only and skip event listeners
   els.detailCard.querySelectorAll("[data-score-input]").forEach((input) => {
+    if (state.readOnly) {
+      input.readOnly = true;
+      input.style.cursor = "default";
+      return;
+    }
+    
     input.addEventListener("input", () => {
       const facetId = input.dataset.scoreInput;
       const facet = state.facets.find((item) => item.id === facetId);
@@ -168,35 +186,38 @@ export function renderModal(candidate) {
   });
 
   // Wire up progress track click handlers for quick score adjustment
-  els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
-    track.addEventListener("click", (event) => {
-      setScoreFromPointer(track, event.clientX);
+  // Skip in read-only mode
+  if (!state.readOnly) {
+    els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
+      track.addEventListener("click", (event) => {
+        setScoreFromPointer(track, event.clientX);
+      });
     });
-  });
 
-  // Wire up progress track drag handlers for continuous score adjustment
-  els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
-    track.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      event.stopPropagation();
-      track.setPointerCapture?.(event.pointerId);
-      track.classList.add("dragging");
-      setScoreFromPointer(track, event.clientX);
+    // Wire up progress track drag handlers for continuous score adjustment
+    els.detailCard.querySelectorAll("[data-progress-track]").forEach((track) => {
+      track.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        track.setPointerCapture?.(event.pointerId);
+        track.classList.add("dragging");
+        setScoreFromPointer(track, event.clientX);
 
-      const onMove = (moveEvent) => {
-        setScoreFromPointer(track, moveEvent.clientX);
-      };
-      const onUp = () => {
-        track.classList.remove("dragging");
-        track.releasePointerCapture?.(event.pointerId);
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerup", onUp);
-      };
-      document.addEventListener("pointermove", onMove);
-      document.addEventListener("pointerup", onUp);
+        const onMove = (moveEvent) => {
+          setScoreFromPointer(track, moveEvent.clientX);
+        };
+        const onUp = () => {
+          track.classList.remove("dragging");
+          track.releasePointerCapture?.(event.pointerId);
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+        };
+        document.addEventListener("pointermove", onMove);
+        document.addEventListener("pointerup", onUp);
+      });
     });
-  });
+  }
 }
 
 /**
