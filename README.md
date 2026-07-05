@@ -13,7 +13,56 @@ A browser-based app for ranking candidates into tiers using weighted scoring cri
 - **Candidate management** — Add, edit, and delete candidates with image upload
 - **Multiple rankings** — Save, load, export, import, and delete named rankings
 - **In-browser configuration** — Edit tiers, scoring criteria, and score ranges without touching config files
+- **AHP weight calculator** — Determine criteria weights through pairwise comparisons using the Analytic Hierarchy Process instead of manually entering numbers
+- **Side-by-side comparison** — Drag one candidate onto another to open a comparison modal with images, descriptions, and full score tables
+- **Shareable read-only links** — Generate a unique URL to share any ranking board — recipients can view tiers, candidates, and scores without an account
+- **Undo (Ctrl+Z)** — Revert your most recent tier move, score change, or AHP adjustment with a single keystroke
+- **Keyboard shortcuts** — Ctrl+S (Cmd+S on Mac) to save the current ranking
 - **Auto-save** — Changes are saved automatically as you work
+
+![Candidate Comparison screenshot](docs/screenshot-comparison-v1.png)
+
+## Configuration
+
+The app ships with a default configuration. Open the menu (burger icon, top-left) to:
+
+| Action | Description |
+|--------|-------------|
+| **Edit Criteria** | Add, remove, and reorder scoring facets. Set weights and the score range (min/max). Use the calculator icon to open the AHP weight calculator for pairwise comparison-based prioritization. |
+| **Edit Tiers** | Add, remove, and reorder tier lanes. |
+| **Reset Scores & Rankings** | Reset all scores and move candidates back to the unranked pool. |
+
+![Edit Criteria Screenshot](docs/screenshot-edit-criteria-v2.png)
+
+### AHP Calculator
+
+Determine criteria weights through pairwise comparisons using the Analytic Hierarchy Process instead of manually entering numbers.
+
+![AHP Calculator Screenshot](docs/screenshot-ahp-calculator-v1.png)
+
+## Ranking Management
+
+Use the **File** menu (burger icon, top-left) to manage rankings:
+
+| Action | Description |
+|--------|-------------|
+| **New Ranking** | Start a fresh ranking with default tiers. Prompts for a name. |
+| **Open** | Browse and load any saved ranking. |
+| **Save** | Save changes to the current ranking. |
+| **Save As** | Save the current ranking under a new name. |
+| **Download File** | Download a ZIP containing the ranking data and all candidate images. |
+| **Upload File** | Load a ranking from a previously exported ZIP file. |
+| **Delete File** | Remove a saved ranking. |
+| **Share File** | Generate a shareable read-only link. Recipients can view the full ranking board with needing an account.|
+
+![Share Ranking screenshot](docs/screenshot-share-ranking-v1.png)
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| **Ctrl+Z** (Cmd+Z on Mac) | Undo the most recent tier move, score change, or AHP slider adjustment |
+| **Ctrl+S** (Cmd+S on Mac) | Save the current ranking (only triggers when there are unsaved changes) |
 
 ## Self-Hosted Deployment
 
@@ -60,34 +109,4 @@ docker compose up -d
 ```
 
 Make sure the port `4173` has been opened in the firewall
-
-## Configuration
-
-The app ships with a default configuration. Open the menu (burger icon, top-left) to:
-
-| Action | Description |
-|--------|-------------|
-| **Edit Criteria** | Add, remove, and reorder scoring facets. Set weights and the score range (min/max). |
-| **Edit Tiers** | Add, remove, and reorder tier lanes. |
-| **Reset Scores & Rankings** | Reset all scores and move candidates back to the unranked pool. |
-
-Changes are applied immediately and saved to the current ranking.
-
-![Tier Ranking App screenshot](docs/screenshot-edit-criteria-v2.png)
-
-## Ranking Management
-
-Use the **File** menu (burger icon, top-left) to manage rankings:
-
-| Action | Description |
-|--------|-------------|
-| **New Ranking** | Start a fresh ranking with default tiers. Prompts for a name. |
-| **Open** | Browse and load any saved ranking. |
-| **Save** | Save changes to the current ranking. |
-| **Save As** | Save the current ranking under a new name. |
-| **Download File** | Download a ZIP containing the ranking data and all candidate images. |
-| **Upload File** | Load a ranking from a previously exported ZIP file. |
-| **Delete File** | Remove a saved ranking. |
-
-Rankings auto-save after any change. If no name has been set, they save as "untitled".
 
