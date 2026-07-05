@@ -293,7 +293,7 @@ function updateComparisonDescription(slider, ahpComparison, idA, idB) {
 function renderAhpWeights() {
   if (!els.ahpWeights || !ahpFacets) return;
 
-  const weights = calculateAhpWeights(ahpFacets, ahpDraft);
+  const weights = calculateAhpWeights(ahpFacets, ahpDraft).sort((a, b) => b.weight - a.weight);
   
   if (weights.length === 0) {
     els.ahpWeights.innerHTML = "<p style='color: #9fa7b8; text-align: center;'>Add at least 2 criteria to calculate weights.</p>";
@@ -301,7 +301,7 @@ function renderAhpWeights() {
   }
 
   // Find the top weight
-  const maxWeight = Math.max(...weights.map((w) => w.weight));
+  const maxWeight = weights[0].weight;
 
   els.ahpWeights.innerHTML = weights.map((w) => {
     const percentage = (w.weight * 100).toFixed(1);

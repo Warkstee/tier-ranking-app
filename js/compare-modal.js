@@ -81,8 +81,11 @@ function renderCompareColumn(candidate, side) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   
+  // Sort facets by weight descending so highest-priority criteria appear first
+  const sortedFacets = [...state.facets].sort((a, b) => b.weight - a.weight);
+  
   // Build score rows
-  const reviewRows = state.facets.map((facet) => {
+  const reviewRows = sortedFacets.map((facet) => {
     const value = candidate.scores[facet.id] ?? min;
     const id = `compare-${side}-facet-${slugify(facet.id)}`;
     const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
