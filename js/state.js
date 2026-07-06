@@ -13,7 +13,7 @@ export { DEFAULT_CONFIG };
  * @type {Object}
  * @property {string} title - The board title
  * @property {string[]} tiers - Array of tier names (e.g., ["S", "A", "B", "C", "D", "F"])
- * @property {Object[]} facets - Array of scoring facets/criteria
+ * @property {Object[]} criteria - Array of scoring criteria
  * @property {Object[]} candidates - Array of candidate objects
  * @property {string|null} selectedId - ID of the currently selected candidate
  * @property {string} configText - Current configuration text
@@ -32,7 +32,7 @@ export const state = {
   ],
   min: 0,
   max: 10,
-  facets: [],
+  criteria: [],
   candidates: [],
   selectedId: null,
   compareIds: { left: null, right: null },
@@ -64,8 +64,8 @@ export const els = {
   configModal: document.querySelector("[data-config-modal]"),
   configMin: document.querySelector("[data-config-min]"),
   configMax: document.querySelector("[data-config-max]"),
-  facetsList: document.querySelector("[data-facets-list]"),
-  addFacet: document.querySelector("[data-add-facet]"),
+  criteriaList: document.querySelector("[data-criteria-list]"),
+  addCriterion: document.querySelector("[data-add-criterion]"),
   cancelConfig: document.querySelector("[data-cancel-config]"),
   configStatus: document.querySelector("[data-config-status]"),
   closeConfig: document.querySelector("[data-close-config]"),

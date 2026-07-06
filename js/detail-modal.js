@@ -53,19 +53,19 @@ export function renderModal(candidate) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
 
-  // Build HTML for each facet's score row with progress bar and input field
-  const reviewRows = state.facets.map((facet) => {
-    const value = candidate.scores[facet.id] ?? min;
-    const id = `facet-${slugify(facet.id)}`;
+  // Build HTML for each criterion's score row with progress bar and input field
+  const reviewRows = state.criteria.map((criterion) => {
+    const value = candidate.scores[criterion.id] ?? min;
+    const id = `criterion-${slugify(criterion.id)}`;
     const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
     return `
       <tr>
         <th scope="row">
           <div class="review-feature-heading">
-            <label for="${escapeAttr(id)}">${escapeHtml(facet.name)}</label>
-            <span>Weight ${escapeHtml(formatNumber(facet.weight))}</span>
+            <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
+            <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
           </div>
-          <div class="progress-track" data-progress-track="${escapeAttr(facet.id)}" aria-hidden="true">
+          <div class="progress-track" data-progress-track="${escapeAttr(criterion.id)}" aria-hidden="true">
             <div class="progress-fill" style="width: ${percent}%"></div>
             <div class="progress-thumb" style="left: ${percent}%"></div>
           </div>
@@ -74,8 +74,8 @@ export function renderModal(candidate) {
           <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
             autocomplete="off" autocapitalize="off" spellcheck="false"
             data-bwignore="true" data-lpignore="true" data-1p-ignore
-            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${facet.name} score out of ${max}`)}"
-            data-score-input="${escapeAttr(facet.id)}">
+            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
+            data-score-input="${escapeAttr(criterion.id)}">
         </td>
       </tr>
     `;
@@ -167,17 +167,17 @@ export function renderModal(candidate) {
     }
     
     input.addEventListener("input", () => {
-      const facetId = input.dataset.scoreInput;
-      const facet = state.facets.find((item) => item.id === facetId);
+      const criterionId = input.dataset.scoreInput;
+      const criterion = state.criteria.find((item) => item.id === criterionId);
       if (!input.value.trim()) return;
       const min = state.min ?? 0;
       const max = state.max ?? 10;
       saveUndo(candidate);
-      candidate.scores[facetId] = clamp(toNumber(input.value, min), min, max);
-      input.value = candidate.scores[facetId];
-      const track = els.detailCard.querySelector(`[data-progress-track="${cssEscape(facetId)}"]`);
-      if (track && facet) {
-        const pct = Math.round((candidate.scores[facetId] - min) / (max - min) * 100);
+      candidate.scores[criterionId] = clamp(toNumber(input.value, min), min, max);
+      input.value = candidate.scores[criterionId];
+      const track = els.detailCard.querySelector(`[data-progress-track="${cssEscape(criterionId)}"]`);
+      if (track && criterion) {
+        const pct = Math.round((candidate.scores[criterionId] - min) / (max - min) * 100);
         track.querySelector(".progress-fill").style.width = `${pct}%`;
         track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
@@ -383,14 +383,14 @@ function fitModalTitle() {
 }
 
 /**
- * Sets a facet score based on pointer position on the progress bar.
+ * Sets a criterion score based on pointer position on the progress bar.
  * @param {HTMLElement} track - The progress track element
  * @param {number} clientX - The X coordinate of the pointer
  */
 function setScoreFromPointer(track, clientX) {
-  const facetId = track.dataset.progressTrack;
-  const facet = state.facets.find((item) => item.id === facetId);
-  if (!facet) return;
+  const criterionId = track.dataset.progressTrack;
+  const criterion = state.criteria.find((item) => item.id === criterionId);
+  if (!criterion) return;
   const candidate = getCandidate(state.selectedId);
   if (!candidate) return;
   const rect = track.getBoundingClientRect();
@@ -398,11 +398,11 @@ function setScoreFromPointer(track, clientX) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   const value = clamp(Math.round(min + ratio * (max - min)), min, max);
-  candidate.scores[facetId] = value;
+  candidate.scores[criterionId] = value;
   const pct = Math.round((value - min) / (max - min) * 100);
   track.querySelector(".progress-fill").style.width = `${pct}%`;
   track.querySelector(".progress-thumb").style.left = `${pct}%`;
-  const input = els.detailCard.querySelector(`[data-score-input="${cssEscape(facetId)}"]`);
+  const input = els.detailCard.querySelector(`[data-score-input="${cssEscape(criterionId)}"]`);
   if (input) input.value = value;
   updateScoresForCandidate(candidate);
   syncConfigFromState();

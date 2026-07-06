@@ -166,13 +166,13 @@
   box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
 }
 
-.facets-list {
+.criteria-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.facet-row {
+.criterion-row {
   display: grid;
   grid-template-columns: 28px 1fr 120px 42px;
   gap: 12px;
@@ -184,7 +184,7 @@
   transition: opacity 0.15s ease;
 }
 
-.facet-row.dragging {
+.criterion-row.dragging {
   opacity: 0.3;
 }
 
@@ -210,8 +210,8 @@
   cursor: grabbing;
 }
 
-/* Override the candidate-card ghost width for facet row reordering */
-.facets-list .drag-ghost {
+/* Override the candidate-card ghost width for criterion row reordering */
+.criteria-list .drag-ghost {
   width: auto;
   min-width: 400px;
   max-width: 760px;
@@ -219,13 +219,13 @@
   pointer-events: none;
 }
 
-.facet-row .form-field {
+.criterion-row .form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.facet-row .form-field label {
+.criterion-row .form-field label {
   color: #9fa7b8;
   font-size: 12px;
   font-weight: 820;
@@ -233,8 +233,8 @@
   letter-spacing: 0.05em;
 }
 
-.facet-row .form-field input[type="text"],
-.facet-row .form-field input[type="number"] {
+.criterion-row .form-field input[type="text"],
+.criterion-row .form-field input[type="number"] {
   height: 38px;
   padding: 0 12px;
   border-radius: 9px;
@@ -246,13 +246,13 @@
   font-family: inherit;
 }
 
-.facet-row .form-field input[type="text"]:focus,
-.facet-row .form-field input[type="number"]:focus {
+.criterion-row .form-field input[type="text"]:focus,
+.criterion-row .form-field input[type="number"]:focus {
   border-color: rgba(103, 215, 255, 0.68);
   box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
 }
 
-.btn-delete-facet {
+.btn-delete-criterion {
   width: 42px;
   height: 38px;
   display: grid;
@@ -265,12 +265,12 @@
   transition: all 0.15s ease;
 }
 
-.btn-delete-facet:hover {
+.btn-delete-criterion:hover {
   background: rgba(255, 138, 163, 0.15);
   border-color: rgba(255, 138, 163, 0.35);
 }
 
-.btn-add-facet {
+.btn-add-criterion {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -287,7 +287,7 @@
   transition: all 0.15s ease;
 }
 
-.btn-add-facet:hover {
+.btn-add-criterion:hover {
   background: rgba(143, 220, 255, 0.12);
   border-color: rgba(143, 220, 255, 0.5);
 }

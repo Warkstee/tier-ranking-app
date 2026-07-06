@@ -44,7 +44,7 @@ export function formatNumber(value) {
  * @returns {string} A unique ID
  */
 export function uniqueId(id, seen) {
-  const fallback = id || "facet";
+  const fallback = id || "criterion";
   let next = fallback;
   let counter = 2;
   while (seen.has(next)) {
@@ -62,7 +62,7 @@ export function uniqueId(id, seen) {
  * @returns {string} Human-readable label
  */
 export function humanizeId(value) {
-  return String(value || "Facet")
+  return String(value || "Criterion")
     .replace(/[_-]+/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

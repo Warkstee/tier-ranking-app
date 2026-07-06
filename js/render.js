@@ -235,11 +235,11 @@ export function overallScore(candidate) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   const range = max - min || 1;
-  const weighted = state.facets.reduce((total, facet) => {
-    const value = clamp(toNumber(candidate.scores[facet.id], min), min, max);
-    return total + ((value - min) / range) * 100 * facet.weight;
+  const weighted = state.criteria.reduce((total, criterion) => {
+    const value = clamp(toNumber(candidate.scores[criterion.id], min), min, max);
+    return total + ((value - min) / range) * 100 * criterion.weight;
   }, 0);
-  const weight = state.facets.reduce((total, facet) => total + facet.weight, 0) || 1;
+  const weight = state.criteria.reduce((total, criterion) => total + criterion.weight, 0) || 1;
   return Math.round(weighted / weight);
 }
 

@@ -14,7 +14,7 @@ import { openAhpCalculator, applyAhpWeights, getAhpComparisons, closeAhpCalculat
 
 /**
  * Draft state for the config editor.
- * Holds a snapshot of facets, min, max, and candidate scores while the editor is open.
+ * Holds a snapshot of criteria, min, max, and candidate scores while the editor is open.
  * All editor operations modify the draft; changes are only applied to real state on "Apply".
  * The draft persists across X-close and is only cleared on Apply or Cancel.
  * @type {Object|null}
@@ -24,7 +24,7 @@ let configDraft = null;
 /**
  * Parses JSON configuration text into the application's data model.
  * @param {string} text - The JSON configuration text to parse
- * @returns {Object} Parsed configuration with title, tiers, facets, and candidates
+ * @returns {Object} Parsed configuration with title, tiers, criteria, and candidates
  */
 export function parseConfig(text) {
   return parseJsonConfig(text);
@@ -33,7 +33,7 @@ export function parseConfig(text) {
 /**
  * Parses JSON configuration text into the application's data model.
  * @param {string} text - JSON configuration text
- * @returns {Object} Parsed configuration with title, tiers, facets, and candidates
+ * @returns {Object} Parsed configuration with title, tiers, criteria, and candidates
  * @throws {Error} If JSON is invalid or candidates list is missing
  */
 export function parseJsonConfig(text) {
@@ -48,7 +48,7 @@ export function parseJsonConfig(text) {
   const min = toNumber(data.min, 0);
   const max = Math.max(1, toNumber(data.max, 10));
   const rawCandidates = Array.isArray(data.candidates) ? data.candidates : [];
-  let facets = normalizeRubric(data.rubric);
+  let criteria = normalizeRubric(data.rubric);
 
   // Parse tiers: support new format [{id, name}] and detect old format ["S", "A", ...]
   let tiers;
@@ -82,8 +82,8 @@ export function parseJsonConfig(text) {
     // Empty candidates list is valid (e.g. newly created ranking)
   }
 
-  if (!facets.length) {
-    facets = inferFacetsFromScores(rawCandidates);
+  if (!criteria.length) {
+    criteria = inferCriteriaFromScores(rawCandidates);
   }
 
   // Build set of valid tier IDs for normalization
@@ -94,8 +94,8 @@ export function parseJsonConfig(text) {
     const name = String(candidate.name || `Candidate ${index + 1}`);
     const rawScores = candidate.scores && typeof candidate.scores === "object" ? candidate.scores : {};
     const scores = {};
-    facets.forEach((facet) => {
-      scores[facet.id] = clamp(toNumber(rawScores[facet.id] ?? rawScores[facet.name], min), min, max);
+    criteria.forEach((criterion) => {
+      scores[criterion.id] = clamp(toNumber(rawScores[criterion.id] ?? rawScores[criterion.name], min), min, max);
     });
     // Normalize tierId: use candidate.tierId if valid, otherwise null (Unranked)
     let tierId = null;
@@ -119,7 +119,7 @@ export function parseJsonConfig(text) {
   // Parse AHP comparisons if present
   const ahpComparisons = data.ahpComparisons && typeof data.ahpComparisons === "object" ? data.ahpComparisons : {};
 
-  return { title, tiers, min, max, facets, candidates, ahpComparisons };
+  return { title, tiers, min, max, criteria, candidates, ahpComparisons };
 }
 
 
@@ -137,10 +137,10 @@ export function exportConfig() {
  * @returns {string} JSON-formatted configuration text
  */
 export function exportJson() {
-  const rubric = state.facets.map((facet) => ({
-    id: facet.id,
-    name: facet.name,
-    weight: facet.weight
+  const rubric = state.criteria.map((criterion) => ({
+    id: criterion.id,
+    name: criterion.name,
+    weight: criterion.weight
   }));
 
   const candidates = state.candidates.map((candidate) => ({
@@ -148,8 +148,8 @@ export function exportJson() {
     image: candidate.image,
     description: candidate.description,
     tierId: candidate.tierId || null,
-    scores: state.facets.reduce((scores, facet) => {
-      scores[facet.id] = candidate.scores[facet.id] ?? 0;
+    scores: state.criteria.reduce((scores, criterion) => {
+      scores[criterion.id] = candidate.scores[criterion.id] ?? 0;
       return scores;
     }, {})
   }));
@@ -208,7 +208,7 @@ export async function persistConfig() {
     const data = {
       title: state.title,
       tiers: state.tiers,
-      facets: state.facets,
+      criteria: state.criteria,
       candidates: state.candidates,
       min: state.min,
       max: state.max,
@@ -270,15 +270,15 @@ export function currentEditorText() {
 }
 
 /**
- * Normalizes a rubric configuration into a standardized facet array.
+ * Normalizes a rubric configuration into a standardized criteria array.
  * Handles both array and object formats for the rubric.
  * @param {Array|Object} rubric - The rubric configuration to normalize
- * @returns {Array} Array of normalized facet objects
+ * @returns {Array} Array of normalized criterion objects
  */
 function normalizeRubric(rubric) {
   const seen = new Set();
   const entries = Array.isArray(rubric)
-    ? rubric.map((item, index) => [item?.id || item?.key || `facet_${index + 1}`, item])
+    ? rubric.map((item, index) => [item?.id || item?.key || `criterion_${index + 1}`, item])
     : Object.entries(rubric || {});
 
   return entries.map(([rawId, rawValue]) => {
@@ -290,15 +290,15 @@ function normalizeRubric(rubric) {
       name: String(label),
       weight: toNumber(value.weight, 1)
     };
-  }).filter((facet) => facet.name);
+  }).filter((criterion) => criterion.name);
 }
 
 /**
- * Infers facets from candidate score keys when no rubric is defined.
+ * Infers criteria from candidate score keys when no rubric is defined.
  * @param {Array} candidates - Array of candidate objects
- * @returns {Array} Array of inferred facet objects
+ * @returns {Array} Array of inferred criterion objects
  */
-function inferFacetsFromScores(candidates) {
+function inferCriteriaFromScores(candidates) {
   const seen = new Set();
   candidates.forEach((candidate) => {
     if (!candidate?.scores || typeof candidate.scores !== "object") return;
@@ -317,7 +317,7 @@ function inferFacetsFromScores(candidates) {
 
 /**
  * Creates a draft snapshot from the current state for editing.
- * @returns {Object} Draft object with facets, min, max, and candidateScores
+ * @returns {Object} Draft object with criteria, min, max, and candidateScores
  */
 export function createDraftFromState() {
   const candidateScores = {};
@@ -325,7 +325,7 @@ export function createDraftFromState() {
     candidateScores[candidate.id] = { ...candidate.scores };
   });
   return {
-    facets: state.facets.map((f) => ({ ...f })),
+    criteria: state.criteria.map((c) => ({ ...c })),
     min: state.min ?? 0,
     max: state.max ?? 10,
     candidateScores
@@ -351,19 +351,19 @@ export function openConfigEditor() {
     els.configMin.value = configDraft.min;
     els.configMax.value = configDraft.max;
     els.configStatus.textContent = "";
-    renderFacetEditor();
+    renderCriteriaEditor();
     updateApplyButtonState();
     els.configModal.hidden = false;
   });
 }
 
 /**
- * Renders the facet list inside the config editor modal from the draft.
+ * Renders the criteria list inside the config editor modal from the draft.
  */
-export function renderFacetEditor() {
-  if (!els.facetsList || !configDraft) return;
-  els.facetsList.innerHTML = configDraft.facets.map((facet) => `
-    <div class="facet-row" data-facet-id="${facet.id}">
+export function renderCriteriaEditor() {
+  if (!els.criteriaList || !configDraft) return;
+  els.criteriaList.innerHTML = configDraft.criteria.map((criterion) => `
+    <div class="criterion-row" data-criterion-id="${criterion.id}">
       <div class="drag-handle" aria-label="Drag to reorder">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="5" cy="3" r="1.5"/>
@@ -376,13 +376,13 @@ export function renderFacetEditor() {
       </div>
       <div class="form-field">
         <label>Name</label>
-        <input type="text" value="${escapeHtml(facet.name)}" data-facet-name="${facet.id}" autocomplete="off" spellcheck="false">
+        <input type="text" value="${escapeHtml(criterion.name)}" data-criterion-name="${criterion.id}" autocomplete="off" spellcheck="false">
       </div>
       <div class="form-field">
         <label>Weight</label>
-        <input type="number" value="${facet.weight}" min="0.1" step="0.1" data-facet-weight="${facet.id}" autocomplete="off">
+        <input type="number" value="${criterion.weight}" min="0.1" step="0.1" data-criterion-weight="${criterion.id}" autocomplete="off">
       </div>
-      <button type="button" class="btn-delete-facet" data-facet-delete="${facet.id}" aria-label="Delete ${escapeHtml(facet.name)}">
+      <button type="button" class="btn-delete-criterion" data-criterion-delete="${criterion.id}" aria-label="Delete ${escapeHtml(criterion.name)}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
@@ -394,24 +394,24 @@ export function renderFacetEditor() {
   `).join("");
 
   // Wire up drag-to-reorder
-  attachReorderable(els.facetsList, ".facet-row", (fromIndex, toIndex) => {
-    const [moved] = configDraft.facets.splice(fromIndex, 1);
-    configDraft.facets.splice(toIndex, 0, moved);
-    renderFacetEditor();
+  attachReorderable(els.criteriaList, ".criterion-row", (fromIndex, toIndex) => {
+    const [moved] = configDraft.criteria.splice(fromIndex, 1);
+    configDraft.criteria.splice(toIndex, 0, moved);
+    renderCriteriaEditor();
     updateApplyButtonState();
   });
 }
 
 /**
  * Wires up event listeners for the config editor form fields.
- * Called once during boot, uses event delegation for dynamic facet rows.
+ * Called once during boot, uses event delegation for dynamic criterion rows.
  */
 export function wireConfigEditorControls() {
   els.configMin.addEventListener("input", handleScoreRangeChange);
   els.configMax.addEventListener("input", handleScoreRangeChange);
-  els.facetsList.addEventListener("input", handleFacetFieldChange);
-  els.facetsList.addEventListener("click", handleFacetButtonClick);
-  els.addFacet.addEventListener("click", addFacet);
+  els.criteriaList.addEventListener("input", handleCriterionFieldChange);
+  els.criteriaList.addEventListener("click", handleCriterionButtonClick);
+  els.addCriterion.addEventListener("click", addCriterion);
 
   // AHP calculator button
   const ahpBtn = document.querySelector("[data-open-ahp]");
@@ -437,18 +437,18 @@ export function hasUnsavedChanges() {
     return true;
   }
 
-  // Check facets count
-  if (configDraft.facets.length !== state.facets.length) {
+  // Check criteria count
+  if (configDraft.criteria.length !== state.criteria.length) {
     return true;
   }
 
-  // Check each facet
-  for (let i = 0; i < configDraft.facets.length; i++) {
-    const draftFacet = configDraft.facets[i];
-    const stateFacet = state.facets[i];
-    if (draftFacet.id !== stateFacet.id || 
-        draftFacet.name !== stateFacet.name || 
-        draftFacet.weight !== stateFacet.weight) {
+  // Check each criterion
+  for (let i = 0; i < configDraft.criteria.length; i++) {
+    const draftCriterion = configDraft.criteria[i];
+    const stateCriterion = state.criteria[i];
+    if (draftCriterion.id !== stateCriterion.id || 
+        draftCriterion.name !== stateCriterion.name || 
+        draftCriterion.weight !== stateCriterion.weight) {
       return true;
     }
   }
@@ -458,18 +458,18 @@ export function hasUnsavedChanges() {
     const draftScores = configDraft.candidateScores[candidate.id] || {};
     const actualScores = candidate.scores;
     
-    // Check if any draft facet scores differ
-    for (const facet of configDraft.facets) {
-      const draftScore = draftScores[facet.id];
-      const actualScore = actualScores[facet.id];
+    // Check if any draft criterion scores differ
+    for (const criterion of configDraft.criteria) {
+      const draftScore = draftScores[criterion.id];
+      const actualScore = actualScores[criterion.id];
       if (draftScore !== actualScore) {
         return true;
       }
     }
     
-    // Check if there are scores for facets not in the draft
+    // Check if there are scores for criteria not in the draft
     for (const scoreKey of Object.keys(actualScores)) {
-      if (!configDraft.facets.some((f) => f.id === scoreKey)) {
+      if (!configDraft.criteria.some((f) => f.id === scoreKey)) {
         return true;
       }
     }
@@ -502,11 +502,11 @@ export function handleScoreRangeChange() {
   configDraft.max = max;
 
   // Clamp scores in the draft
-  configDraft.facets.forEach((facet) => {
+  configDraft.criteria.forEach((criterion) => {
     state.candidates.forEach((candidate) => {
       const scores = configDraft.candidateScores[candidate.id];
-      if (scores && scores[facet.id] !== undefined) {
-        scores[facet.id] = clamp(scores[facet.id], min, max);
+      if (scores && scores[criterion.id] !== undefined) {
+        scores[criterion.id] = clamp(scores[criterion.id], min, max);
       }
     });
   });
@@ -515,36 +515,36 @@ export function handleScoreRangeChange() {
 }
 
 /**
- * Handles changes to facet name or weight inputs using event delegation.
+ * Handles changes to criterion name or weight inputs using event delegation.
  * Operates on the draft only; real state is unchanged until Apply.
  */
-export function handleFacetFieldChange(event) {
+export function handleCriterionFieldChange(event) {
   if (!configDraft) return;
   const target = event.target;
-  const facetId = target.dataset.facetName || target.dataset.facetWeight;
-  if (!facetId) return;
+  const criterionId = target.dataset.criterionName || target.dataset.criterionWeight;
+  if (!criterionId) return;
 
-  const facet = configDraft.facets.find((f) => f.id === facetId);
-  if (!facet) return;
+  const criterion = configDraft.criteria.find((f) => f.id === criterionId);
+  if (!criterion) return;
 
-  if (target.dataset.facetName !== undefined) {
+  if (target.dataset.criterionName !== undefined) {
     const newName = target.value.trim();
     if (!newName) return;
 
     // Check for duplicate names within the draft
-    const isDuplicate = configDraft.facets.some((f) => f.id !== facetId && f.name.toLowerCase() === newName.toLowerCase());
+    const isDuplicate = configDraft.criteria.some((f) => f.id !== criterionId && f.name.toLowerCase() === newName.toLowerCase());
     if (isDuplicate) {
       setConfigStatus(`"${newName}" already exists. Use a different name.`, "error");
-      target.value = facet.name;
+      target.value = criterion.name;
       return;
     }
 
-    facet.name = newName;
+    criterion.name = newName;
     setConfigStatus("");
-  } else if (target.dataset.facetWeight !== undefined) {
+  } else if (target.dataset.criterionWeight !== undefined) {
     const newWeight = parseFloat(target.value);
     if (!isNaN(newWeight) && newWeight > 0) {
-      facet.weight = newWeight;
+      criterion.weight = newWeight;
     }
   }
 
@@ -552,72 +552,72 @@ export function handleFacetFieldChange(event) {
 }
 
 /**
- * Handles click events on facet row buttons (delete) using event delegation.
+ * Handles click events on criterion row buttons (delete) using event delegation.
  * Operates on the draft only; real state is unchanged until Apply.
  */
-export function handleFacetButtonClick(event) {
+export function handleCriterionButtonClick(event) {
   if (!configDraft) return;
-  const deleteBtn = event.target.closest("[data-facet-delete]");
+  const deleteBtn = event.target.closest("[data-criterion-delete]");
   if (!deleteBtn) return;
 
-  const facetId = deleteBtn.dataset.facetDelete;
-  const facet = configDraft.facets.find((f) => f.id === facetId);
-  if (!facet) return;
+  const criterionId = deleteBtn.dataset.criterionDelete;
+  const criterion = configDraft.criteria.find((f) => f.id === criterionId);
+  if (!criterion) return;
 
-  // Count candidates with non-default scores for this facet in the draft
+  // Count candidates with non-default scores for this criterion in the draft
   const min = configDraft.min;
   const affectedCount = state.candidates.filter((c) => {
     const scores = configDraft.candidateScores[c.id];
-    const score = scores ? scores[facetId] : undefined;
+    const score = scores ? scores[criterionId] : undefined;
     return score !== undefined && score !== min;
   }).length;
 
   // Show confirmation if any candidate has a meaningful score
   if (affectedCount > 0) {
     const confirmed = window.confirm(
-      `${affectedCount} candidate${affectedCount !== 1 ? "s have" : " has"} a score for "${facet.name}". Delete this criterion?`
+      `${affectedCount} candidate${affectedCount !== 1 ? "s have" : " has"} a score for "${criterion.name}". Delete this criterion?`
     );
     if (!confirmed) return;
   }
 
-  // Remove facet from draft
-  configDraft.facets = configDraft.facets.filter((f) => f.id !== facetId);
+  // Remove criterion from draft
+  configDraft.criteria = configDraft.criteria.filter((f) => f.id !== criterionId);
 
-  // Remove scores for this facet from all candidates in the draft
+  // Remove scores for this criterion from all candidates in the draft
   state.candidates.forEach((candidate) => {
     const scores = configDraft.candidateScores[candidate.id];
     if (scores) {
-      delete scores[facetId];
+      delete scores[criterionId];
     }
   });
 
-  renderFacetEditor();
+  renderCriteriaEditor();
   updateApplyButtonState();
 }
 
 /**
- * Opens the AHP calculator modal with the current draft facets.
+ * Opens the AHP calculator modal with the current draft criteria.
  * Restores previously saved AHP comparisons if available.
  */
 function handleOpenAhp() {
   if (!configDraft) return;
-  openAhpCalculator(configDraft.facets, state.ahpComparisons || {});
+  openAhpCalculator(configDraft.criteria, state.ahpComparisons || {});
 }
 
 /**
  * Handles the AHP apply event: copies calculated weights back to configDraft
- * and refreshes the facet editor.
+ * and refreshes the criteria editor.
  */
 function handleAhpApply() {
-  const updatedFacets = applyAhpWeights();
-  if (updatedFacets.length === 0) return;
+  const updatedCriteria = applyAhpWeights();
+  if (updatedCriteria.length === 0) return;
 
-  // Map updated weights back to configDraft facets (preserve order and IDs)
+  // Map updated weights back to configDraft criteria (preserve order and IDs)
   // Convert from decimal (0-1) to percentage (0-100) and round to 1 decimal
-  updatedFacets.forEach((updated) => {
-    const draftFacet = configDraft.facets.find((f) => f.id === updated.id);
-    if (draftFacet) {
-      draftFacet.weight = Math.round(updated.weight * 1000) / 10;
+  updatedCriteria.forEach((updated) => {
+    const draftCriterion = configDraft.criteria.find((f) => f.id === updated.id);
+    if (draftCriterion) {
+      draftCriterion.weight = Math.round(updated.weight * 1000) / 10;
     }
   });
 
@@ -625,34 +625,34 @@ function handleAhpApply() {
   state.ahpComparisons = getAhpComparisons();
 
   closeAhpCalculator();
-  renderFacetEditor();
+  renderCriteriaEditor();
   updateApplyButtonState();
   setConfigStatus("AHP weights applied. You can fine-tune manually before applying.", "ok");
 }
 
 /**
- * Adds a new facet with default values to the draft.
- * All existing candidates get the minimum score for the new facet in the draft.
+ * Adds a new criterion with default values to the draft.
+ * All existing candidates get the minimum score for the new criterion in the draft.
  */
-export function addFacet() {
+export function addCriterion() {
   if (!configDraft) return;
 
-  // Generate a unique ID for the new facet
+  // Generate a unique ID for the new criterion
   const baseId = "new-criterion";
-  let facetId = baseId;
+  let criterionId = baseId;
   let counter = 1;
-  while (configDraft.facets.some((f) => f.id === facetId)) {
-    facetId = `${baseId}-${counter++}`;
+  while (configDraft.criteria.some((f) => f.id === criterionId)) {
+    criterionId = `${baseId}-${counter++}`;
   }
 
-  // Create new facet
-  const newFacet = {
-    id: facetId,
+  // Create new criterion
+  const newCriterion = {
+    id: criterionId,
     name: "New Criterion",
     weight: 1
   };
 
-  configDraft.facets.push(newFacet);
+  configDraft.criteria.push(newCriterion);
 
   // Add minimum score for all existing candidates in the draft
   const min = configDraft.min;
@@ -660,16 +660,16 @@ export function addFacet() {
     if (!configDraft.candidateScores[candidate.id]) {
       configDraft.candidateScores[candidate.id] = {};
     }
-    configDraft.candidateScores[candidate.id][facetId] = min;
+    configDraft.candidateScores[candidate.id][criterionId] = min;
   });
 
-  renderFacetEditor();
+  renderCriteriaEditor();
   updateApplyButtonState();
 
-  // Focus the name input of the new facet row
-  const newRow = els.facetsList.querySelector(`[data-facet-id="${facetId}"]`);
+  // Focus the name input of the new criterion row
+  const newRow = els.criteriaList.querySelector(`[data-criterion-id="${criterionId}"]`);
   if (newRow) {
-    const nameInput = newRow.querySelector("[data-facet-name]");
+    const nameInput = newRow.querySelector("[data-criterion-name]");
     if (nameInput) {
       nameInput.focus();
       nameInput.select();
@@ -697,7 +697,7 @@ export function closeConfigEditor() {
 
   // Restore state from the last saved config
   const saved = parseConfig(state.configText);
-  state.facets = saved.facets;
+  state.criteria = saved.criteria;
   state.min = saved.min ?? 0;
   state.max = saved.max ?? 10;
 
@@ -717,7 +717,7 @@ export function syncOpenConfigEditor() {
   if (!configDraft) return;
   els.configMin.value = configDraft.min;
   els.configMax.value = configDraft.max;
-  renderFacetEditor();
+  renderCriteriaEditor();
 }
 
 /**
@@ -735,42 +735,42 @@ export function applyEditorConfig() {
     return;
   }
 
-  // Validate all facet names and weights in the draft
+  // Validate all criterion names and weights in the draft
   const names = new Set();
-  for (const facet of configDraft.facets) {
-    if (!facet.name.trim()) {
+  for (const criterion of configDraft.criteria) {
+    if (!criterion.name.trim()) {
       setConfigStatus("All criteria must have a name.", "error");
       return;
     }
-    const normalizedName = facet.name.toLowerCase();
+    const normalizedName = criterion.name.toLowerCase();
     if (names.has(normalizedName)) {
-      setConfigStatus(`Duplicate criterion name: "${facet.name}".`, "error");
+      setConfigStatus(`Duplicate criterion name: "${criterion.name}".`, "error");
       return;
     }
     names.add(normalizedName);
-    if (facet.weight <= 0 || isNaN(facet.weight)) {
-      setConfigStatus(`Invalid weight for "${facet.name}". Must be greater than 0.`, "error");
+    if (criterion.weight <= 0 || isNaN(criterion.weight)) {
+      setConfigStatus(`Invalid weight for "${criterion.name}". Must be greater than 0.`, "error");
       return;
     }
   }
 
   // Apply draft to state
-  state.facets = configDraft.facets;
+  state.criteria = configDraft.criteria;
   state.min = min;
   state.max = max;
 
   // Apply draft scores to candidates
   state.candidates.forEach((candidate) => {
     const draftScores = configDraft.candidateScores[candidate.id] || {};
-    // Set scores for all draft facets
-    configDraft.facets.forEach((facet) => {
-      candidate.scores[facet.id] = draftScores[facet.id] !== undefined
-        ? clamp(draftScores[facet.id], min, max)
+    // Set scores for all draft criteria
+    configDraft.criteria.forEach((criterion) => {
+      candidate.scores[criterion.id] = draftScores[criterion.id] !== undefined
+        ? clamp(draftScores[criterion.id], min, max)
         : min;
     });
-    // Remove scores for facets no longer in the draft
+    // Remove scores for criteria no longer in the draft
     Object.keys(candidate.scores).forEach((scoreKey) => {
-      if (!configDraft.facets.some((f) => f.id === scoreKey)) {
+      if (!configDraft.criteria.some((f) => f.id === scoreKey)) {
         delete candidate.scores[scoreKey];
       }
     });
@@ -869,7 +869,7 @@ function renderTierList() {
     </div>
   `).join("");
 
-  // Wire up drag-to-reorder (attached when rows exist, matching facet editor pattern)
+  // Wire up drag-to-reorder (attached when rows exist, matching criteria editor pattern)
   attachReorderable(els.tiersList, ".tier-row", (fromIndex, toIndex) => {
     const [moved] = tierDraft.splice(fromIndex, 1);
     tierDraft.splice(toIndex, 0, moved);

@@ -23,7 +23,7 @@ let lastAction = null;
  * @param {Object} candidate - The candidate object to snapshot
  * @param {string} candidate.id - The candidate's unique identifier
  * @param {string|null} candidate.tierId - The candidate's current tier assignment
- * @param {Object} candidate.scores - The candidate's current scores by facet
+ * @param {Object} candidate.scores - The candidate's current scores by criterion
  */
 export function saveUndo(candidate) {
   lastAction = {

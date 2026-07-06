@@ -215,7 +215,7 @@ let reorderDrag = null;
  * Each item must contain a `.drag-handle` element that initiates the drag.
  * Items are physically moved in the DOM during the drag for live visual feedback.
  * @param {HTMLElement} container - The container holding the reorderable items
- * @param {string} itemSelector - CSS selector for each reorderable item (e.g., ".facet-row")
+ * @param {string} itemSelector - CSS selector for each reorderable item (e.g., ".criterion-row")
  * @param {Function} onReorder - Callback invoked with (fromIndex, toIndex) when an item is dropped
  */
 export function attachReorderable(container, itemSelector, onReorder) {

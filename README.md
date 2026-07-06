@@ -28,7 +28,7 @@ The app ships with a default configuration. Open the menu (burger icon, top-left
 
 | Action | Description |
 |--------|-------------|
-| **Edit Criteria** | Add, remove, and reorder scoring facets. Set weights and the score range (min/max). Use the calculator icon to open the AHP weight calculator for pairwise comparison-based prioritization. |
+| **Edit Criteria** | Add, remove, and reorder scoring criteria. Set weights and the score range (min/max). Use the calculator icon to open the AHP weight calculator for pairwise comparison-based prioritization. |
 | **Edit Tiers** | Add, remove, and reorder tier lanes. |
 | **Reset Scores & Rankings** | Reset all scores and move candidates back to the unranked pool. |
 

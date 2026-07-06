@@ -92,7 +92,7 @@ async function loadSharedRanking(token) {
     // Apply the ranking data
     state.title = title || data.title || "Shared Ranking";
     state.tiers = data.tiers || state.tiers;
-    state.facets = data.facets || [];
+    state.criteria = data.criteria || [];
     
     // Fix image paths - convert relative paths to absolute for shared view
     state.candidates = (data.candidates || []).map(candidate => ({
@@ -273,10 +273,10 @@ async function resetScoresAndRankings() {
   try {
     // Reset all candidates
     state.candidates.forEach(candidate => {
-      // Reset all facet scores to minimum
+      // Reset all criterion scores to minimum
       if (candidate.scores) {
-        Object.keys(candidate.scores).forEach(facetId => {
-          candidate.scores[facetId] = state.min;
+        Object.keys(candidate.scores).forEach(criterionId => {
+          candidate.scores[criterionId] = state.min;
         });
       }
       
@@ -310,7 +310,7 @@ function applyConfig(config) {
   const parsed = parseConfig(config.text);
   state.title = parsed.title;
   state.tiers = parsed.tiers;
-  state.facets = parsed.facets;
+  state.criteria = parsed.criteria;
   state.candidates = parsed.candidates;
   state.min = parsed.min ?? 0;   // Add support for min/max from config
   state.max = parsed.max ?? 10;
@@ -399,8 +399,8 @@ async function handleAddCandidateSubmit(event) {
   }
 
   const scores = {};
-  state.facets.forEach((facet) => {
-    scores[facet.id] = 0;
+  state.criteria.forEach((criterion) => {
+    scores[criterion.id] = 0;
   });
 
   const newCandidate = {

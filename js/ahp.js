@@ -16,10 +16,10 @@ import { escapeHtml } from "./utils.js";
 let ahpDraft = null;
 
 /**
- * Current facets being compared (snapshot from configDraft).
+ * Current criteria being compared (snapshot from configDraft).
  * @type {Array|null}
  */
-let ahpFacets = null;
+let ahpCriteria = null;
 
 /**
  * Stores the last AHP slider action for single-step undo.
@@ -29,11 +29,11 @@ let ahpFacets = null;
 let lastAhpAction = null;
 
 /**
- * Generates a consistent pair ID from two facet IDs.
+ * Generates a consistent pair ID from two criterion IDs.
  * Always returns the alphabetically sorted pair to ensure consistency.
- * Uses "::" as delimiter to avoid conflicts with hyphenated facet IDs.
- * @param {string} idA - First facet ID
- * @param {string} idB - Second facet ID
+ * Uses "::" as delimiter to avoid conflicts with hyphenated criterion IDs.
+ * @param {string} idA - First criterion ID
+ * @param {string} idB - Second criterion ID
  * @returns {string} Pair ID in format "smallerId::largerId"
  */
 function getPairId(idA, idB) {
@@ -83,8 +83,8 @@ function ahpToSliderPosition(ahp, leftId, rightId) {
 /**
  * Gets the order of IDs in a pair (which is left, which is right).
  * @param {string} pairId - The pair ID (format: "idA::idB")
- * @param {string} idA - First facet ID
- * @param {string} idB - Second facet ID
+ * @param {string} idA - First criterion ID
+ * @param {string} idB - Second criterion ID
  * @returns {Object} Object with leftId and rightId
  */
 function getPairOrder(pairId, idA, idB) {
@@ -105,12 +105,12 @@ function getPairOrder(pairId, idA, idB) {
  * 4. Normalize: divide each cell by its column sum
  * 5. Average each row to get priority weights
  * 
- * @param {Array} facets - Array of facet objects { id, name }
+ * @param {Array} criteria - Array of criterion objects { id, name }
  * @param {Object} comparisons - Pairwise comparison values keyed by pair ID
  * @returns {Array} Array of { id, name, weight } objects (weight as decimal 0-1)
  */
-export function calculateAhpWeights(facets, comparisons) {
-  const n = facets.length;
+export function calculateAhpWeights(criteria, comparisons) {
+  const n = criteria.length;
   if (n < 2) return [];
 
   // Build pairwise comparison matrix
@@ -121,18 +121,18 @@ export function calculateAhpWeights(facets, comparisons) {
       if (i === j) {
         matrix[i][j] = 1;
       } else {
-        const pairId = getPairId(facets[i].id, facets[j].id);
+        const pairId = getPairId(criteria[i].id, criteria[j].id);
         const ahpComparison = comparisons[pairId] || { favoredId: null, degree: 1 };
         
         // Convert AHP comparison to matrix value
         // If equal, matrix value is 1
-        // If a facet is favored, matrix[i][j] = degree if i is favored, 1/degree if j is favored
+        // If a criterion is favored, matrix[i][j] = degree if i is favored, 1/degree if j is favored
         let matrixValue;
         if (ahpComparison.favoredId === null) {
           matrixValue = 1;
-        } else if (ahpComparison.favoredId === facets[i].id) {
+        } else if (ahpComparison.favoredId === criteria[i].id) {
           matrixValue = ahpComparison.degree;
-        } else if (ahpComparison.favoredId === facets[j].id) {
+        } else if (ahpComparison.favoredId === criteria[j].id) {
           matrixValue = 1 / ahpComparison.degree;
         } else {
           matrixValue = 1; // Fallback (shouldn't happen)
@@ -153,14 +153,14 @@ export function calculateAhpWeights(facets, comparisons) {
   }
 
   // Normalize each cell by its column sum, then average each row
-  const weights = facets.map((facet, i) => {
+  const weights = criteria.map((criterion, i) => {
     let rowSum = 0;
     for (let j = 0; j < n; j++) {
       rowSum += matrix[i][j] / columnSums[j];
     }
     return {
-      id: facet.id,
-      name: facet.name,
+      id: criterion.id,
+      name: criterion.name,
       weight: rowSum / n
     };
   });
@@ -172,16 +172,16 @@ export function calculateAhpWeights(facets, comparisons) {
  * Renders the pairwise comparison sliders.
  */
 function renderAhpComparisons() {
-  if (!els.ahpComparisons || !ahpFacets) return;
+  if (!els.ahpComparisons || !ahpCriteria) return;
 
   const pairs = [];
-  for (let i = 0; i < ahpFacets.length; i++) {
-    for (let j = i + 1; j < ahpFacets.length; j++) {
+  for (let i = 0; i < ahpCriteria.length; i++) {
+    for (let j = i + 1; j < ahpCriteria.length; j++) {
       pairs.push({
-        idA: ahpFacets[i].id,
-        nameA: ahpFacets[i].name,
-        idB: ahpFacets[j].id,
-        nameB: ahpFacets[j].name
+        idA: ahpCriteria[i].id,
+        nameA: ahpCriteria[i].name,
+        idB: ahpCriteria[j].id,
+        nameB: ahpCriteria[j].name
       });
     }
   }
@@ -294,10 +294,10 @@ function updateSliderBackground(slider, position) {
  * @param {string} idB - ID of the right criterion
  */
 function updateComparisonDescription(slider, ahpComparison, idA, idB) {
-  const facetA = ahpFacets.find((f) => f.id === idA);
-  const facetB = ahpFacets.find((f) => f.id === idB);
-  const leftName = facetA.name;
-  const rightName = facetB.name;
+  const criterionA = ahpCriteria.find((f) => f.id === idA);
+  const criterionB = ahpCriteria.find((f) => f.id === idB);
+  const leftName = criterionA.name;
+  const rightName = criterionB.name;
 
   const descriptionEl = slider.closest(".ahp-comparison-row").querySelector(".ahp-comparison-value");
   
@@ -316,9 +316,9 @@ function updateComparisonDescription(slider, ahpComparison, idA, idB) {
  * Renders the calculated priority weights with progress bars.
  */
 function renderAhpWeights() {
-  if (!els.ahpWeights || !ahpFacets) return;
+  if (!els.ahpWeights || !ahpCriteria) return;
 
-  const weights = calculateAhpWeights(ahpFacets, ahpDraft).sort((a, b) => b.weight - a.weight);
+  const weights = calculateAhpWeights(ahpCriteria, ahpDraft).sort((a, b) => b.weight - a.weight);
   
   if (weights.length === 0) {
     els.ahpWeights.innerHTML = "<p style='color: #9fa7b8; text-align: center;'>Add at least 2 criteria to calculate weights.</p>";
@@ -364,26 +364,26 @@ function setAhpStatus(message, tone = "") {
 
 /**
  * Opens the AHP calculator modal.
- * @param {Array} facets - Array of facet objects { id, name, weight } from configDraft
+ * @param {Array} criteria - Array of criterion objects { id, name, weight } from configDraft
  * @param {Object} [existingComparisons] - Optional existing pairwise comparisons to restore
  */
-export function openAhpCalculator(facets, existingComparisons = {}) {
+export function openAhpCalculator(criteria, existingComparisons = {}) {
   if (!els.ahpModal) return;
 
   // Need at least 2 criteria
-  if (facets.length < 2) {
+  if (criteria.length < 2) {
     setAhpStatus("Add at least 2 criteria to use the AHP calculator.", "error");
     return;
   }
 
   // Initialize draft
-  ahpFacets = facets.map((f) => ({ id: f.id, name: f.name }));
+  ahpCriteria = criteria.map((f) => ({ id: f.id, name: f.name }));
   ahpDraft = { ...existingComparisons };
 
   // Initialize any missing pairs to equal importance
-  for (let i = 0; i < ahpFacets.length; i++) {
-    for (let j = i + 1; j < ahpFacets.length; j++) {
-      const pairId = getPairId(ahpFacets[i].id, ahpFacets[j].id);
+  for (let i = 0; i < ahpCriteria.length; i++) {
+    for (let j = i + 1; j < ahpCriteria.length; j++) {
+      const pairId = getPairId(ahpCriteria[i].id, ahpCriteria[j].id);
       if (!(pairId in ahpDraft)) {
         ahpDraft[pairId] = { favoredId: null, degree: 1 };
       }
@@ -407,7 +407,7 @@ export function closeAhpCalculator() {
     els.ahpModal.hidden = true;
   }
   ahpDraft = null;
-  ahpFacets = null;
+  ahpCriteria = null;
   lastAhpAction = null;
   setAhpStatus("");
 }
@@ -430,20 +430,20 @@ export function undoAhpSlider() {
 }
 
 /**
- * Applies the calculated AHP weights to the caller's facet array.
- * Returns the updated facets with new weights.
- * @returns {Array} Array of facet objects with updated weights
+ * Applies the calculated AHP weights to the caller's criterion array.
+ * Returns the updated criteria with new weights.
+ * @returns {Array} Array of criterion objects with updated weights
  */
 export function applyAhpWeights() {
-  if (!ahpFacets || !ahpDraft) return [];
+  if (!ahpCriteria || !ahpDraft) return [];
 
-  const weights = calculateAhpWeights(ahpFacets, ahpDraft);
+  const weights = calculateAhpWeights(ahpCriteria, ahpDraft);
   
-  // Return facets with updated weights
-  return ahpFacets.map((facet) => {
-    const weightObj = weights.find((w) => w.id === facet.id);
+  // Return criteria with updated weights
+  return ahpCriteria.map((criterion) => {
+    const weightObj = weights.find((w) => w.id === criterion.id);
     return {
-      ...facet,
+      ...criterion,
       weight: weightObj ? weightObj.weight : 1
     };
   });

@@ -82,22 +82,22 @@ function renderCompareColumn(candidate, side) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   
-  // Sort facets by weight descending so highest-priority criteria appear first
-  const sortedFacets = [...state.facets].sort((a, b) => b.weight - a.weight);
+  // Sort criteria by weight descending so highest-priority criteria appear first
+  const sortedCriteria = [...state.criteria].sort((a, b) => b.weight - a.weight);
   
   // Build score rows
-  const reviewRows = sortedFacets.map((facet) => {
-    const value = candidate.scores[facet.id] ?? min;
-    const id = `compare-${side}-facet-${slugify(facet.id)}`;
+  const reviewRows = sortedCriteria.map((criterion) => {
+    const value = candidate.scores[criterion.id] ?? min;
+    const id = `compare-${side}-criterion-${slugify(criterion.id)}`;
     const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
     return `
       <tr>
         <th scope="row">
           <div class="review-feature-heading">
-            <label for="${escapeAttr(id)}">${escapeHtml(facet.name)}</label>
-            <span>Weight ${escapeHtml(formatNumber(facet.weight))}</span>
+            <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
+            <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
           </div>
-          <div class="progress-track" data-compare-progress="${escapeAttr(side)}-${escapeAttr(facet.id)}" aria-hidden="true">
+          <div class="progress-track" data-compare-progress="${escapeAttr(side)}-${escapeAttr(criterion.id)}" aria-hidden="true">
             <div class="progress-fill" style="width: ${percent}%"></div>
             <div class="progress-thumb" style="left: ${percent}%"></div>
           </div>
@@ -106,8 +106,8 @@ function renderCompareColumn(candidate, side) {
           <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
             autocomplete="off" autocapitalize="off" spellcheck="false"
             data-bwignore="true" data-lpignore="true" data-1p-ignore
-            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${facet.name} score out of ${max}`)}"
-            data-compare-input="${escapeAttr(side)}-${escapeAttr(facet.id)}">
+            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
+            data-compare-input="${escapeAttr(side)}-${escapeAttr(criterion.id)}">
         </td>
       </tr>
     `;
@@ -164,20 +164,20 @@ function attachCompareScoreListeners(candidate, side) {
   // Wire up number inputs
   compareCard.querySelectorAll(`[data-compare-input^="${side}-"]`).forEach((input) => {
     input.addEventListener("input", () => {
-      const facetId = input.dataset.compareInput.replace(`${side}-`, "");
-      const facet = state.facets.find((item) => item.id === facetId);
+      const criterionId = input.dataset.compareInput.replace(`${side}-`, "");
+      const criterion = state.criteria.find((item) => item.id === criterionId);
       if (!input.value.trim()) return;
       
       const min = state.min ?? 0;
       const max = state.max ?? 10;
       saveUndo(candidate);
-      candidate.scores[facetId] = clamp(toNumber(input.value, min), min, max);
-      input.value = candidate.scores[facetId];
+      candidate.scores[criterionId] = clamp(toNumber(input.value, min), min, max);
+      input.value = candidate.scores[criterionId];
       
       // Update progress bar
-      const track = compareCard.querySelector(`[data-compare-progress="${side}-${cssEscape(facetId)}"]`);
-      if (track && facet) {
-        const pct = Math.round((candidate.scores[facetId] - min) / (max - min) * 100);
+      const track = compareCard.querySelector(`[data-compare-progress="${side}-${cssEscape(criterionId)}"]`);
+      if (track && criterion) {
+        const pct = Math.round((candidate.scores[criterionId] - min) / (max - min) * 100);
         track.querySelector(".progress-fill").style.width = `${pct}%`;
         track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
@@ -218,30 +218,30 @@ function attachCompareScoreListeners(candidate, side) {
 }
 
 /**
- * Sets a facet score based on pointer position on the progress bar (for comparison modal).
+ * Sets a criterion score based on pointer position on the progress bar (for comparison modal).
  * @param {HTMLElement} track - The progress track element
  * @param {number} clientX - The X coordinate of the pointer
  * @param {Object} candidate - The candidate object
  * @param {string} side - "left" or "right"
  */
 function setCompareScoreFromPointer(track, clientX, candidate, side) {
-  const facetId = track.dataset.compareProgress.replace(`${side}-`, "");
-  const facet = state.facets.find((item) => item.id === facetId);
-  if (!facet) return;
+  const criterionId = track.dataset.compareProgress.replace(`${side}-`, "");
+  const criterion = state.criteria.find((item) => item.id === criterionId);
+  if (!criterion) return;
   
   const rect = track.getBoundingClientRect();
   const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   const value = clamp(Math.round(min + ratio * (max - min)), min, max);
-  candidate.scores[facetId] = value;
+  candidate.scores[criterionId] = value;
   
   const pct = Math.round((value - min) / (max - min) * 100);
   track.querySelector(".progress-fill").style.width = `${pct}%`;
   track.querySelector(".progress-thumb").style.left = `${pct}%`;
   
   const compareCard = document.querySelector("[data-compare-card]");
-  const input = compareCard.querySelector(`[data-compare-input="${side}-${cssEscape(facetId)}"]`);
+  const input = compareCard.querySelector(`[data-compare-input="${side}-${cssEscape(criterionId)}"]`);
   if (input) input.value = value;
   
   updateCompareScoresForCandidate(candidate, side);

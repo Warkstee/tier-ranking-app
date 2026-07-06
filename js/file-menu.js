@@ -198,7 +198,7 @@ async function handleNew() {
       { id: "tier-5", name: "D", position: 5 },
       { id: "tier-6", name: "F", position: 6 }
     ];
-    state.facets = [];
+    state.criteria = [];
     state.candidates = [];
     state.min = 0;
     state.max = 10;
@@ -486,7 +486,7 @@ async function openRanking(name) {
       { id: "tier-5", name: "D", position: 5 },
       { id: "tier-6", name: "F", position: 6 }
     ];
-    state.facets = data.facets || [];
+    state.criteria = data.criteria || [];
     state.candidates = data.candidates || [];
     state.min = data.min ?? 0;
     state.max = data.max ?? 10;
@@ -514,7 +514,7 @@ export async function saveRankingToServer(name) {
   const data = {
     title: state.title,
     tiers: state.tiers,
-    facets: state.facets,
+    criteria: state.criteria,
     candidates: state.candidates,
     min: state.min,
     max: state.max,
