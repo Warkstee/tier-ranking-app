@@ -18,52 +18,62 @@ export const DEFAULT_CONFIG = `{
     {
       "id": "first_impression",
       "name": "First impression",
-      "weight": 1.0
+      "weight": 1.0,
+      "type": "numeric"
     },
     {
       "id": "core_features",
       "name": "Core features",
-      "weight": 1.2
+      "weight": 1.2,
+      "type": "numeric"
     },
     {
       "id": "ease",
       "name": "Ease of use",
-      "weight": 1.1
+      "weight": 1.1,
+      "type": "numeric"
     },
     {
       "id": "performance",
       "name": "Performance",
-      "weight": 1.2
+      "weight": 1.2,
+      "type": "numeric"
     },
     {
       "id": "reliability",
       "name": "Reliability",
-      "weight": 1.2
+      "weight": 1.2,
+      "type": "numeric"
     },
     {
       "id": "polish",
       "name": "Visual polish",
-      "weight": 1.0
+      "weight": 1.0,
+      "type": "numeric"
     },
     {
       "id": "flexibility",
       "name": "Flexibility",
-      "weight": 0.9
+      "weight": 0.9,
+      "type": "numeric"
     },
     {
       "id": "learning_curve",
       "name": "Learning curve",
-      "weight": 0.8
+      "weight": 0.8,
+      "type": "numeric"
     },
     {
       "id": "workflow_fit",
       "name": "Workflow fit",
-      "weight": 1.0
+      "weight": 1.0,
+      "type": "numeric"
     },
     {
       "id": "final_vibe",
       "name": "Final vibe",
-      "weight": 0.9
+      "weight": 0.9,
+      "type": "numeric"
     }
   ],
   "candidates": [

@@ -79,8 +79,11 @@ export function openConfigEditor() {
  */
 export function renderCriteriaEditor() {
   if (!els.criteriaList || !configDraft) return;
-  els.criteriaList.innerHTML = configDraft.criteria.map((criterion) => `
-    <div class="criterion-row" data-criterion-id="${criterion.id}">
+  els.criteriaList.innerHTML = configDraft.criteria.map((criterion) => {
+    const type = criterion.type || "numeric";
+    const isConstraint = type === "boolean-constraint";
+    return `
+    <div class="criterion-row ${isConstraint ? 'criterion-constraint' : ''}" data-criterion-id="${criterion.id}">
       <div class="drag-handle" aria-label="Drag to reorder">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <circle cx="5" cy="3" r="1.5"/>
@@ -92,12 +95,20 @@ export function renderCriteriaEditor() {
         </svg>
       </div>
       <div class="form-field">
-        <label>Name</label>
+        <label>Name ${isConstraint ? '<span class="constraint-badge" title="Filter only — not scored">⚠</span>' : ''}</label>
         <input type="text" value="${escapeHtml(criterion.name)}" data-criterion-name="${criterion.id}" autocomplete="off" spellcheck="false">
       </div>
       <div class="form-field">
+        <label>Type</label>
+        <select data-criterion-type="${criterion.id}" autocomplete="off">
+          <option value="numeric" ${type === 'numeric' ? 'selected' : ''}>Numeric</option>
+          <option value="boolean-scoring" ${type === 'boolean-scoring' ? 'selected' : ''}>Boolean (Scoring)</option>
+          <option value="boolean-constraint" ${type === 'boolean-constraint' ? 'selected' : ''}>Boolean (Constraint)</option>
+        </select>
+      </div>
+      <div class="form-field">
         <label>Weight</label>
-        <input type="number" value="${criterion.weight}" min="0.1" step="0.1" data-criterion-weight="${criterion.id}" autocomplete="off">
+        <input type="number" value="${criterion.weight}" min="0.1" step="0.1" data-criterion-weight="${criterion.id}" autocomplete="off" ${isConstraint ? 'disabled' : ''}>
       </div>
       <button type="button" class="btn-delete-criterion" data-criterion-delete="${criterion.id}" aria-label="Delete ${escapeHtml(criterion.name)}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -108,7 +119,8 @@ export function renderCriteriaEditor() {
         </svg>
       </button>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   // Wire up drag-to-reorder
   attachReorderable(els.criteriaList, ".criterion-row", (fromIndex, toIndex) => {
@@ -165,7 +177,8 @@ export function hasUnsavedChanges() {
     const stateCriterion = state.criteria[i];
     if (draftCriterion.id !== stateCriterion.id || 
         draftCriterion.name !== stateCriterion.name || 
-        draftCriterion.weight !== stateCriterion.weight) {
+        draftCriterion.weight !== stateCriterion.weight ||
+        (draftCriterion.type || "numeric") !== (stateCriterion.type || "numeric")) {
       return true;
     }
   }
@@ -232,13 +245,13 @@ export function handleScoreRangeChange() {
 }
 
 /**
- * Handles changes to criterion name or weight inputs using event delegation.
+ * Handles changes to criterion name, type, or weight inputs using event delegation.
  * Operates on the draft only; real state is unchanged until Apply.
  */
 export function handleCriterionFieldChange(event) {
   if (!configDraft) return;
   const target = event.target;
-  const criterionId = target.dataset.criterionName || target.dataset.criterionWeight;
+  const criterionId = target.dataset.criterionName || target.dataset.criterionType || target.dataset.criterionWeight;
   if (!criterionId) return;
 
   const criterion = configDraft.criteria.find((f) => f.id === criterionId);
@@ -258,6 +271,11 @@ export function handleCriterionFieldChange(event) {
 
     criterion.name = newName;
     setConfigStatus("");
+  } else if (target.dataset.criterionType !== undefined) {
+    const newType = target.value;
+    criterion.type = newType;
+    // Re-render to update visual indicators and disable weight for constraints
+    renderCriteriaEditor();
   } else if (target.dataset.criterionWeight !== undefined) {
     const newWeight = parseFloat(target.value);
     if (!isNaN(newWeight) && newWeight > 0) {
@@ -315,10 +333,13 @@ export function handleCriterionButtonClick(event) {
 /**
  * Opens the AHP calculator modal with the current draft criteria.
  * Restores previously saved AHP comparisons if available.
+ * Excludes boolean-constraint criteria from AHP calculation.
  */
 function handleOpenAhp() {
   if (!configDraft) return;
-  openAhpCalculator(configDraft.criteria, state.ahpComparisons || {});
+  // Filter out constraint criteria - they don't participate in AHP
+  const scoringCriteria = configDraft.criteria.filter(c => c.type !== 'boolean-constraint');
+  openAhpCalculator(scoringCriteria, state.ahpComparisons || {});
 }
 
 /**
@@ -366,7 +387,8 @@ export function addCriterion() {
   const newCriterion = {
     id: criterionId,
     name: "New Criterion",
-    weight: 1
+    weight: 1,
+    type: "numeric"
   };
 
   configDraft.criteria.push(newCriterion);

@@ -458,10 +458,10 @@ const server = createServer(async (req, res) => {
         // 4. Insert criteria and build client_id -> db id map
         const criteriaIdMap = {};
         const insertCriteria = db.prepare(
-          'INSERT INTO criteria (ranking_id, client_id, name, weight) VALUES (?, ?, ?, ?)'
+          'INSERT INTO criteria (ranking_id, client_id, name, weight, type) VALUES (?, ?, ?, ?, ?)'
         );
         for (const criterion of (data.criteria || [])) {
-          const info = insertCriteria.run(rankingId, criterion.id, criterion.name, criterion.weight);
+          const info = insertCriteria.run(rankingId, criterion.id, criterion.name, criterion.weight, criterion.type || 'numeric');
           criteriaIdMap[criterion.id] = info.lastInsertRowid;
         }
         
@@ -490,7 +490,11 @@ const server = createServer(async (req, res) => {
           for (const [criterionClientId, scoreValue] of Object.entries(candidate.scores)) {
             const dbCriteriaId = criteriaIdMap[criterionClientId];
             if (dbCriteriaId) {
-              insertScore.run(dbCandidateId, dbCriteriaId, scoreValue);
+              // Convert boolean scores to integers (true -> 1, false -> 0)
+              const numericScore = typeof scoreValue === 'boolean' 
+                ? (scoreValue ? 1 : 0) 
+                : scoreValue;
+              insertScore.run(dbCandidateId, dbCriteriaId, numericScore);
             }
           }
         }
@@ -1175,11 +1179,12 @@ function reconstructRankingData(db, rankingId) {
 
   // 3. Criteria
   const criteria = db.prepare(
-    'SELECT client_id, name, weight FROM criteria WHERE ranking_id = ?'
+    'SELECT client_id, name, weight, type FROM criteria WHERE ranking_id = ?'
   ).all(rankingId).map(c => ({
     id: c.client_id,
     name: c.name,
-    weight: c.weight
+    weight: c.weight,
+    type: c.type || 'numeric'
   }));
 
   // 4. Build a db criteria id -> client id map for score reconstruction

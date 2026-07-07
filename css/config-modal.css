@@ -174,7 +174,7 @@
 
 .criterion-row {
   display: grid;
-  grid-template-columns: 28px 1fr 120px 42px;
+  grid-template-columns: 28px 1fr 160px 120px 42px;
   gap: 12px;
   align-items: end;
   padding: 14px;
@@ -182,6 +182,11 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
   transition: opacity 0.15s ease;
+}
+
+.criterion-row.criterion-constraint {
+  border-color: rgba(255, 165, 0, 0.3);
+  background: rgba(255, 165, 0, 0.04);
 }
 
 .criterion-row.dragging {
@@ -234,7 +239,8 @@
 }
 
 .criterion-row .form-field input[type="text"],
-.criterion-row .form-field input[type="number"] {
+.criterion-row .form-field input[type="number"],
+.criterion-row .form-field select {
   height: 38px;
   padding: 0 12px;
   border-radius: 9px;
@@ -246,10 +252,38 @@
   font-family: inherit;
 }
 
+.criterion-row .form-field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239fa7b8' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
 .criterion-row .form-field input[type="text"]:focus,
-.criterion-row .form-field input[type="number"]:focus {
+.criterion-row .form-field input[type="number"]:focus,
+.criterion-row .form-field select:focus {
   border-color: rgba(103, 215, 255, 0.68);
   box-shadow: 0 0 0 3px rgba(103, 215, 255, 0.12);
+}
+
+.criterion-row .form-field input[type="number"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.constraint-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffa500;
+  background: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  vertical-align: middle;
 }
 
 .btn-delete-criterion {

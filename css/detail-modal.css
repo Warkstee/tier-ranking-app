@@ -529,6 +529,71 @@
   box-shadow: 0 0 10px rgba(103, 215, 255, 0.4);
 }
 
+/* Toggle switch for boolean criteria */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  transition: all 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, var(--brand-a), var(--brand-b));
+  border-color: var(--brand-a);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+  background: #fff;
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Constraint criteria styling */
+.criterion-constraint .review-feature-heading label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.constraint-label {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 165, 0, 0.8);
+  font-style: italic;
+}
+
 .review-table tbody td {
   width: 112px;
   padding: 6px 14px 6px 8px;

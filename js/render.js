@@ -235,11 +235,25 @@ export function overallScore(candidate) {
   const min = state.min ?? 0;
   const max = state.max ?? 10;
   const range = max - min || 1;
-  const weighted = state.criteria.reduce((total, criterion) => {
-    const value = clamp(toNumber(candidate.scores[criterion.id], min), min, max);
-    return total + ((value - min) / range) * 100 * criterion.weight;
+  
+  // Filter out constraint criteria - they don't contribute to scoring
+  const scoringCriteria = state.criteria.filter(c => c.type !== 'boolean-constraint');
+  
+  const weighted = scoringCriteria.reduce((total, criterion) => {
+    const type = criterion.type || 'numeric';
+    
+    if (type === 'boolean-scoring') {
+      // Boolean scoring: true = 100, false = 0
+      const value = candidate.scores[criterion.id] === true || candidate.scores[criterion.id] === 1;
+      return total + (value ? 100 : 0) * criterion.weight;
+    } else {
+      // Numeric: normalize to 0-100 scale
+      const value = clamp(toNumber(candidate.scores[criterion.id], min), min, max);
+      return total + ((value - min) / range) * 100 * criterion.weight;
+    }
   }, 0);
-  const weight = state.criteria.reduce((total, criterion) => total + criterion.weight, 0) || 1;
+  
+  const weight = scoringCriteria.reduce((total, criterion) => total + criterion.weight, 0) || 1;
   return Math.round(weighted / weight);
 }
 

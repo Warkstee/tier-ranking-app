@@ -84,7 +84,22 @@ export function parseJsonConfig(text) {
     const rawScores = candidate.scores && typeof candidate.scores === "object" ? candidate.scores : {};
     const scores = {};
     criteria.forEach((criterion) => {
-      scores[criterion.id] = clamp(toNumber(rawScores[criterion.id] ?? rawScores[criterion.name], min), min, max);
+      const rawValue = rawScores[criterion.id] ?? rawScores[criterion.name];
+      const type = criterion.type || "numeric";
+      
+      // Handle boolean criteria: convert to true/false
+      if (type === "boolean-scoring" || type === "boolean-constraint") {
+        // Handle both boolean values and integer values (0/1) from database
+        if (typeof rawValue === 'boolean') {
+          scores[criterion.id] = rawValue;
+        } else {
+          // Convert integer to boolean (1 -> true, 0 -> false)
+          scores[criterion.id] = toNumber(rawValue, 0) === 1;
+        }
+      } else {
+        // Numeric criteria: clamp to min/max range
+        scores[criterion.id] = clamp(toNumber(rawValue, min), min, max);
+      }
     });
     // Normalize tierId: use candidate.tierId if valid, otherwise null (Unranked)
     let tierId = null;
@@ -129,7 +144,8 @@ export function exportJson() {
   const rubric = state.criteria.map((criterion) => ({
     id: criterion.id,
     name: criterion.name,
-    weight: criterion.weight
+    weight: criterion.weight,
+    type: criterion.type || "numeric"
   }));
 
   const candidates = state.candidates.map((candidate) => ({
@@ -267,7 +283,8 @@ function normalizeRubric(rubric) {
     return {
       id,
       name: String(label),
-      weight: toNumber(value.weight, 1)
+      weight: toNumber(value.weight, 1),
+      type: value.type || "numeric"
     };
   }).filter((criterion) => criterion.name);
 }

@@ -55,30 +55,60 @@ export function renderModal(candidate) {
 
   // Build HTML for each criterion's score row with progress bar and input field
   const reviewRows = state.criteria.map((criterion) => {
-    const value = candidate.scores[criterion.id] ?? min;
-    const id = `criterion-${slugify(criterion.id)}`;
-    const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
-    return `
-      <tr>
-        <th scope="row">
-          <div class="review-feature-heading">
-            <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
-            <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
-          </div>
-          <div class="progress-track" data-progress-track="${escapeAttr(criterion.id)}" aria-hidden="true">
-            <div class="progress-fill" style="width: ${percent}%"></div>
-            <div class="progress-thumb" style="left: ${percent}%"></div>
-          </div>
-        </th>
-        <td>
-          <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
-            autocomplete="off" autocapitalize="off" spellcheck="false"
-            data-bwignore="true" data-lpignore="true" data-1p-ignore
-            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
-            data-score-input="${escapeAttr(criterion.id)}">
-        </td>
-      </tr>
-    `;
+    const type = criterion.type || "numeric";
+    const isBoolean = type === "boolean-scoring" || type === "boolean-constraint";
+    const isConstraint = type === "boolean-constraint";
+    
+    if (isBoolean) {
+      // Boolean criteria: render toggle switch
+      const value = candidate.scores[criterion.id] === true || candidate.scores[criterion.id] === 1;
+      const id = `criterion-${slugify(criterion.id)}`;
+      const constraintLabel = isConstraint ? ' <span class="constraint-label">(Filter only — not scored)</span>' : '';
+      return `
+        <tr class="criterion-boolean ${isConstraint ? 'criterion-constraint' : ''}">
+          <th scope="row">
+            <div class="review-feature-heading">
+              <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}${constraintLabel}</label>
+              ${!isConstraint ? `<span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>` : ''}
+            </div>
+          </th>
+          <td>
+            <label class="toggle-switch" for="${escapeAttr(id)}">
+              <input type="checkbox" id="${escapeAttr(id)}" ${value ? 'checked' : ''} 
+                data-boolean-input="${escapeAttr(criterion.id)}" 
+                aria-label="${escapeAttr(criterion.name)}">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+        </tr>
+      `;
+    } else {
+      // Numeric criteria: render progress bar and numeric input
+      const value = candidate.scores[criterion.id] ?? min;
+      const id = `criterion-${slugify(criterion.id)}`;
+      const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
+      return `
+        <tr>
+          <th scope="row">
+            <div class="review-feature-heading">
+              <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
+              <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
+            </div>
+            <div class="progress-track" data-progress-track="${escapeAttr(criterion.id)}" aria-hidden="true">
+              <div class="progress-fill" style="width: ${percent}%"></div>
+              <div class="progress-thumb" style="left: ${percent}%"></div>
+            </div>
+          </th>
+          <td>
+            <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
+              autocomplete="off" autocapitalize="off" spellcheck="false"
+              data-bwignore="true" data-lpignore="true" data-1p-ignore
+              value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
+              data-score-input="${escapeAttr(criterion.id)}">
+          </td>
+        </tr>
+      `;
+    }
   }).join("");
 
   // Format the score column header
@@ -181,6 +211,24 @@ export function renderModal(candidate) {
         track.querySelector(".progress-fill").style.width = `${pct}%`;
         track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
+      updateScoresForCandidate(candidate);
+      syncConfigFromState();
+      markDirty();
+    });
+  });
+
+  // Wire up boolean toggle switches
+  els.detailCard.querySelectorAll("[data-boolean-input]").forEach((toggle) => {
+    if (state.readOnly) {
+      toggle.disabled = true;
+      return;
+    }
+    
+    toggle.addEventListener("change", () => {
+      const criterionId = toggle.dataset.booleanInput;
+      saveUndo(candidate);
+      // Store as boolean true/false
+      candidate.scores[criterionId] = toggle.checked;
       updateScoresForCandidate(candidate);
       syncConfigFromState();
       markDirty();

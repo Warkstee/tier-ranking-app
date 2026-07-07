@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS criteria (
   client_id TEXT,
   name TEXT NOT NULL,
   weight REAL DEFAULT 1.0,
+  type TEXT DEFAULT 'numeric',
   FOREIGN KEY (ranking_id) REFERENCES rankings(id) ON DELETE CASCADE
 );
 
