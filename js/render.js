@@ -210,7 +210,7 @@ export function createCandidateRow(candidate) {
     <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
     <div>
       <h3>${escapeHtml(candidate.name)}</h3>
-      <p>${escapeHtml(candidate.description)}</p>
+      <p>${escapeHtml(candidate.description ?? "")}</p>
     </div>
     <span class="score-pill" data-score-pill="${escapeAttr(candidate.id)}">${overallScore(candidate)}</span>
   `;

@@ -113,7 +113,7 @@ export function renderModal(candidate) {
         <div class="pill pill--rank" data-modal-rank>${escapeHtml(formatRank(rank))}</div>
       </div>
       <h2 data-modal-title>${escapeHtml(candidate.name)}</h2>
-      <p class="detail-description">${escapeHtml(candidate.description)}</p>
+      <p class="detail-description">${escapeHtml(candidate.description ?? "")}</p>
       <div class="review-table-wrap" aria-label="Review criteria scores">
         <table class="review-table">
           <thead>
@@ -226,6 +226,9 @@ export function renderModal(candidate) {
  * @param {Object} candidate - The candidate object to edit
  */
 function renderEditModal(candidate) {
+  // Normalize description to avoid null/undefined issues
+  const description = candidate.description ?? "";
+
   els.detailCard.innerHTML = `
     <div class="detail-media">
       <img src="${escapeAttr(candidate.image)}" alt="${escapeAttr(candidate.name)} image">
@@ -256,8 +259,8 @@ function renderEditModal(candidate) {
         </div>
         <div class="form-field">
           <label for="edit-candidate-description">Description</label>
-          <textarea id="edit-candidate-description" rows="4" maxlength="325" data-edit-description-input>${escapeHtml(candidate.description)}</textarea>
-          <span class="char-counter" data-edit-description-counter>${Math.max(0, 325 - candidate.description.length)} characters remaining</span>
+          <textarea id="edit-candidate-description" rows="4" maxlength="325" data-edit-description-input>${escapeHtml(description)}</textarea>
+          <span class="char-counter" data-edit-description-counter>${Math.max(0, 325 - description.length)} characters remaining</span>
         </div>
       </div>
       <div class="edit-actions">

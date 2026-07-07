@@ -474,8 +474,8 @@ const server = createServer(async (req, res) => {
           const dbTierId = candidate.tierId ? (tierIdMap[candidate.tierId] || null) : null;
           const info = insertCandidate.run(
             rankingId, candidate.id, dbTierId,
-            candidate.name, candidate.image || null,
-            candidate.description || null, candidate.notes || null
+            candidate.name, candidate.image ?? null,
+            candidate.description ?? null, candidate.notes ?? null
           );
           candidateIdMap[candidate.id] = info.lastInsertRowid;
         }
@@ -1222,8 +1222,8 @@ function reconstructRankingData(db, rankingId) {
     return {
       id: cand.client_id,
       name: cand.name,
-      image: cand.image || null,
-      description: cand.description || null,
+      image: cand.image ?? null,
+      description: cand.description ?? null,
       tierId: cand.tier_id ? (tierDbToClient[cand.tier_id] || null) : null,
       scores
     };
