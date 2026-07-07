@@ -143,6 +143,7 @@ export function matchesBooleanFilters(candidate) {
 export function enableTitleEdit() {
   const h1 = els.title;
   const parent = h1.parentElement;
+  let isHandlingKey = false;
   
   // Create input field
   const input = document.createElement("input");
@@ -160,16 +161,26 @@ export function enableTitleEdit() {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      isHandlingKey = true;
       saveTitleEdit(input.value.trim());
+      isHandlingKey = false;
     } else if (e.key === "Escape") {
       e.preventDefault();
+      isHandlingKey = true;
       cancelTitleEdit();
+      isHandlingKey = false;
     }
   });
   
-  // Save on blur
+  // Save on blur (only if the input is still in the DOM — it may have been
+  // removed already by the Enter-key handler above)
   input.addEventListener("blur", () => {
-    saveTitleEdit(input.value.trim());
+    if (isHandlingKey) {
+      return;
+    }
+    if (input.parentElement) {
+      saveTitleEdit(input.value.trim());
+    }
   });
 }
 
@@ -179,7 +190,7 @@ export function enableTitleEdit() {
 function saveTitleEdit(newTitle) {
   // Remove the input field before rendering
   const input = document.querySelector(".title-edit-input");
-  if (input) {
+  if (input && input.parentElement) {
     input.remove();
   }
   
@@ -201,7 +212,7 @@ function saveTitleEdit(newTitle) {
  */
 function cancelTitleEdit() {
   const input = document.querySelector(".title-edit-input");
-  if (input) {
+  if (input && input.parentElement) {
     input.remove();
   }
   render();
