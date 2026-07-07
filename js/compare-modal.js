@@ -9,7 +9,7 @@
 import { state, els, markDirty } from "./state.js";
 import { escapeHtml, escapeAttr, cssEscape, clamp, toNumber, slugify, formatNumber } from "./utils.js";
 import { getCandidate, overallScore, overallRank, formatRank, attachImageFallback } from "./render.js";
-import { syncConfigFromState } from "./config.js";
+import { syncConfigFromState } from './config-parser.js';
 import { closeModal } from "./detail-modal.js";
 import { saveUndo } from "./undo.js";
 

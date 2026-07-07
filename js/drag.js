@@ -8,7 +8,7 @@
 
 import { state, els, markDirty } from "./state.js";
 import { renderTierBoard, renderUnranked, getCandidate } from "./render.js";
-import { syncConfigFromState } from "./config.js";
+import { syncConfigFromState } from './config-parser.js';
 import { openCompareModal } from "./compare-modal.js";
 import { saveUndo } from "./undo.js";
 

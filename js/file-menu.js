@@ -12,7 +12,7 @@
  */
 
 import { state, els, markDirty, markClean, updateCurrentRankingDisplay } from "./state.js";
-import { syncConfigFromState } from "./config.js";
+import { syncConfigFromState } from './config-parser.js';
 import { render } from "./render.js";
 import { showToast } from "./utils.js";
 import { exportRanking, importRanking } from "./export-import.js";

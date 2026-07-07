@@ -6,7 +6,7 @@
  */
 
 import { state, els } from './state.js';
-import { cancelPendingSave } from './config.js';
+import { cancelPendingSave } from './config-parser.js';
 
 // Auth state
 let currentUser = null;

@@ -10,8 +10,10 @@ import { state, els, DEFAULT_CONFIG, markDirty } from "./state.js";
 import { 
   parseConfig, 
   syncConfigFromState, 
-  setConfigStatus, 
-  formatConfigError,
+  formatConfigError
+} from "./config-parser.js";
+import { 
+  setConfigStatus,
   openConfigEditor,
   closeConfigEditor,
   hideConfigEditor,

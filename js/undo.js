@@ -8,7 +8,7 @@
 
 import { state, markDirty } from "./state.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
-import { syncConfigFromState } from "./config.js";
+import { syncConfigFromState } from './config-parser.js';
 
 /**
  * Stores the last action snapshot for undo.
