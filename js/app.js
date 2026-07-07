@@ -82,8 +82,7 @@ async function loadSharedRanking(token) {
     const res = await fetch(`/api/shared/${token}`);
     
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Failed to load shared ranking" }));
-      showToast(err.error || "Failed to load shared ranking");
+      showShareErrorOverlay();
       return;
     }
 
@@ -123,8 +122,18 @@ async function loadSharedRanking(token) {
     showReadOnlyIndicator();
   } catch (err) {
     console.error("Failed to load shared ranking:", err);
-    showToast("Failed to load shared ranking");
+    showShareErrorOverlay();
   }
+}
+
+/**
+ * Shows the share link error overlay and hides the app shell.
+ */
+function showShareErrorOverlay() {
+  const overlay = document.querySelector("[data-share-error-overlay]");
+  const appShell = document.querySelector("[data-app-shell]");
+  if (overlay) overlay.hidden = false;
+  if (appShell) appShell.hidden = true;
 }
 
 /**
