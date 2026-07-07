@@ -87,30 +87,59 @@ function renderCompareColumn(candidate, side) {
   
   // Build score rows
   const reviewRows = sortedCriteria.map((criterion) => {
-    const value = candidate.scores[criterion.id] ?? min;
+    const type = criterion.type || "numeric";
+    const isBoolean = type === "boolean-scoring" || type === "boolean-constraint";
+    const isConstraint = type === "boolean-constraint";
     const id = `compare-${side}-criterion-${slugify(criterion.id)}`;
-    const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
-    return `
-      <tr>
-        <th scope="row">
-          <div class="review-feature-heading">
-            <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
-            <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
-          </div>
-          <div class="progress-track" data-compare-progress="${escapeAttr(side)}-${escapeAttr(criterion.id)}" aria-hidden="true">
-            <div class="progress-fill" style="width: ${percent}%"></div>
-            <div class="progress-thumb" style="left: ${percent}%"></div>
-          </div>
-        </th>
-        <td>
-          <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
-            autocomplete="off" autocapitalize="off" spellcheck="false"
-            data-bwignore="true" data-lpignore="true" data-1p-ignore
-            value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
-            data-compare-input="${escapeAttr(side)}-${escapeAttr(criterion.id)}">
-        </td>
-      </tr>
-    `;
+
+    if (isBoolean) {
+      // Boolean criteria: render toggle switch
+      const value = candidate.scores[criterion.id] === true || candidate.scores[criterion.id] === 1;
+      const constraintLabel = isConstraint ? ' <span class="constraint-label">(Filter only — not scored)</span>' : '';
+      return `
+        <tr class="criterion-boolean ${isConstraint ? 'criterion-constraint' : ''}">
+          <th scope="row">
+            <div class="review-feature-heading">
+              <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}${constraintLabel}</label>
+              ${!isConstraint ? `<span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>` : ''}
+            </div>
+          </th>
+          <td>
+            <label class="toggle-switch" for="${escapeAttr(id)}">
+              <input type="checkbox" id="${escapeAttr(id)}" ${value ? 'checked' : ''}
+                data-compare-boolean="${escapeAttr(side)}-${escapeAttr(criterion.id)}"
+                aria-label="${escapeAttr(criterion.name)}">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+        </tr>
+      `;
+    } else {
+      // Numeric criteria: render progress bar and numeric input
+      const value = candidate.scores[criterion.id] ?? min;
+      const percent = Math.round((clamp(value, min, max) - min) / (max - min) * 100);
+      return `
+        <tr>
+          <th scope="row">
+            <div class="review-feature-heading">
+              <label for="${escapeAttr(id)}">${escapeHtml(criterion.name)}</label>
+              <span>Weight ${escapeHtml(formatNumber(criterion.weight))}</span>
+            </div>
+            <div class="progress-track" data-compare-progress="${escapeAttr(side)}-${escapeAttr(criterion.id)}" aria-hidden="true">
+              <div class="progress-fill" style="width: ${percent}%"></div>
+              <div class="progress-thumb" style="left: ${percent}%"></div>
+            </div>
+          </th>
+          <td>
+            <input id="${escapeAttr(id)}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric"
+              autocomplete="off" autocapitalize="off" spellcheck="false"
+              data-bwignore="true" data-lpignore="true" data-1p-ignore
+              value="${escapeAttr(String(value))}" aria-label="${escapeAttr(`${criterion.name} score out of ${max}`)}"
+              data-compare-input="${escapeAttr(side)}-${escapeAttr(criterion.id)}">
+          </td>
+        </tr>
+      `;
+    }
   }).join("");
   
   const scoreLabel = `Score <span>/ ${escapeHtml(formatNumber(max))}</span>`;
@@ -182,6 +211,23 @@ function attachCompareScoreListeners(candidate, side) {
         track.querySelector(".progress-thumb").style.left = `${pct}%`;
       }
       
+      updateCompareScoresForCandidate(candidate, side);
+      syncConfigFromState();
+      markDirty();
+    });
+  });
+
+  // Wire up boolean toggle switches
+  compareCard.querySelectorAll(`[data-compare-boolean^="${side}-"]`).forEach((toggle) => {
+    if (state.readOnly) {
+      toggle.disabled = true;
+      return;
+    }
+    
+    toggle.addEventListener("change", () => {
+      const criterionId = toggle.dataset.compareBoolean.replace(`${side}-`, "");
+      saveUndo(candidate);
+      candidate.scores[criterionId] = toggle.checked;
       updateCompareScoresForCandidate(candidate, side);
       syncConfigFromState();
       markDirty();
