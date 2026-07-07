@@ -19,7 +19,9 @@ import {
   hideConfigEditor,
   applyEditorConfig,
   wireConfigEditorControls,
-  syncOpenConfigEditor,
+  syncOpenConfigEditor
+} from "./criteria-editor.js";
+import { 
   openTierEditor,
   closeTierEditor,
   hideTierEditor,
