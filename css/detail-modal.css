@@ -536,6 +536,7 @@
   width: 52px;
   height: 28px;
   cursor: pointer;
+  vertical-align: middle;
 }
 
 .toggle-switch input {
@@ -599,6 +600,13 @@
   padding: 6px 14px 6px 8px;
   text-align: right;
   white-space: nowrap;
+  vertical-align: middle;
+}
+
+.review-table tbody td .toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .review-table tbody tr:last-child th,

@@ -8,7 +8,7 @@
 
 import { state, els, markDirty } from "./state.js";
 import { clamp, escapeHtml, showToast } from "./utils.js";
-import { renderTierBoard, renderUnranked } from "./render.js";
+import { renderTierBoard, renderUnranked, renderFilterDropdown } from "./render.js";
 import { attachReorderable } from "./drag.js";
 import { parseConfig, syncConfigFromState } from "./config-parser.js";
 import { openAhpCalculator, applyAhpWeights, getAhpComparisons, closeAhpCalculator } from "./ahp-calculator.js";
@@ -441,6 +441,7 @@ export function closeConfigEditor() {
   state.max = saved.max ?? 10;
 
   // Re-render the board to reflect the restored state
+  renderFilterDropdown();
   renderTierBoard();
   renderUnranked();
 

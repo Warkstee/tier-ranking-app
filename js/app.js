@@ -29,7 +29,7 @@ import {
   addTier,
   wireTierEditorControls
 } from "./tier-editor.js";
-import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
+import { render, renderTierBoard, renderUnranked, initTitleEdit, renderFilterDropdown, updateFilterButtonState } from "./render.js";
 import { openModal, closeModal } from "./detail-modal.js";
 import { openCompareModal } from "./compare-modal.js";
 import { wireAhpControls, undoAhpSlider } from "./ahp-calculator.js";
@@ -196,6 +196,36 @@ function wireStaticControls() {
   els.cancelTier.addEventListener("click", closeTierEditor); // Cancel button - discards draft
   els.applyTierEditor.addEventListener("click", applyTierEditor);
   els.addTier.addEventListener("click", addTier);
+
+  // Filter button handlers
+  if (els.filterBtn) {
+    els.filterBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeBurgerMenu();
+      if (els.filterDropdown) {
+        els.filterDropdown.hidden = !els.filterDropdown.hidden;
+      }
+    });
+  }
+
+  if (els.filterClear) {
+    els.filterClear.addEventListener("click", () => {
+      state.activeBooleanFilters.clear();
+      updateFilterButtonState();
+      renderFilterDropdown();
+      renderTierBoard();
+      renderUnranked();
+    });
+  }
+
+  // Close filter dropdown when clicking outside
+  document.addEventListener("click", (event) => {
+    if (els.filterDropdown && !els.filterDropdown.hidden) {
+      if (!els.filterBtn.contains(event.target) && !els.filterDropdown.contains(event.target)) {
+        els.filterDropdown.hidden = true;
+      }
+    }
+  });
 
   wireConfigEditorControls();
   wireTierEditorControls();

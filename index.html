@@ -85,9 +85,25 @@
           <span class="file-status-pill" data-file-status></span>
         </div>
       </nav>
-      <div class="user-info" data-user-info hidden>
-        <span class="user-info-username" data-user-username></span>
-        <button type="button" class="user-info-logout" data-user-logout>Logout</button>
+      <div class="topbar-right">
+        <div class="filter-menu-container">
+          <button type="button" class="filter-btn" data-filter-menu aria-label="Filter candidates">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+          </button>
+          <div class="filter-dropdown" data-filter-dropdown hidden>
+            <div class="filter-header">
+              <button type="button" class="filter-clear-btn" data-filter-clear>Clear All</button>
+            </div>
+            <div class="filter-list" data-filter-list></div>
+            <div class="filter-empty" data-filter-empty hidden>No boolean criteria defined</div>
+          </div>
+        </div>
+        <div class="user-info" data-user-info hidden>
+          <span class="user-info-username" data-user-username></span>
+          <button type="button" class="user-info-logout" data-user-logout>Logout</button>
+        </div>
       </div>
     </header>
 

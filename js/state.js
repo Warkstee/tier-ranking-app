@@ -42,7 +42,15 @@ export const state = {
   currentRankingName: null,
   isDirty: false,
   ahpComparisons: {},
-  readOnly: false
+  readOnly: false,
+  activeBooleanFilters: new Set()
+};
+
+/**
+ * Returns true if any boolean filters are currently active.
+ */
+state.hasActiveFilters = function () {
+  return state.activeBooleanFilters.size > 0;
 };
 
 /**
@@ -146,7 +154,13 @@ export const els = {
   shareLinkInput: document.querySelector("[data-share-link-input]"),
   shareCopyBtn: document.querySelector("[data-share-copy-btn]"),
   shareError: document.querySelector("[data-share-error]"),
-  shareCancel: document.querySelector("[data-share-cancel]")
+  shareCancel: document.querySelector("[data-share-cancel]"),
+  // Filter elements
+  filterBtn: document.querySelector("[data-filter-menu]"),
+  filterDropdown: document.querySelector("[data-filter-dropdown]"),
+  filterList: document.querySelector("[data-filter-list]"),
+  filterClear: document.querySelector("[data-filter-clear]"),
+  filterEmpty: document.querySelector("[data-filter-empty]")
 };
 
 /**

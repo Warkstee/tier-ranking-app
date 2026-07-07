@@ -183,6 +183,139 @@
   cursor: wait;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* Filter Layout Styles */
+.filter-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-btn {
+  background: transparent;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.filter-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  min-width: 240px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  padding: 0.25rem;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.filter-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-clear-btn {
+  background: transparent;
+  color: #67d7ff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  transition: background 0.12s;
+}
+
+.filter-clear-btn:hover {
+  background: rgba(103, 215, 255, 0.15);
+}
+
+.filter-list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  margin: 0.125rem 0;
+  border-radius: 0.375rem;
+  transition: background 0.12s;
+}
+
+.filter-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.filter-item-label {
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.filter-item .toggle-switch {
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+}
+
+.filter-item .toggle-slider::before {
+  height: 18px;
+  width: 18px;
+}
+
+.filter-item .toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.filter-empty {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 .workspace {
   position: absolute;
   z-index: 2;

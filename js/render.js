@@ -45,8 +45,95 @@ export function render() {
     els.title = titleEl;
   }
   titleEl.textContent = state.title;
+  renderFilterDropdown();
   renderTierBoard();
   renderUnranked();
+}
+
+/**
+ * Renders the filter dropdown with boolean criteria toggles.
+ */
+export function renderFilterDropdown() {
+  if (!els.filterList || !els.filterEmpty) return;
+
+  const booleanCriteria = state.criteria.filter(
+    (c) => c.type === "boolean-scoring" || c.type === "boolean-constraint"
+  );
+
+  if (booleanCriteria.length === 0) {
+    els.filterList.replaceChildren();
+    els.filterEmpty.hidden = false;
+    return;
+  }
+
+  els.filterEmpty.hidden = true;
+  els.filterList.replaceChildren();
+
+  booleanCriteria.forEach((criterion) => {
+    const item = document.createElement("div");
+    item.className = "filter-item";
+
+    const label = document.createElement("span");
+    label.className = "filter-item-label";
+    label.textContent = criterion.name;
+
+    const toggleLabel = document.createElement("label");
+    toggleLabel.className = "toggle-switch";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = state.activeBooleanFilters.has(criterion.id);
+
+    const slider = document.createElement("span");
+    slider.className = "toggle-slider";
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        state.activeBooleanFilters.add(criterion.id);
+      } else {
+        state.activeBooleanFilters.delete(criterion.id);
+      }
+      updateFilterButtonState();
+      renderTierBoard();
+      renderUnranked();
+    });
+
+    toggleLabel.append(checkbox, slider);
+    item.append(label, toggleLabel);
+    els.filterList.append(item);
+  });
+}
+
+/**
+ * Updates the filter button visual state based on active filters.
+ */
+export function updateFilterButtonState() {
+  if (!els.filterBtn) return;
+  if (state.hasActiveFilters()) {
+    els.filterBtn.classList.add("active");
+  } else {
+    els.filterBtn.classList.remove("active");
+  }
+}
+
+/**
+ * Checks if a candidate matches all active boolean filters.
+ * @param {Object} candidate - The candidate to check
+ * @returns {boolean} True if candidate passes all active filters
+ */
+export function matchesBooleanFilters(candidate) {
+  if (!state.hasActiveFilters()) return true;
+
+  for (const criterionId of state.activeBooleanFilters) {
+    const criterion = state.criteria.find((c) => c.id === criterionId);
+    if (!criterion) continue;
+
+    const value = candidate.scores[criterion.id];
+    const isTrue = value === true || value === 1;
+    if (!isTrue) return false;
+  }
+
+  return true;
 }
 
 /**
@@ -151,7 +238,9 @@ export function renderTierBoard() {
     cards.dataset.dropZone = tier.id;
     cards.dataset.tierCards = tier.id;
 
-    const candidates = state.candidates.filter((candidate) => candidate.tierId === tier.id);
+    const candidates = state.candidates.filter(
+      (candidate) => candidate.tierId === tier.id && matchesBooleanFilters(candidate)
+    );
     if (candidates.length) {
       candidates.forEach((candidate) => cards.append(createCandidateCard(candidate)));
     } else {
@@ -170,7 +259,9 @@ export function renderTierBoard() {
  * Renders the unranked candidates list in the right rail.
  */
 export function renderUnranked() {
-  const unranked = state.candidates.filter((candidate) => !candidate.tierId);
+  const unranked = state.candidates.filter(
+    (candidate) => !candidate.tierId && matchesBooleanFilters(candidate)
+  );
   els.unrankedList.replaceChildren();
   unranked.forEach((candidate) => els.unrankedList.append(createCandidateRow(candidate)));
   els.unrankedCount.textContent = `${unranked.length} of ${state.candidates.length}`;
