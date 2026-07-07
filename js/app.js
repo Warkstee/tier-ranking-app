@@ -170,6 +170,7 @@ export async function initializeApp() {
   wireStaticControls();
   initFileMenu();
   initTitleEdit();
+  initSidebarToggle();
   
   // Try to load the most recent ranking first
   const loaded = await loadMostRecentRanking();
@@ -179,6 +180,31 @@ export async function initializeApp() {
     const config = { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
     applyConfig(config);
   }
+}
+
+/**
+ * Initializes the sidebar toggle button that shows/hides the unranked sidebar.
+ */
+function initSidebarToggle() {
+  if (!els.sidebarToggle) return;
+
+  const workspace = document.querySelector(".workspace");
+  const visibleIcon = els.sidebarToggle.querySelector(".sidebar-visible-icon");
+  const hiddenIcon = els.sidebarToggle.querySelector(".sidebar-hidden-icon");
+
+  els.sidebarToggle.addEventListener("click", () => {
+    const isExpanded = els.sidebarToggle.getAttribute("aria-expanded") === "true";
+    // If currently expanded, we want to collapse; if collapsed, we want to expand
+    const shouldCollapse = isExpanded;
+
+    workspace.classList.toggle("sidebar-collapsed", shouldCollapse);
+    els.sidebarToggle.setAttribute("aria-expanded", String(!shouldCollapse));
+
+    if (visibleIcon && hiddenIcon) {
+      visibleIcon.hidden = shouldCollapse;
+      hiddenIcon.hidden = !shouldCollapse;
+    }
+  });
 }
 
 /**

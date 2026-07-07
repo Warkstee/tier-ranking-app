@@ -160,7 +160,9 @@ export const els = {
   filterDropdown: document.querySelector("[data-filter-dropdown]"),
   filterList: document.querySelector("[data-filter-list]"),
   filterClear: document.querySelector("[data-filter-clear]"),
-  filterEmpty: document.querySelector("[data-filter-empty]")
+  filterEmpty: document.querySelector("[data-filter-empty]"),
+  // Sidebar toggle
+  sidebarToggle: document.querySelector("[data-sidebar-toggle]")
 };
 
 /**
