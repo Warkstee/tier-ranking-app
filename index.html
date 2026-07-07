@@ -272,8 +272,19 @@
           </div>
 
           <div class="form-field">
-            <label for="add-candidate-image">Image (optional)</label>
-            <input type="file" id="add-candidate-image" name="image" accept="image/jpeg,image/png,image/gif,image/webp" data-add-candidate-image>
+            <label>Image (optional)</label>
+            <div class="image-source-tabs" data-add-image-tabs>
+              <button type="button" class="image-tab active" data-image-tab="file">Upload File</button>
+              <button type="button" class="image-tab" data-image-tab="url">Paste URL</button>
+            </div>
+            <div class="image-tab-panels">
+              <div class="image-tab-panel active" data-image-panel="file">
+                <input type="file" id="add-candidate-image" name="image" accept="image/jpeg,image/png,image/gif,image/webp" data-add-candidate-image>
+              </div>
+              <div class="image-tab-panel" data-image-panel="url">
+                <input type="url" id="add-candidate-image-url" name="imageUrl" placeholder="https://example.com/image.jpg" autocomplete="off" spellcheck="false" data-add-candidate-image-url>
+              </div>
+            </div>
           </div>
 
           <footer class="add-candidate-footer">

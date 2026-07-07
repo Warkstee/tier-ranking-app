@@ -85,6 +85,8 @@ export const els = {
   addCandidateForm: document.querySelector("[data-add-candidate-form]"),
   addNameInput: document.querySelector("[data-add-candidate-name]"),
   addImageInput: document.querySelector("[data-add-candidate-image]"),
+  addImageUrlInput: document.querySelector("[data-add-candidate-image-url]"),
+  addImageTabs: document.querySelector("[data-add-image-tabs]"),
   closeAddCandidate: document.querySelector("[data-close-add-candidate]"),
   cancelAddCandidate: document.querySelector("[data-cancel-add-candidate]"),
   submitAddCandidate: document.querySelector("[data-submit-add-candidate]"),

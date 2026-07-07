@@ -211,6 +211,33 @@ function wireStaticControls() {
     }
   });
 
+  // Image source tab switching
+  if (els.addImageTabs) {
+    els.addImageTabs.addEventListener("click", (event) => {
+      const tab = event.target.closest("[data-image-tab]");
+      if (!tab) return;
+      
+      const tabType = tab.dataset.imageTab;
+      
+      // Update tab buttons
+      els.addImageTabs.querySelectorAll(".image-tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.imageTab === tabType);
+      });
+      
+      // Update tab panels
+      document.querySelectorAll("[data-image-panel]").forEach(panel => {
+        panel.classList.toggle("active", panel.dataset.imagePanel === tabType);
+      });
+      
+      // Clear the inactive input
+      if (tabType === "file") {
+        els.addImageUrlInput.value = "";
+      } else {
+        els.addImageInput.value = "";
+      }
+    });
+  }
+
   // Candidate modal handlers
   els.openAddCandidate.addEventListener("click", openAddCandidateModal);
   els.closeAddCandidate.addEventListener("click", closeAddCandidateModal);
@@ -343,6 +370,17 @@ function openAddCandidateModal() {
   closeModal();
   closeConfigEditor();
   els.addCandidateForm.reset();
+  
+  // Reset image tabs to "Upload File"
+  if (els.addImageTabs) {
+    els.addImageTabs.querySelectorAll(".image-tab").forEach(t => {
+      t.classList.toggle("active", t.dataset.imageTab === "file");
+    });
+    document.querySelectorAll("[data-image-panel]").forEach(panel => {
+      panel.classList.toggle("active", panel.dataset.imagePanel === "file");
+    });
+  }
+  
   els.addCandidateModal.hidden = false;
   els.addNameInput.focus();
   // Disable Add button until name is entered
@@ -369,38 +407,75 @@ async function handleAddCandidateSubmit(event) {
   const name = els.addNameInput.value.trim();
   if (!name) return;
 
-  const imageFile = els.addImageInput.files[0];
+  // Determine which image tab is active
+  const activeTab = els.addImageTabs?.querySelector(".image-tab.active");
+  const isFileTab = !activeTab || activeTab.dataset.imageTab === "file";
+  
   let imagePath = "";
 
-  if (imageFile) {
-    try {
-      const formData = new FormData();
-      formData.append("image", imageFile);
-      
-      const response = await apiFetch("/api/uploadimg", {
-        method: "POST",
-        body: formData
-      });
+  if (isFileTab) {
+    // File upload mode
+    const imageFile = els.addImageInput.files[0];
+    if (imageFile) {
+      try {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        
+        const response = await apiFetch("/api/uploadimg", {
+          method: "POST",
+          body: formData
+        });
 
-      if (!response.ok) {
-        let errorMessage = `Upload failed (${response.status})`;
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch {
-          if (response.status === 413) {
-            errorMessage = "File too large (max 5MB)";
+        if (!response.ok) {
+          let errorMessage = `Upload failed (${response.status})`;
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            if (response.status === 413) {
+              errorMessage = "File too large (max 5MB)";
+            }
           }
+          throw new Error(errorMessage);
         }
-        throw new Error(errorMessage);
-      }
 
-      const result = await response.json();
-      imagePath = result.path;
-    } catch (err) {
-      console.error("Failed to upload image:", err);
-      showToast(`Could not upload image: ${err.message}`);
-      return;
+        const result = await response.json();
+        imagePath = result.path;
+      } catch (err) {
+        console.error("Failed to upload image:", err);
+        showToast(`Could not upload image: ${err.message}`);
+        return;
+      }
+    }
+  } else {
+    // URL upload mode
+    const imageUrl = els.addImageUrlInput.value.trim();
+    if (imageUrl) {
+      try {
+        const response = await apiFetch("/api/uploadimgurl", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: imageUrl })
+        });
+
+        if (!response.ok) {
+          let errorMessage = `URL upload failed (${response.status})`;
+          try {
+            const error = await response.json();
+            errorMessage = error.error || errorMessage;
+          } catch {
+            // Use default error message
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        imagePath = result.path;
+      } catch (err) {
+        console.error("Failed to upload image from URL:", err);
+        showToast(`Could not upload image: ${err.message}`);
+        return;
+      }
     }
   }
 
