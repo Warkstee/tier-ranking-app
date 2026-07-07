@@ -113,6 +113,7 @@ async function loadSharedRanking(token) {
     // Wire up controls and render
     wireStaticControls();
     initTitleEdit();
+    initSidebarToggle();
     render();
     
     // Hide mutation UI elements
