@@ -28,7 +28,7 @@ import {
   applyTierEditor,
   addTier,
   wireTierEditorControls
-} from "./config.js";
+} from "./tier-editor.js";
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./detail-modal.js";
 import { openCompareModal } from "./compare-modal.js";

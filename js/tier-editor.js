@@ -1,14 +1,15 @@
 /**
- * Tier Editor
+ * Tier Editor Modal
  * 
- * Handles tier editor UI interactions.
+ * Manages the draft-based UI for editing ranking tiers.
+ * All editor operations modify the draft; changes are only
+ * applied to real state on "Apply".
  */
 
 import { state, els, markDirty } from "./state.js";
 import { escapeHtml, showToast } from "./utils.js";
 import { attachReorderable } from "./drag.js";
 import { syncConfigFromState } from "./config-parser.js";
-
 
 /**
  * Draft state for the tier editor.
@@ -330,5 +331,3 @@ export function applyTierEditor() {
   els.tierEditorModal.hidden = true;
   showToast("Applied tier config.");
 }
-
-
