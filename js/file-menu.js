@@ -283,7 +283,18 @@ async function handleDelete() {
  */
 async function handleExport() {
   closeBurgerMenu();
-  await exportRanking();
+  
+  if (!state.currentRankingName) {
+    showToast("No ranking loaded to export. Please save or load a ranking first.");
+    return;
+  }
+  
+  try {
+    await exportRanking(state.currentRankingName);
+  } catch (error) {
+    console.error("Failed to export ranking:", error);
+    showToast("Failed to export ranking. Please try again.");
+  }
 }
 
 /**

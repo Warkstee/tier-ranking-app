@@ -12,20 +12,19 @@ import { apiFetch } from "./auth.js";
 
 /**
  * Export ranking as ZIP file with images
+ * @param {string} rankingName - The name of the ranking to export (required)
  */
-export async function exportRanking() {
+export async function exportRanking(rankingName) {
   try {
-    const zip = new JSZip();
+    // Fetch ranking data from database
+    const response = await apiFetch(`/api/rankings/${encodeURIComponent(rankingName)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ranking: ${response.statusText}`);
+    }
     
-    // Prepare ranking data
-    const data = {
-      title: state.title,
-      tiers: state.tiers,
-      criteria: state.criteria,
-      candidates: state.candidates,
-      min: state.min,
-      max: state.max
-    };
+    const data = await response.json();
+    
+    const zip = new JSZip();
     
     // Add ranking.json to ZIP
     zip.file("ranking.json", JSON.stringify(data, null, 2));
@@ -34,7 +33,7 @@ export async function exportRanking() {
     const imagesFolder = zip.folder("images");
     
     // Fetch and add each candidate image
-    const imagePromises = state.candidates.map(async (candidate) => {
+    const imagePromises = data.candidates.map(async (candidate) => {
       if (!candidate.image) return;
       
       try {
@@ -186,6 +185,7 @@ export async function importRanking(file) {
     state.candidates = data.candidates || [];
     state.min = data.min ?? 0;
     state.max = data.max ?? 10;
+    state.ahpComparisons = data.ahpComparisons || {};
     state.currentRankingName = null; // Imported files start unsaved
     
     showToast(`Imported ranking: ${file.name}`);
