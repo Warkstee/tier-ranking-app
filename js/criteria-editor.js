@@ -11,7 +11,7 @@ import { clamp, escapeHtml, showToast } from "./utils.js";
 import { renderTierBoard, renderUnranked } from "./render.js";
 import { attachReorderable } from "./drag.js";
 import { parseConfig, syncConfigFromState } from "./config-parser.js";
-import { openAhpCalculator, applyAhpWeights, getAhpComparisons, closeAhpCalculator } from "./ahp.js";
+import { openAhpCalculator, applyAhpWeights, getAhpComparisons, closeAhpCalculator } from "./ahp-calculator.js";
 
 /**
  * Draft state for the config editor.

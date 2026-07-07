@@ -41,8 +41,7 @@ export function initDatabase() {
 function runMigrations() {
   const migrationsDir = join(__dirname, 'migrations');
   const migrationFiles = [
-    '001-initial-schema.sql',
-    '002-shared-rankings.sql'
+    '001-initial-schema.sql'
   ];
 
   for (const file of migrationFiles) {

@@ -14,6 +14,7 @@ node_modules
 
 # Data folder
 /data
+/db
 
 # Log files
 *.log

@@ -32,7 +32,7 @@ import {
 import { render, renderTierBoard, renderUnranked, initTitleEdit } from "./render.js";
 import { openModal, closeModal } from "./detail-modal.js";
 import { openCompareModal } from "./compare-modal.js";
-import { wireAhpControls, undoAhpSlider } from "./ahp.js";
+import { wireAhpControls, undoAhpSlider } from "./ahp-calculator.js";
 import { showToast, slugify } from "./utils.js";
 import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 import { wireShareModalControls } from "./share-modal.js";

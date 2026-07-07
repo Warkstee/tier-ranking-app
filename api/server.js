@@ -305,7 +305,7 @@ const server = createServer(async (req, res) => {
     try {
       const db = getDb();
       const ranking = db.prepare(
-        'SELECT data_json FROM rankings WHERE user_id = ? AND name = ?'
+        'SELECT id FROM rankings WHERE user_id = ? AND name = ?'
       ).get(user.userId, name);
       
       if (!ranking) {
@@ -314,8 +314,9 @@ const server = createServer(async (req, res) => {
         return;
       }
       
+      const data = reconstructRankingData(db, ranking.id);
       res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(ranking.data_json);
+      res.end(JSON.stringify(data));
     } catch (err) {
       console.error("Failed to load ranking:", err);
       res.writeHead(500, { "Content-Type": "application/json" });
@@ -382,19 +383,97 @@ const server = createServer(async (req, res) => {
     }
     
     try {
-      const body = await readBody(req);
-      const data = JSON.parse(body);
-      const title = data.title || null;
-      
+      const data = JSON.parse(await readBody(req));
       const db = getDb();
-      db.prepare(`
-        INSERT INTO rankings (user_id, name, title, data_json, updated_at)
-        VALUES (?, ?, ?, ?, datetime('now'))
-        ON CONFLICT(user_id, name) DO UPDATE SET
-          title = excluded.title,
-          data_json = excluded.data_json,
-          updated_at = datetime('now')
-      `).run(user.userId, name, title, body);
+      
+      // Save strategy: Delete-then-reinsert within a transaction.
+      // The client sends the complete desired state, so we clear all child rows and re-insert. 
+      // The transaction guarantees atomicity. If any insert fails, the entire operation rolls back and no data is lost.
+      // This is simpler than diffing old vs new and matches the "full replacement" semantics of the save operation.
+      const saveRanking = db.transaction(() => {
+        // 1. Upsert ranking metadata
+        db.prepare(`
+          INSERT INTO rankings (user_id, name, title, min_score, max_score, updated_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(user_id, name) DO UPDATE SET
+            title = excluded.title,
+            min_score = excluded.min_score,
+            max_score = excluded.max_score,
+            updated_at = datetime('now')
+        `).run(user.userId, name, data.title || null, data.min ?? 0, data.max ?? 10);
+        
+        const rankingId = db.prepare(
+          'SELECT id FROM rankings WHERE user_id = ? AND name = ?'
+        ).get(user.userId, name).id;
+        
+        // 2. Clear existing child rows (cascade handles scores via candidates)
+        db.prepare('DELETE FROM ahp_comparisons WHERE ranking_id = ?').run(rankingId);
+        db.prepare('DELETE FROM candidates WHERE ranking_id = ?').run(rankingId);
+        db.prepare('DELETE FROM criteria WHERE ranking_id = ?').run(rankingId);
+        db.prepare('DELETE FROM tiers WHERE ranking_id = ?').run(rankingId);
+        
+        // 3. Insert tiers and build client_id -> db id map
+        const tierIdMap = {};
+        const insertTier = db.prepare(
+          'INSERT INTO tiers (ranking_id, client_id, name, position) VALUES (?, ?, ?, ?)'
+        );
+        for (const tier of (data.tiers || [])) {
+          const info = insertTier.run(rankingId, tier.id, tier.name, tier.position);
+          tierIdMap[tier.id] = info.lastInsertRowid;
+        }
+        
+        // 4. Insert criteria and build client_id -> db id map
+        const criteriaIdMap = {};
+        const insertCriteria = db.prepare(
+          'INSERT INTO criteria (ranking_id, client_id, name, weight) VALUES (?, ?, ?, ?)'
+        );
+        for (const criterion of (data.criteria || [])) {
+          const info = insertCriteria.run(rankingId, criterion.id, criterion.name, criterion.weight);
+          criteriaIdMap[criterion.id] = info.lastInsertRowid;
+        }
+        
+        // 5. Insert candidates and build client_id -> db id map
+        const candidateIdMap = {};
+        const insertCandidate = db.prepare(
+          'INSERT INTO candidates (ranking_id, client_id, tier_id, name, image, description, notes) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        );
+        for (const candidate of (data.candidates || [])) {
+          const dbTierId = candidate.tierId ? (tierIdMap[candidate.tierId] || null) : null;
+          const info = insertCandidate.run(
+            rankingId, candidate.id, dbTierId,
+            candidate.name, candidate.image || null,
+            candidate.description || null, candidate.notes || null
+          );
+          candidateIdMap[candidate.id] = info.lastInsertRowid;
+        }
+        
+        // 6. Insert scores
+        const insertScore = db.prepare(
+          'INSERT INTO scores (candidate_id, criteria_id, score) VALUES (?, ?, ?)'
+        );
+        for (const candidate of (data.candidates || [])) {
+          const dbCandidateId = candidateIdMap[candidate.id];
+          if (!dbCandidateId || !candidate.scores) continue;
+          for (const [criterionClientId, scoreValue] of Object.entries(candidate.scores)) {
+            const dbCriteriaId = criteriaIdMap[criterionClientId];
+            if (dbCriteriaId) {
+              insertScore.run(dbCandidateId, dbCriteriaId, scoreValue);
+            }
+          }
+        }
+        
+        // 7. Insert AHP comparisons
+        const insertAhp = db.prepare(
+          'INSERT INTO ahp_comparisons (ranking_id, criterion_a_id, criterion_b_id, favored_id, degree) VALUES (?, ?, ?, ?, ?)'
+        );
+        const ahpComparisons = data.ahpComparisons || {};
+        for (const [pairKey, comparison] of Object.entries(ahpComparisons)) {
+          const [idA, idB] = pairKey.split('::');
+          insertAhp.run(rankingId, idA, idB, comparison.favoredId || null, comparison.degree || 1);
+        }
+      });
+      
+      saveRanking();
       
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ success: true, name }));
@@ -749,7 +828,7 @@ const server = createServer(async (req, res) => {
     try {
       const db = getDb();
       const share = db.prepare(`
-        SELECT sr.is_active, sr.expires_at, r.data_json, r.title
+        SELECT sr.is_active, sr.expires_at, sr.ranking_id, r.title
         FROM shared_rankings sr
         JOIN rankings r ON r.id = sr.ranking_id
         WHERE sr.token = ?
@@ -773,8 +852,8 @@ const server = createServer(async (req, res) => {
         return;
       }
 
-      // Return the ranking data with the title
-      const data = JSON.parse(share.data_json);
+      // Reconstruct ranking data from normalized tables
+      const data = reconstructRankingData(db, share.ranking_id);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ title: share.title, data }));
     } catch (err) {
@@ -788,6 +867,107 @@ const server = createServer(async (req, res) => {
   res.writeHead(404, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ error: "Not found" }));
 });
+
+/**
+ * Reconstruct full ranking data from normalized tables.
+ * Queries all child tables and assembles the JSON structure
+ * expected by the client.
+ */
+function reconstructRankingData(db, rankingId) {
+  // 1. Ranking metadata
+  const ranking = db.prepare(
+    'SELECT title, min_score, max_score FROM rankings WHERE id = ?'
+  ).get(rankingId);
+
+  // 2. Tiers
+  const tiers = db.prepare(
+    'SELECT client_id, name, position FROM tiers WHERE ranking_id = ? ORDER BY position'
+  ).all(rankingId).map(t => ({
+    id: t.client_id,
+    name: t.name,
+    position: t.position
+  }));
+
+  // 3. Criteria
+  const criteria = db.prepare(
+    'SELECT client_id, name, weight FROM criteria WHERE ranking_id = ?'
+  ).all(rankingId).map(c => ({
+    id: c.client_id,
+    name: c.name,
+    weight: c.weight
+  }));
+
+  // 4. Build a db criteria id -> client id map for score reconstruction
+  const criteriaDbToClient = {};
+  const criteriaRows = db.prepare(
+    'SELECT id, client_id FROM criteria WHERE ranking_id = ?'
+  ).all(rankingId);
+  for (const c of criteriaRows) {
+    criteriaDbToClient[c.id] = c.client_id;
+  }
+
+  // 5. Build a db tier id -> client id map for candidate tier assignment
+  const tierDbToClient = {};
+  const tierRows = db.prepare(
+    'SELECT id, client_id FROM tiers WHERE ranking_id = ?'
+  ).all(rankingId);
+  for (const t of tierRows) {
+    tierDbToClient[t.id] = t.client_id;
+  }
+
+  // 6. Candidates with their scores
+  const candidateRows = db.prepare(
+    'SELECT id, client_id, tier_id, name, image, description, notes FROM candidates WHERE ranking_id = ?'
+  ).all(rankingId);
+
+  const candidates = candidateRows.map(cand => {
+    // Get scores for this candidate
+    const scoreRows = db.prepare(
+      'SELECT criteria_id, score FROM scores WHERE candidate_id = ?'
+    ).all(cand.id);
+
+    const scores = {};
+    for (const s of scoreRows) {
+      const criterionClientId = criteriaDbToClient[s.criteria_id];
+      if (criterionClientId) {
+        scores[criterionClientId] = s.score;
+      }
+    }
+
+    return {
+      id: cand.client_id,
+      name: cand.name,
+      image: cand.image || null,
+      description: cand.description || null,
+      tierId: cand.tier_id ? (tierDbToClient[cand.tier_id] || null) : null,
+      scores
+    };
+  });
+
+  // 7. AHP comparisons
+  const ahpRows = db.prepare(
+    'SELECT criterion_a_id, criterion_b_id, favored_id, degree FROM ahp_comparisons WHERE ranking_id = ?'
+  ).all(rankingId);
+
+  const ahpComparisons = {};
+  for (const row of ahpRows) {
+    const pairKey = `${row.criterion_a_id}::${row.criterion_b_id}`;
+    ahpComparisons[pairKey] = {
+      favoredId: row.favored_id || null,
+      degree: row.degree
+    };
+  }
+
+  return {
+    title: ranking.title,
+    min: ranking.min_score,
+    max: ranking.max_score,
+    tiers,
+    criteria,
+    candidates,
+    ahpComparisons
+  };
+}
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
