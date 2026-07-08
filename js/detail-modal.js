@@ -160,9 +160,6 @@ export function renderModal(candidate) {
     </div>
   `;
 
-  // Adjust title font size to fit within available width
-  fitModalTitle();
-
   // Attach image fallback
   attachImageFallback(els.detailCard.querySelector(".detail-media img"), candidate.name);
 
@@ -486,30 +483,6 @@ async function handleEditSave(candidate) {
   syncConfigFromState();
   renderModal(candidate);
   showToast(`Updated "${name}".`);
-}
-
-/**
- * Adjusts the modal title font size to fit within the available width.
- */
-function fitModalTitle() {
-  const title = els.detailCard.querySelector("[data-modal-title]");
-  if (!title) return;
-
-  title.style.fontSize = "";
-  const baseSize = parseFloat(window.getComputedStyle(title).fontSize) || 64;
-  const minSize = 24;
-  title.style.fontSize = `${baseSize}px`;
-
-  const availableWidth = title.clientWidth;
-  if (!availableWidth || title.scrollWidth <= availableWidth) return;
-
-  let fittedSize = Math.max(minSize, Math.floor(baseSize * (availableWidth / title.scrollWidth)));
-  title.style.fontSize = `${fittedSize}px`;
-
-  while (title.scrollWidth > availableWidth && fittedSize > minSize) {
-    fittedSize -= 1;
-    title.style.fontSize = `${fittedSize}px`;
-  }
 }
 
 /**

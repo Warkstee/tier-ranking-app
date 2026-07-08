@@ -39,8 +39,6 @@ import { wireShareModalControls } from "./share-modal.js";
 import { initAuth, apiFetch } from "./auth.js";
 import { undo, clearUndo } from "./undo.js";
 
-let modalTitleFrame = 0;
-
 boot();
 
 // Listen for successful authentication to initialize the app
@@ -345,12 +343,6 @@ function wireStaticControls() {
     }
   });
 
-  window.addEventListener("resize", () => {
-    if (!els.modal.hidden) {
-      window.cancelAnimationFrame(modalTitleFrame);
-      modalTitleFrame = window.requestAnimationFrame(fitModalTitle);
-    }
-  });
 }
 
 /**
@@ -565,29 +557,5 @@ async function handleAddCandidateSubmit(event) {
   showToast(`Added "${name}" to Unranked.`);
 }
 
-/**
- * Adjusts the modal title font size to fit within the available width.
- * Uses a binary search approach to find the optimal font size.
- */
-function fitModalTitle() {
-  const title = els.detailCard.querySelector("[data-modal-title]");
-  if (!title) return;
-
-  title.style.fontSize = "";
-  const baseSize = parseFloat(window.getComputedStyle(title).fontSize) || 64;
-  const minSize = 24;
-  title.style.fontSize = `${baseSize}px`;
-
-  const availableWidth = title.clientWidth;
-  if (!availableWidth || title.scrollWidth <= availableWidth) return;
-
-  let fittedSize = Math.max(minSize, Math.floor(baseSize * (availableWidth / title.scrollWidth)));
-  title.style.fontSize = `${fittedSize}px`;
-
-  while (title.scrollWidth > availableWidth && fittedSize > minSize) {
-    fittedSize -= 1;
-    title.style.fontSize = `${fittedSize}px`;
-  }
-}
 
 

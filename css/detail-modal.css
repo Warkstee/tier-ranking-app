@@ -309,7 +309,7 @@
   max-width: 610px;
   white-space: nowrap;
   color: #fbfbff;
-  font-size: clamp(44px, 3.4vw, 64px);
+  font-size: 45px;
   line-height: 0.98;
   font-weight: 950;
   letter-spacing: 0;
