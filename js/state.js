@@ -109,9 +109,7 @@ export const els = {
   fileImportInput: document.querySelector("[data-file-import-input]"),
   fileShare: document.querySelector("[data-file-share]"),
   fileDelete: document.querySelector("[data-file-delete]"),
-  currentRankingName: document.querySelector("[data-current-ranking-name]"),
-  fileName: document.querySelector("[data-file-name]"),
-  fileStatus: document.querySelector("[data-file-status]"),
+  saveIcon: document.querySelector("[data-save-icon]"),
   nameInputModal: document.querySelector("[data-name-input-modal]"),
   nameInputTitle: document.querySelector("[data-name-input-title]"),
   nameInputField: document.querySelector("[data-name-input-field]"),
@@ -166,16 +164,24 @@ export const els = {
 };
 
 /**
- * Update the current ranking display in the top bar
+ * Update the save icon state in the top bar
  */
 export function updateCurrentRankingDisplay() {
+  if (!els.saveIcon) return;
+
+  if (state.readOnly) {
+    els.saveIcon.className = "save-icon read-only";
+    els.saveIcon.title = state.currentRankingName || "";
+    return;
+  }
+
   if (state.currentRankingName) {
-    els.fileName.textContent = state.currentRankingName;
-    els.fileStatus.textContent = state.isDirty ? "Draft" : "Saved";
-    els.fileStatus.className = "file-status-pill " + (state.isDirty ? "draft" : "saved");
+    els.saveIcon.className = "save-icon " + (state.isDirty ? "draft" : "saved");
+    els.saveIcon.title = state.currentRankingName;
   } else {
-    els.fileName.textContent = "";
-    els.fileStatus.textContent = "";
+    // No file loaded — show white (draft) to invite saving
+    els.saveIcon.className = "save-icon draft";
+    els.saveIcon.title = "Save";
   }
 }
 

@@ -93,33 +93,28 @@ export function initFileMenu() {
   els.fileShare.addEventListener("click", handleShare);
   els.fileDelete.addEventListener("click", handleDelete);
   
-  // Click on draft pill to save
-  els.fileStatus.addEventListener("click", () => {
-    if (state.isDirty) {
+  // Click on save icon to save
+  els.saveIcon.addEventListener("click", () => {
+    if (state.readOnly) return;
+    if (!state.isDirty && state.currentRankingName) return;
+    if (state.currentRankingName) {
       handleSave();
+    } else {
+      handleSaveAs();
     }
   });
-  els.fileStatus.style.cursor = "pointer";
-  
+
   // Ctrl+S / Cmd+S keyboard shortcut to save
   document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "s") {
       event.preventDefault();
-      if (state.isDirty && !state.readOnly) {
+      if (state.readOnly) return;
+      if (!state.isDirty && state.currentRankingName) return;
+      if (state.currentRankingName) {
         handleSave();
+      } else {
+        handleSaveAs();
       }
-    }
-  });
-  
-  // Change text to "SAVE" on hover when in draft state
-  els.fileStatus.addEventListener("mouseenter", () => {
-    if (state.isDirty) {
-      els.fileStatus.textContent = "SAVE";
-    }
-  });
-  els.fileStatus.addEventListener("mouseleave", () => {
-    if (state.isDirty) {
-      els.fileStatus.textContent = "DRAFT";
     }
   });
   
@@ -543,6 +538,15 @@ export async function saveRankingToServer(name) {
   }
   
   markClean();
+
+  // Trigger pulse animation on save icon
+  if (els.saveIcon) {
+    els.saveIcon.classList.add("pulse");
+    els.saveIcon.addEventListener("animationend", () => {
+      els.saveIcon.classList.remove("pulse");
+    }, { once: true });
+  }
+
   return response.json();
 }
 

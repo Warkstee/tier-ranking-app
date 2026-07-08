@@ -4,24 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>S-Tier Ranking Board</title>
-  <link rel="stylesheet" href="/css/base.css?v=3">
-  <link rel="stylesheet" href="/css/layout.css?v=3">
-  <link rel="stylesheet" href="/css/tier-board.css?v=3">
-  <link rel="stylesheet" href="/css/detail-modal.css?v=3">
-  <link rel="stylesheet" href="/css/compare-modal.css?v=3">
-  <link rel="stylesheet" href="/css/config-modal.css?v=3">
-  <link rel="stylesheet" href="/css/ahp-modal.css?v=1">
-  <link rel="stylesheet" href="/css/add-candidate.css?v=3">
-  <link rel="stylesheet" href="/css/components.css?v=3">
-  <link rel="stylesheet" href="/css/file-menu.css?v=3">
-  <link rel="stylesheet" href="/css/share-modal.css?v=1">
-  <link rel="stylesheet" href="/css/read-only.css?v=1">
-  <link rel="stylesheet" href="/css/auth.css?v=3">
+  <link rel="stylesheet" href="/css/base.css?v=4">
+  <link rel="stylesheet" href="/css/layout.css?v=4">
+  <link rel="stylesheet" href="/css/tier-board.css?v=4">
+  <link rel="stylesheet" href="/css/detail-modal.css?v=4">
+  <link rel="stylesheet" href="/css/compare-modal.css?v=4">
+  <link rel="stylesheet" href="/css/config-modal.css?v=4">
+  <link rel="stylesheet" href="/css/ahp-modal.css?v=4">
+  <link rel="stylesheet" href="/css/add-candidate.css?v=4">
+  <link rel="stylesheet" href="/css/components.css?v=4">
+  <link rel="stylesheet" href="/css/file-menu.css?v=4">
+  <link rel="stylesheet" href="/css/share-modal.css?v=4">
+  <link rel="stylesheet" href="/css/read-only.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
     <div class="scene-backdrop" aria-hidden="true"></div>
     <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="12" width="5" height="9" rx="1" fill="#111"/>
+          <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
+          <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
+        </svg>
+      </div>
       <div class="burger-menu-container">
         <button type="button" class="burger-button" data-burger-menu aria-label="Menu">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -58,14 +65,14 @@
           <button type="button" class="burger-menu-item" data-reset-config>Reset Scores & Rankings...</button>
         </div>
       </div>
+      <button type="button" class="save-icon draft" data-save-icon aria-label="Save" title="Save">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+      </button>
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="12" width="5" height="9" rx="1" fill="#111"/>
-            <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
-            <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
-          </svg>
-        </div>
         <div class="brand-copy">
           <h1 data-title>S-Tier Ranking Board</h1>
           <button class="title-edit-btn" type="button" aria-label="Edit title" data-title-edit>
@@ -75,16 +82,6 @@
           </button>
         </div>
       </div>
-      <nav class="menu" aria-label="Board controls">
-        <div class="current-ranking-name" data-current-ranking-name>
-          <svg class="file-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-          </svg>
-          <span class="file-name" data-file-name></span>
-          <span class="file-status-pill" data-file-status></span>
-        </div>
-      </nav>
       <div class="topbar-right">
         <div class="filter-menu-container">
           <button type="button" class="filter-btn" data-filter-menu aria-label="Filter candidates">

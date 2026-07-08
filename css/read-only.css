@@ -1,9 +1,8 @@
-/* Read-only indicator styles */
+/* Read-only indicator styles — handled via .save-icon.read-only in file-menu.css */
 
-.current-ranking-name .file-status-pill.read-only {
-  background: rgba(0, 164, 220, 0.15);
-  color: var(--brand-a);
-  cursor: default;
+/* Hide save icon in read-only mode */
+body.read-only-mode [data-save-icon] {
+  display: none !important;
 }
 
 /* Hide edit buttons in read-only mode */

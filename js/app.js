@@ -152,12 +152,12 @@ function hideMutationUI() {
 }
 
 /**
- * Shows a read-only indicator in the filename pill area.
+ * Shows a read-only indicator on the save icon.
  */
 function showReadOnlyIndicator() {
-  if (els.fileStatus) {
-    els.fileStatus.textContent = "Read-only";
-    els.fileStatus.className = "file-status-pill read-only";
+  if (els.saveIcon) {
+    els.saveIcon.className = "save-icon read-only";
+    els.saveIcon.title = state.currentRankingName || "";
   }
 }
 

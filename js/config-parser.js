@@ -203,10 +203,10 @@ export async function persistConfig() {
     // If no ranking name is set, auto-save to "untitled"
     if (!state.currentRankingName) {
       state.currentRankingName = "untitled";
-      // Update the UI to show the ranking name
-      const rankingNameEl = document.querySelector("[data-current-ranking-name]");
-      if (rankingNameEl) {
-        rankingNameEl.textContent = state.currentRankingName;
+      // Update the save icon tooltip
+      const saveIcon = document.querySelector("[data-save-icon]");
+      if (saveIcon) {
+        saveIcon.title = state.currentRankingName;
       }
     }
     
