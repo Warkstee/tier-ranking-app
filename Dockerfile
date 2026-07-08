@@ -10,6 +10,9 @@ COPY api/package.json ./
 RUN npm install --omit=dev
 COPY api/server.js api/db.js api/auth.js ./
 COPY api/migrations ./migrations
+COPY api/utils ./utils
+COPY api/middleware ./middleware
+COPY api/routes ./routes
 
 # Stage 2: Final image with nginx + API
 FROM node:22-alpine
