@@ -13,6 +13,7 @@ import { handleAuthRoutes } from "./routes/auth.js";
 import { handleRankingsRoutes } from "./routes/rankings.js";
 import { handleUploadRoutes } from "./routes/upload.js";
 import { handleShareRoutes } from "./routes/share.js";
+import { handleHealthRoute, handleStatsRoute } from "./routes/health.js";
 
 // Initialize database on startup
 initDatabase();
@@ -32,6 +33,12 @@ const server = createServer(async (req, res) => {
     }
     if (req.url.startsWith('/api/share') || req.url.startsWith('/api/shared')) {
       return handleShareRoutes(req, res);
+    }
+    if (req.url === '/api/health') {
+      return handleHealthRoute(req, res);
+    }
+    if (req.url === '/api/stats') {
+      return handleStatsRoute(req, res);
     }
 
     res.writeHead(404, { "Content-Type": "application/json" });
