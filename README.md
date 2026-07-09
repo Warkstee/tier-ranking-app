@@ -2,8 +2,6 @@
 
 A browser-based app for ranking candidates into tiers using weighted scoring criteria. Drag candidates between tiers, score them against a custom rubric, and manage multiple saved rankings.
 
-![Tier Ranking App screenshot](docs/screenshot-app-main-v2.png)
-
 ## Features
 
 - **User authentication** — Sign up and log in with per-user accounts. Each user's rankings and data are completely isolated.
@@ -20,7 +18,27 @@ A browser-based app for ranking candidates into tiers using weighted scoring cri
 - **Keyboard shortcuts** — Ctrl+S (Cmd+S on Mac) to save the current ranking
 - **Auto-save** — Changes are saved automatically as you work
 
-![Candidate Comparison screenshot](docs/screenshot-comparison-v1.png)
+<p align="center">
+  <img src="docs/sreenshot-dashboard-v1.png" width="30%" style="margin: 0 15px;" />
+  <img src="docs/screenshot-app-main-v3.png" width="30%" style="margin: 0 15px;" />
+  <img src="docs/screenshot-comparison-v2.png" width="30%" style="margin: 0 15px;" />
+</p>
+
+## Dashboard
+
+The dashboard allows you to open, delete and create new rankings. Use the menu (burger icon, top-left) to :
+
+| Action | Description |
+|--------|-------------|
+| **New Ranking File** | Start a fresh ranking with default tiers. Prompts for a name. |
+| **Open File** | Browse and load any saved ranking. |
+| **Upload File** | Load a ranking from a previously exported ZIP file. |
+| **Delete File** | Remove a saved ranking. |
+
+<p align="center">
+  <img src="docs/screenshot-dashboard-menu-v1.png" width="40%" style="margin: 0 15px;" />
+  <img src="docs/sreenshot-dashboard-new-ranking-v1.png" width="40%" style="margin: 0 15px;" />
+</p>
 
 ## Configuration
 
@@ -32,30 +50,26 @@ The app ships with a default configuration. Open the menu (burger icon, top-left
 | **Edit Tiers** | Add, remove, and reorder tier lanes. |
 | **Reset Scores & Rankings** | Reset all scores and move candidates back to the unranked pool. |
 
-![Edit Criteria Screenshot](docs/screenshot-edit-criteria-v2.png)
+<p align="center">
+  <img src="docs/screenshot-edit-criteria-v3.png" width="40%" style="margin: 0 15px;" />
+  <img src="docs/screenshot-ahp-calculator-v2.png" width="40%" style="margin: 0 15px;" />
+</p>
 
-### AHP Calculator
+## Ranking File Options
 
-Determine criteria weights through pairwise comparisons using the Analytic Hierarchy Process instead of manually entering numbers.
-
-![AHP Calculator Screenshot](docs/screenshot-ahp-calculator-v1.png)
-
-## Ranking Management
-
-Use the **File** menu (burger icon, top-left) to manage rankings:
+Use the **File** menu (burger icon, top-left) to:
 
 | Action | Description |
 |--------|-------------|
-| **New Ranking** | Start a fresh ranking with default tiers. Prompts for a name. |
-| **Open** | Browse and load any saved ranking. |
-| **Save** | Save changes to the current ranking. |
+| **Save File** | Save changes to the current ranking. |
 | **Save As** | Save the current ranking under a new name. |
 | **Download File** | Download a ZIP containing the ranking data and all candidate images. |
-| **Upload File** | Load a ranking from a previously exported ZIP file. |
-| **Delete File** | Remove a saved ranking. |
 | **Share File** | Generate a shareable read-only link. Recipients can view the full ranking board with needing an account.|
 
-![Share Ranking screenshot](docs/screenshot-share-ranking-v1.png)
+<p align="center">
+  <img src="docs/screenshot-ranking-menu-v1.png" width="40%" style="margin: 0 15px;" />
+  <img src="docs/screenshot-share-ranking-v2.png" width="40%" style="margin: 0 15px;" />
+</p>
 
 ## Keyboard Shortcuts
 
@@ -70,7 +84,6 @@ Deploy on your local machine, or a remote server, using the pre-built image, via
 
 ```sh
 mkdir tier-ranking-app && cd tier-ranking-app
-mkdir -p data/candidates
 ```
 
 Create `compose.yml`:
@@ -84,6 +97,7 @@ services:
       - "4173:80"
     volumes:
       - ./data/candidates:/usr/share/nginx/html/assets/candidates
+      - ./data/screenshots:/usr/share/nginx/html/assets/screenshots
       - db-data:/app/data
     environment:
       - DB_PATH=/app/data/tier-ranking.db
