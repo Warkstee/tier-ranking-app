@@ -547,7 +547,61 @@ export async function saveRankingToServer(name) {
     }, { once: true });
   }
 
+  // Capture and upload screenshot (non-blocking, best-effort)
+  captureAndUploadScreenshot(name).catch(err => {
+    console.warn("Screenshot capture failed:", err);
+  });
+
   return response.json();
+}
+
+/**
+ * Capture a screenshot of the tier board and upload it to the server.
+ * Uses html2canvas to render the board to a canvas, then uploads as PNG.
+ * This is a best-effort operation — failures are logged but don't block the save.
+ */
+async function captureAndUploadScreenshot(name) {
+  if (typeof html2canvas === "undefined") {
+    console.warn("html2canvas not available, skipping screenshot");
+    return;
+  }
+
+  const workspace = document.querySelector(".workspace");
+  if (!workspace) {
+    console.warn("No workspace found, skipping screenshot");
+    return;
+  }
+
+  try {
+    const canvas = await html2canvas(workspace, {
+      scale: 0.75,
+      backgroundColor: "#050609",
+      useCORS: true,
+      logging: false,
+      windowWidth: workspace.scrollWidth,
+      windowHeight: workspace.scrollHeight
+    });
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+    if (!blob) {
+      console.warn("Failed to convert canvas to blob");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("screenshot", blob, `${name}.png`);
+
+    const response = await apiFetch(`/api/screenshots/${encodeURIComponent(name)}`, {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      console.warn("Screenshot upload failed:", response.statusText);
+    }
+  } catch (err) {
+    console.warn("Screenshot capture error:", err);
+  }
 }
 
 /**

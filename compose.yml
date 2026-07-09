@@ -6,6 +6,7 @@ services:
       - "4173:80"
     volumes:
       - ./data/candidates:/usr/share/nginx/html/assets/candidates
+      - ./data/screenshots:/usr/share/nginx/html/assets/screenshots
       - ./db:/app/data
     environment:
       - DB_PATH=/app/data/tier-ranking.db

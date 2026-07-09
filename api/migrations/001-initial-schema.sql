@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS rankings (
   title TEXT,
   min_score INTEGER DEFAULT 0,
   max_score INTEGER DEFAULT 10,
+  screenshot TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

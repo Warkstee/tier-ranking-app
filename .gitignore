@@ -28,6 +28,7 @@ pnpm-debug.log*
 # Specific project asset files
 config.yml
 *.json
+!package.json
 
 # Specific test output files
 

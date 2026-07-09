@@ -11,6 +11,7 @@ import { createServer } from "http";
 import { initDatabase } from "./db.js";
 import { handleAuthRoutes } from "./routes/auth.js";
 import { handleRankingsRoutes } from "./routes/rankings.js";
+import { handleScreenshotsRoutes } from "./routes/screenshots.js";
 import { handleUploadRoutes } from "./routes/upload.js";
 import { handleShareRoutes } from "./routes/share.js";
 import { handleHealthRoute, handleStatsRoute } from "./routes/health.js";
@@ -27,6 +28,9 @@ const server = createServer(async (req, res) => {
     }
     if (req.url.startsWith('/api/rankings')) {
       return handleRankingsRoutes(req, res);
+    }
+    if (req.url.startsWith('/api/screenshots')) {
+      return handleScreenshotsRoutes(req, res);
     }
     if (req.url.startsWith('/api/upload')) {
       return handleUploadRoutes(req, res);

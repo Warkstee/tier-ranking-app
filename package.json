@@ -1,0 +1,12 @@
+{
+  "name": "tier-ranking-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm run vendor:copy",
+    "vendor:copy": "cp node_modules/html2canvas/dist/html2canvas.min.js vendor/html2canvas.min.js"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
+  }
+}

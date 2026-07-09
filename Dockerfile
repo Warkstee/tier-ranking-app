@@ -20,13 +20,21 @@ FROM node:22-alpine
 # Install nginx for serving frontend
 RUN apk add --no-cache nginx
 
+# Install frontend dependencies
+WORKDIR /app
+COPY package.json ./
+RUN npm install --omit=dev
+
 # Copy frontend files
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY index.html /usr/share/nginx/html/
 COPY css /usr/share/nginx/html/css
 COPY js /usr/share/nginx/html/js
 COPY assets /usr/share/nginx/html/default-assets
-COPY vendor /usr/share/nginx/html/vendor
+
+# Copy vendor dependencies from node_modules
+RUN mkdir -p /usr/share/nginx/html/vendor
+RUN cp /app/node_modules/html2canvas/dist/html2canvas.min.js /usr/share/nginx/html/vendor/html2canvas.min.js
 
 # Copy API from builder stage
 COPY --from=api-builder /app /app/api
