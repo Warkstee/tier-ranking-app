@@ -195,19 +195,14 @@ export function cancelPendingSave() {
 
 /**
  * Persists the current configuration to the backend API.
- * If no ranking name is set, auto-saves to a default ranking named "untitled".
+ * Only saves if a ranking name is set; does not auto-create "untitled" rankings.
  * @returns {Promise<void>}
  */
 export async function persistConfig() {
   try {
-    // If no ranking name is set, auto-save to "untitled"
+    // Don't save if there's no ranking name - prevents creating empty "untitled" rankings
     if (!state.currentRankingName) {
-      state.currentRankingName = "untitled";
-      // Update the save icon tooltip
-      const saveIcon = document.querySelector("[data-save-icon]");
-      if (saveIcon) {
-        saveIcon.title = state.currentRankingName;
-      }
+      return;
     }
     
     const data = {

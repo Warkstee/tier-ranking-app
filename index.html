@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/css/share-modal.css?v=4">
   <link rel="stylesheet" href="/css/read-only.css?v=4">
   <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/dashboard.css?v=4">
 </head>
 <body>
   <main class="app-shell" data-app-shell>
@@ -28,6 +29,29 @@
           <rect x="9.5" y="3" width="5" height="18" rx="1" fill="#111"/>
           <rect x="16" y="8" width="5" height="13" rx="1" fill="#111"/>
         </svg>
+      </div>
+      <div class="dashboard-menu-container" data-dashboard-menu-container hidden>
+        <button type="button" class="burger-button" data-dashboard-menu aria-label="Dashboard menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="burger-dropdown" data-dashboard-dropdown hidden>
+          <button type="button" class="burger-menu-item" data-dashboard-new>New Ranking File</button>
+          <div class="submenu-item-with-flyout" data-dashboard-flyout-trigger="open">
+            <button type="button" class="burger-menu-item" data-dashboard-open>Open File...</button>
+          </div>
+          <button type="button" class="burger-menu-item" data-dashboard-import>Upload File...</button>
+          <input type="file" accept=".zip" data-dashboard-import-input hidden>
+          <div class="submenu-item-with-flyout" data-dashboard-flyout-trigger="delete">
+            <button type="button" class="burger-menu-item" data-dashboard-delete>Delete File...</button>
+          </div>
+          <div class="ranking-flyout" data-dashboard-ranking-flyout hidden>
+            <div class="ranking-flyout-list" data-dashboard-ranking-flyout-list></div>
+          </div>
+        </div>
       </div>
       <div class="burger-menu-container">
         <button type="button" class="burger-button" data-burger-menu aria-label="Menu">
@@ -42,22 +66,10 @@
             <span>File</span>
             <svg class="submenu-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             <div class="burger-submenu" data-submenu-panel="file" hidden>
-              <button type="button" data-file-new>New Ranking File</button>
-              <div class="submenu-item-with-flyout" data-flyout-trigger="open">
-                <button type="button" data-file-open>Open File...</button>
-              </div>
               <button type="button" data-file-save>Save File...</button>
               <button type="button" data-file-save-as>Save As...</button>
               <button type="button" data-file-export>Download File...</button>
-              <button type="button" data-file-import>Upload File...</button>
-              <input type="file" accept=".zip" data-file-import-input hidden>
               <button type="button" data-file-share>Share...</button>
-              <div class="submenu-item-with-flyout" data-flyout-trigger="delete">
-                <button type="button" data-file-delete>Delete File...</button>
-              </div>
-              <div class="ranking-flyout" data-ranking-flyout hidden>
-                <div class="ranking-flyout-list" data-ranking-flyout-list></div>
-              </div>
             </div>
           </div>
           <button type="button" class="burger-menu-item" data-open-config>Edit Criteria...</button>
@@ -82,6 +94,7 @@
           </button>
         </div>
       </div>
+      <div class="dashboard-title" hidden>Dashboard</div>
       <div class="topbar-right">
         <div class="filter-menu-container">
           <button type="button" class="filter-btn" data-filter-menu aria-label="Filter candidates">
@@ -114,6 +127,8 @@
         </div>
       </div>
     </header>
+
+    <div class="dashboard-view" data-dashboard-view hidden></div>
 
     <section class="workspace">
       <section class="tier-board" aria-label="Tier ranking canvas" data-tier-board></section>

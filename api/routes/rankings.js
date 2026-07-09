@@ -37,11 +37,21 @@ export async function handleRankingsRoutes(req, res) {
    *                     nullable: true
    *                     description: The ranking title
    *                     example: "My Tier Ranking"
+   *                   created_at:
+   *                     type: string
+   *                     format: date-time
+   *                     description: ISO 8601 timestamp of creation
+   *                     example: "2026-06-28T10:30:00.000Z"
    *                   modifiedAt:
    *                     type: string
    *                     format: date-time
    *                     description: ISO 8601 timestamp of last modification
    *                     example: "2026-06-28T10:30:00.000Z"
+   *                   screenshot:
+   *                     type: string
+   *                     nullable: true
+   *                     description: Relative path to the ranking screenshot thumbnail
+   *                     example: "./assets/screenshots/1/my-ranking.png"
    *       401:
    *         description: Authentication required
    *       500:
@@ -54,13 +64,15 @@ export async function handleRankingsRoutes(req, res) {
     try {
       const db = getDb();
       const rankings = db.prepare(
-        'SELECT name, title, updated_at FROM rankings WHERE user_id = ? ORDER BY updated_at DESC'
+        'SELECT name, title, created_at, updated_at, screenshot FROM rankings WHERE user_id = ? ORDER BY created_at DESC'
       ).all(user.userId);
       
       const result = rankings.map(r => ({
         name: r.name,
         title: r.title,
-        modifiedAt: r.updated_at
+        created_at: r.created_at,
+        modifiedAt: r.updated_at,
+        screenshot: r.screenshot ?? null
       }));
       
       res.writeHead(200, { "Content-Type": "application/json" });

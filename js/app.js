@@ -34,16 +34,18 @@ import { openModal, closeModal } from "./detail-modal.js";
 import { openCompareModal } from "./compare-modal.js";
 import { wireAhpControls, undoAhpSlider } from "./ahp-calculator.js";
 import { showToast, slugify } from "./utils.js";
-import { initFileMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
+import { initFileMenu, initDashboardMenu, loadMostRecentRanking, closeBurgerMenu, saveRankingToServer } from "./file-menu.js";
 import { wireShareModalControls } from "./share-modal.js";
 import { initAuth, apiFetch } from "./auth.js";
 import { undo, clearUndo } from "./undo.js";
+import { showDashboard } from "./dashboard.js";
 
 boot();
 
-// Listen for successful authentication to initialize the app
+// Listen for successful authentication to show the dashboard
 window.addEventListener('auth:authenticated', () => {
-  initializeApp();
+  initDashboardMenu();
+  showDashboard();
 });
 
 /**
@@ -67,8 +69,9 @@ async function boot() {
     return;
   }
   
-  // User is authenticated, initialize the app
-  await initializeApp();
+  // User is authenticated, initialize dashboard menu and show the dashboard
+  initDashboardMenu();
+  await showDashboard();
 }
 
 /**
@@ -164,20 +167,28 @@ function showReadOnlyIndicator() {
  * Called after successful authentication.
  * @returns {Promise<void>}
  */
-export async function initializeApp() {
+export async function initializeApp(skipLoad = false) {
   // Wire up all controls
   wireStaticControls();
   initFileMenu();
+  initDashboardMenu();
   initTitleEdit();
   initSidebarToggle();
   
-  // Try to load the most recent ranking first
-  const loaded = await loadMostRecentRanking();
+  // Skip loading if called from dashboard new flow (modal callback will handle state)
+  if (skipLoad) return;
   
-  // If no rankings exist, use the bundled default config
-  if (!loaded) {
-    const config = { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
-    applyConfig(config);
+  // Only load the most recent ranking if no ranking is currently loaded.
+  // When called from the dashboard after opening a specific ranking,
+  // openRanking() has already populated the state.
+  if (!state.currentRankingName) {
+    const loaded = await loadMostRecentRanking();
+    
+    // If no rankings exist, use the bundled default config
+    if (!loaded) {
+      const config = { text: DEFAULT_CONFIG, format: "json", source: "bundled config" };
+      applyConfig(config);
+    }
   }
 }
 
@@ -211,6 +222,15 @@ function initSidebarToggle() {
  * including config editor, add candidate modal, keyboard shortcuts, and window resize.
  */
 function wireStaticControls() {
+  // Brand logo click → return to dashboard
+  const brandMark = document.querySelector(".brand-mark");
+  if (brandMark) {
+    brandMark.style.cursor = "pointer";
+    brandMark.addEventListener("click", () => {
+      showDashboard();
+    });
+  }
+
   els.openConfig.addEventListener("click", () => { closeBurgerMenu(); openConfigEditor(); });
   els.openTierEditor.addEventListener("click", () => { closeBurgerMenu(); openTierEditor(); });
   els.resetConfig.addEventListener("click", () => { closeBurgerMenu(); resetScoresAndRankings(); });

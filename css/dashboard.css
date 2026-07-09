@@ -1,0 +1,273 @@
+/* Dashboard view styles */
+
+/* Hide board-specific topbar elements when dashboard is active */
+body.dashboard-mode .burger-menu-container,
+body.dashboard-mode .save-icon,
+body.dashboard-mode .brand,
+body.dashboard-mode .filter-menu-container,
+body.dashboard-mode .sidebar-toggle-btn {
+  display: none;
+}
+
+/* Show dashboard menu only in dashboard mode */
+.dashboard-menu-container {
+  display: none;
+}
+
+body.dashboard-mode .dashboard-menu-container {
+  display: block;
+}
+
+/* Ensure uniform background on dashboard - hide workspace and right-rail completely */
+body.dashboard-mode .workspace,
+body.dashboard-mode .right-rail {
+  display: none !important;
+}
+
+/* Show dashboard title when dashboard is active */
+.dashboard-title {
+  display: none;
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+body.dashboard-mode .dashboard-title {
+  display: block;
+}
+
+.dashboard-view {
+  position: absolute;
+  top: 98px; /* below topbar (22px + 54px + 22px) */
+  left: 22px;
+  right: 22px;
+  bottom: 22px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
+  z-index: 1;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: 14px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Ranking card */
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Card preview/thumbnail area */
+.card-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+
+.card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-preview--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Card body */
+.card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-filename {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.7;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* Action row */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.card-action-btn--delete:hover {
+  background: rgba(255, 75, 114, 0.12);
+  color: var(--danger);
+  border-color: rgba(255, 75, 114, 0.3);
+}
+
+.card-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* New ranking card */
+.dashboard-card--new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--line);
+  border-radius: 16px;
+  background: transparent;
+  min-height: 280px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card--new:hover {
+  border-color: var(--brand-a);
+  background: rgba(0, 164, 220, 0.04);
+  box-shadow: 0 0 24px rgba(0, 164, 220, 0.12);
+}
+
+.dashboard-card--new .new-card-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.dashboard-card--new:hover .new-card-icon {
+  color: var(--brand-a);
+}
+
+.new-card-icon svg {
+  width: 48px;
+  height: 48px;
+  stroke-width: 1.5;
+}
+
+.new-card-icon span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Empty state */
+.dashboard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--muted);
+}
+
+.dashboard-empty h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.dashboard-empty p {
+  font-size: 15px;
+  margin: 0 0 32px;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.dashboard-empty .empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  background: var(--brand-a);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.dashboard-empty .empty-cta:hover {
+  background: #00b8f0;
+  transform: translateY(-2px);
+}
+
+.dashboard-empty .empty-cta svg {
+  width: 18px;
+  height: 18px;
+}

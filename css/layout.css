@@ -22,16 +22,6 @@
     linear-gradient(145deg, #090a0f 0%, #12131a 48%, #07080c 100%);
 }
 
-.scene-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.024) 0 1px, transparent 1px 12px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0) 0 70%, rgba(0, 0, 0, 0.33) 70% 100%);
-  opacity: 0.52;
-}
-
 .topbar {
   position: absolute;
   z-index: 5;
@@ -327,6 +317,10 @@
   grid-template-columns: minmax(640px, 1fr) var(--rail-size);
   gap: 20px;
   min-height: 0;
+}
+
+.workspace[hidden] {
+  display: none;
 }
 
 .workspace.sidebar-collapsed {

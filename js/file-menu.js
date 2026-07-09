@@ -20,6 +20,7 @@ import { apiFetch } from "./auth.js";
 import { openShareModal } from "./share-modal.js";
 
 let nameInputCallback = null;
+let nameInputCancelCallback = null;
 
 /**
  * Initialize file menu event listeners
@@ -83,15 +84,10 @@ export function initFileMenu() {
   });
   
   // File menu actions
-  els.fileNew.addEventListener("click", handleNew);
-  els.fileOpen.addEventListener("click", handleOpen);
   els.fileSave.addEventListener("click", handleSave);
   els.fileSaveAs.addEventListener("click", handleSaveAs);
   els.fileExport.addEventListener("click", handleExport);
-  els.fileImport.addEventListener("click", handleImport);
-  els.fileImportInput.addEventListener("change", handleImportFile);
   els.fileShare.addEventListener("click", handleShare);
-  els.fileDelete.addEventListener("click", handleDelete);
   
   // Click on save icon to save
   els.saveIcon.addEventListener("click", () => {
@@ -107,6 +103,9 @@ export function initFileMenu() {
   // Ctrl+S / Cmd+S keyboard shortcut to save
   document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      // Don't intercept Ctrl+S on the dashboard
+      if (document.body.classList.contains("dashboard-mode")) return;
+      
       event.preventDefault();
       if (state.readOnly) return;
       if (!state.isDirty && state.currentRankingName) return;
@@ -163,7 +162,7 @@ function closeFileSubmenu() {
 /**
  * Handle "New" action - create a new empty ranking
  */
-async function handleNew() {
+export async function handleNew(onCancel = null) {
   closeBurgerMenu();
   
   // Auto-save current ranking if it has a name
@@ -205,16 +204,10 @@ async function handleNew() {
     // Save the new empty ranking
     await saveRankingToServer(sanitizedName);
     showToast(`Created new ranking: ${name}`);
-  });
+  }, onCancel);
 }
 
-/**
- * Handle "Open" action - show ranking flyout
- */
-async function handleOpen() {
-  // Don't close the burger menu — keep it open so the flyout can appear
-  await showRankingFlyout();
-}
+
 
 /**
  * Handle "Save" action - save current ranking
@@ -355,7 +348,7 @@ async function handleImportFile(event) {
 /**
  * Show name input modal
  */
-function showNameInputModal(title, callback) {
+function showNameInputModal(title, callback, onCancel = null) {
   // Close any open flyouts first
   closeRankingFlyout();
   
@@ -364,6 +357,7 @@ function showNameInputModal(title, callback) {
   els.nameInputModal.hidden = false;
   els.nameInputField.focus();
   nameInputCallback = callback;
+  nameInputCancelCallback = onCancel;
 }
 
 /**
@@ -372,7 +366,12 @@ function showNameInputModal(title, callback) {
 function closeNameInputModal() {
   els.nameInputModal.hidden = true;
   els.nameInputForm.reset();
+  // Call cancel callback if it exists (modal was closed without submitting)
+  if (nameInputCancelCallback) {
+    nameInputCancelCallback();
+  }
   nameInputCallback = null;
+  nameInputCancelCallback = null;
 }
 
 /**
@@ -382,6 +381,9 @@ function handleNameInputSubmit(event) {
   event.preventDefault();
   const name = els.nameInputField.value.trim();
   if (!name) return;
+  
+  // Clear cancel callback since we're submitting
+  nameInputCancelCallback = null;
   
   if (nameInputCallback) {
     nameInputCallback(name);
@@ -471,9 +473,242 @@ function closeRankingFlyout() {
 }
 
 /**
+ * Show dashboard ranking flyout with list of saved rankings
+ */
+async function showDashboardRankingFlyout() {
+  if (!els.dashboardRankingFlyout || !els.dashboardRankingFlyoutList) return;
+
+  // Position flyout next to the active trigger
+  const activeTrigger = document.querySelector(`[data-dashboard-flyout-trigger="${flyoutMode}"]`);
+  if (activeTrigger) {
+    const rect = activeTrigger.getBoundingClientRect();
+    const dropdownRect = els.dashboardDropdown.getBoundingClientRect();
+    els.dashboardRankingFlyout.style.top = `${rect.top - dropdownRect.top}px`;
+    els.dashboardRankingFlyout.style.left = `${rect.right - dropdownRect.left + 2}px`;
+  }
+
+  els.dashboardRankingFlyout.hidden = false;
+  els.dashboardRankingFlyoutList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:1rem;font-size:0.875rem;'>Loading...</p>";
+
+  try {
+    const rankings = await fetchRankings();
+
+    if (rankings.length === 0) {
+      els.dashboardRankingFlyoutList.innerHTML = "";
+      return;
+    }
+
+    els.dashboardRankingFlyoutList.innerHTML = rankings.map(ranking => {
+      const date = new Date(ranking.modifiedAt).toLocaleString();
+      return `
+        <div class="ranking-flyout-item" data-ranking-name="${escapeAttr(ranking.name)}">
+          <div class="ranking-flyout-item-info">
+            <div class="ranking-flyout-item-name">${escapeHtml(ranking.name)}</div>
+            <div class="ranking-flyout-item-date">Modified: ${date}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // Wire up click on item — behavior depends on flyout mode (open vs delete)
+    const currentMode = flyoutMode;
+    els.dashboardRankingFlyoutList.querySelectorAll(".ranking-flyout-item").forEach(item => {
+      const name = item.dataset.rankingName;
+      item.addEventListener("click", async () => {
+        if (currentMode === "delete") {
+          const confirmed = confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`);
+          if (!confirmed) return;
+          try {
+            await deleteRankingFromServer(name);
+            showToast(`Deleted ranking: ${name}`);
+            await showDashboardRankingFlyout();
+            // Also refresh the dashboard grid
+            const { showDashboard } = await import("./dashboard.js");
+            await showDashboard();
+          } catch (error) {
+            console.error("Failed to delete ranking:", error);
+            showToast("Failed to delete ranking.");
+          }
+        } else {
+          await openRanking(name);
+          closeDashboardMenu();
+          // Hide dashboard and show board
+          const { hideDashboard } = await import("./dashboard.js");
+          hideDashboard();
+          const { initializeApp } = await import("./app.js");
+          await initializeApp();
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Failed to load rankings:", error);
+    els.dashboardRankingFlyoutList.innerHTML = "<p style='text-align:center;color:var(--muted);padding:1rem;font-size:0.875rem;'>Failed to load rankings.</p>";
+  }
+}
+
+/**
+ * Close dashboard ranking flyout
+ */
+function closeDashboardRankingFlyout() {
+  if (els.dashboardRankingFlyout) {
+    els.dashboardRankingFlyout.hidden = true;
+  }
+}
+
+/**
+ * Toggle dashboard menu dropdown visibility
+ */
+function toggleDashboardMenu(event) {
+  if (event) event.stopPropagation();
+  if (els.dashboardDropdown) {
+    els.dashboardDropdown.hidden = !els.dashboardDropdown.hidden;
+  }
+}
+
+/**
+ * Close dashboard menu dropdown
+ */
+export function closeDashboardMenu() {
+  if (els.dashboardDropdown) {
+    els.dashboardDropdown.hidden = true;
+  }
+  closeDashboardRankingFlyout();
+}
+
+/**
+ * Initialize dashboard menu event listeners
+ */
+export function initDashboardMenu() {
+  if (!els.dashboardMenuButton || !els.dashboardDropdown) return;
+
+  // Toggle dropdown
+  els.dashboardMenuButton.addEventListener("click", toggleDashboardMenu);
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (event) => {
+    if (!els.dashboardMenuButton.contains(event.target) && !els.dashboardDropdown.contains(event.target)) {
+      closeDashboardMenu();
+    }
+  });
+
+  // Dashboard ranking flyout hover
+  const dashboardFlyoutTriggers = document.querySelectorAll('[data-dashboard-flyout-trigger]');
+  if (dashboardFlyoutTriggers.length && els.dashboardRankingFlyout) {
+    dashboardFlyoutTriggers.forEach(trigger => {
+      trigger.addEventListener("mouseenter", () => {
+        clearTimeout(flyoutCloseTimer);
+        flyoutMode = trigger.dataset.dashboardFlyoutTrigger || "open";
+        showDashboardRankingFlyout();
+      });
+      trigger.addEventListener("mouseleave", () => {
+        flyoutCloseTimer = setTimeout(() => closeDashboardRankingFlyout(), 150);
+      });
+    });
+    els.dashboardRankingFlyout.addEventListener("mouseenter", () => {
+      clearTimeout(flyoutCloseTimer);
+    });
+    els.dashboardRankingFlyout.addEventListener("mouseleave", () => {
+      flyoutCloseTimer = setTimeout(() => closeDashboardRankingFlyout(), 150);
+    });
+  }
+
+  // Menu actions
+  if (els.dashboardNew) {
+    els.dashboardNew.addEventListener("click", async () => {
+      closeDashboardMenu();
+      const { hideDashboard } = await import("./dashboard.js");
+      hideDashboard();
+      // Pass cancel callback to return to dashboard if user cancels
+      await handleNew(async () => {
+        const { showDashboard } = await import("./dashboard.js");
+        await showDashboard();
+      });
+      const { initializeApp } = await import("./app.js");
+      await initializeApp(true);
+    });
+  }
+
+  if (els.dashboardOpen) {
+    els.dashboardOpen.addEventListener("click", async () => {
+      // Don't close the menu — keep it open so the flyout can appear
+      await showDashboardRankingFlyout();
+    });
+  }
+
+  if (els.dashboardImport) {
+    els.dashboardImport.addEventListener("click", () => {
+      closeDashboardMenu();
+      if (els.dashboardImportInput) {
+        els.dashboardImportInput.value = "";
+        els.dashboardImportInput.click();
+      }
+    });
+  }
+
+  if (els.dashboardImportInput) {
+    els.dashboardImportInput.addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const success = await importRanking(file);
+      
+      if (success) {
+        updateCurrentRankingDisplay();
+        
+        // Auto-save using the imported filename (without extension)
+        const rankingName = file.name.replace(/\.zip$/i, "");
+        const sanitizedName = sanitizeRankingName(rankingName);
+        
+        // Check if ranking already exists
+        const rankings = await fetchRankings();
+        const exists = rankings.some(r => r.name === sanitizedName);
+        
+        if (exists) {
+          const overwrite = confirm(`A ranking named "${rankingName}" already exists. Overwrite?`);
+          if (!overwrite) {
+            // Fall back to name input modal so user can choose a different name
+            showNameInputModal("Save Imported Ranking As", async (name) => {
+              const newName = sanitizeRankingName(name);
+              const newExists = rankings.some(r => r.name === newName);
+              
+              if (newExists) {
+                const newOverwrite = confirm(`A ranking named "${name}" already exists. Overwrite?`);
+                if (!newOverwrite) return;
+              }
+              
+              state.currentRankingName = newName;
+              await saveRankingToServer(newName);
+              updateCurrentRankingDisplay();
+              showToast(`Imported and saved ranking as: ${name}`);
+            });
+            return;
+          }
+        }
+        
+        state.currentRankingName = sanitizedName;
+        await saveRankingToServer(sanitizedName);
+        updateCurrentRankingDisplay();
+        showToast(`Imported and saved ranking: ${rankingName}`);
+        
+        // Refresh dashboard to show new ranking
+        const { showDashboard } = await import("./dashboard.js");
+        await showDashboard();
+      }
+    });
+  }
+
+  if (els.dashboardDelete) {
+    els.dashboardDelete.addEventListener("click", async () => {
+      // Don't close the menu — keep it open so the flyout can appear
+      await showDashboardRankingFlyout();
+    });
+  }
+}
+
+/**
  * Open a specific ranking by name
  */
-async function openRanking(name) {
+export async function openRanking(name) {
   // Auto-save current ranking if it has a name
   if (state.currentRankingName) {
     await saveRankingToServer(state.currentRankingName);
